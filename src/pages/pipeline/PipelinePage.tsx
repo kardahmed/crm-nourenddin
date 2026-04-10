@@ -39,6 +39,7 @@ import { KanbanBoard } from './components/KanbanBoard'
 import { CardsView } from './components/CardsView'
 import { TableView } from './components/TableView'
 import { ClientFormModal } from './components/ClientFormModal'
+import { StageChangeDialog } from './components/StageChangeDialog'
 
 type ViewMode = 'kanban' | 'cards' | 'table'
 
@@ -103,6 +104,7 @@ export function PipelinePage() {
   const [view, setView] = useState<ViewMode>('kanban')
   const [alertFilter, setAlertFilter] = useState<string[] | null>(null)
   const [showClientForm, setShowClientForm] = useState(false)
+  const [pendingMove, setPendingMove] = useState<{ clientId: string; clientName: string; fromStage: PipelineStage; toStage: PipelineStage } | null>(null)
 
   // Filter clients
   const filtered = useMemo(() => {
@@ -150,7 +152,38 @@ export function PipelinePage() {
   }
 
   function handleMoveClient(clientId: string, newStage: PipelineStage) {
-    updateClientStage.mutate({ clientId, newStage })
+    const client = clients.find(c => c.id === clientId)
+    if (!client || client.pipeline_stage === newStage) return
+
+    setPendingMove({
+      clientId,
+      clientName: client.full_name,
+      fromStage: client.pipeline_stage,
+      toStage: newStage,
+    })
+  }
+
+  function confirmMoveClient(note?: string) {
+    if (!pendingMove) return
+    updateClientStage.mutate(
+      { clientId: pendingMove.clientId, newStage: pendingMove.toStage },
+      {
+        onSuccess: () => {
+          // If note provided, add to history
+          if (note) {
+            supabase.from('history').insert({
+              tenant_id: tenantId,
+              client_id: pendingMove.clientId,
+              agent_id: null,
+              type: 'note',
+              title: note,
+              metadata: { from: pendingMove.fromStage, to: pendingMove.toStage },
+            } as never)
+          }
+          setPendingMove(null)
+        },
+      },
+    )
   }
 
   function handleViewClient(_clientId: string) {
@@ -338,6 +371,19 @@ export function PipelinePage() {
       )}
 
       <ClientFormModal isOpen={showClientForm} onClose={() => setShowClientForm(false)} />
+
+      {/* Stage change confirmation dialog */}
+      {pendingMove && (
+        <StageChangeDialog
+          isOpen
+          onClose={() => setPendingMove(null)}
+          onConfirm={confirmMoveClient}
+          clientName={pendingMove.clientName}
+          fromStage={pendingMove.fromStage}
+          toStage={pendingMove.toStage}
+          loading={updateClientStage.isPending}
+        />
+      )}
     </div>
   )
 }

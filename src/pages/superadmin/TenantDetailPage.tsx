@@ -13,6 +13,7 @@ import { fr } from 'date-fns/locale'
 import { UserManagementPanel } from './components/UserManagementPanel'
 import { PlanBadge } from './components/PlanBadge'
 import { ChangePlanModal } from './components/ChangePlanModal'
+import { DuplicateConfigModal } from './components/DuplicateConfigModal'
 import type { PlanKey } from './hooks/usePlanLimits'
 import toast from 'react-hot-toast'
 
@@ -22,6 +23,7 @@ export function TenantDetailPage() {
   const qc = useQueryClient()
   const { enterTenant } = useSuperAdminStore()
   const [showChangePlan, setShowChangePlan] = useState(false)
+  const [showDuplicate, setShowDuplicate] = useState(false)
 
   // Tenant info
   const { data: tenant, isLoading: loadingTenant } = useQuery({
@@ -127,6 +129,12 @@ export function TenantDetailPage() {
         </div>
         <div className="flex gap-2">
           <Button
+            onClick={() => setShowDuplicate(true)}
+            className="border border-[#1E325A] bg-transparent text-[#7F96B7] hover:bg-[#1E325A] hover:text-white"
+          >
+            Dupliquer config
+          </Button>
+          <Button
             onClick={() => setShowChangePlan(true)}
             className="border border-[#7C3AED]/30 bg-transparent text-[#7C3AED] hover:bg-[#7C3AED]/10"
           >
@@ -225,6 +233,14 @@ export function TenantDetailPage() {
           {history.length === 0 && <div className="py-8 text-center text-sm text-[#7F96B7]">Aucune activite</div>}
         </div>
       </div>
+
+      {/* Duplicate config modal */}
+      <DuplicateConfigModal
+        isOpen={showDuplicate}
+        onClose={() => setShowDuplicate(false)}
+        sourceTenantId={tenantId!}
+        sourceTenantName={tenant.name as string}
+      />
 
       {/* Change plan modal */}
       <ChangePlanModal

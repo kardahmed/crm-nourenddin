@@ -4,6 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useSuperAdminStore } from '@/store/superAdminStore'
 import { HealthAlertsBanner } from './components/HealthAlertsBanner'
 import { GlobalSearch } from './components/GlobalSearch'
+import { NotificationCenter } from './components/NotificationCenter'
 
 const NAV_ITEMS = [
   { to: '/admin', icon: Building2, labelKey: 'Tenants', end: true },
@@ -85,7 +86,10 @@ export function SuperAdminLayout() {
         {/* Topbar with search */}
         <div className="flex items-center justify-between border-b border-[#1E325A]/50 bg-[#060A15] px-6 py-3">
           <GlobalSearch />
-          <div className="text-xs text-[#4E6687]">Super Admin Panel</div>
+          <div className="flex items-center gap-3">
+            <NotificationCenter />
+            <span className="text-xs text-[#4E6687]">Super Admin Panel</span>
+          </div>
         </div>
 
         {/* Inspection banner */}

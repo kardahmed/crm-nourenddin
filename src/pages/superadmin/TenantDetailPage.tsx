@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, Users, Briefcase, Building2, DollarSign, Bookmark, CheckCircle, Home, AlertTriangle, Power } from 'lucide-react'
@@ -10,6 +11,9 @@ import { formatPriceCompact } from '@/lib/constants'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { UserManagementPanel } from './components/UserManagementPanel'
+import { PlanBadge } from './components/PlanBadge'
+import { ChangePlanModal } from './components/ChangePlanModal'
+import type { PlanKey } from './hooks/usePlanLimits'
 import toast from 'react-hot-toast'
 
 export function TenantDetailPage() {
@@ -17,6 +21,7 @@ export function TenantDetailPage() {
   const navigate = useNavigate()
   const qc = useQueryClient()
   const { enterTenant } = useSuperAdminStore()
+  const [showChangePlan, setShowChangePlan] = useState(false)
 
   // Tenant info
   const { data: tenant, isLoading: loadingTenant } = useQuery({
@@ -114,10 +119,19 @@ export function TenantDetailPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold text-white">{tenant.name as string}</h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-white">{tenant.name as string}</h1>
+            <PlanBadge plan={(tenant.plan as string) ?? 'free'} />
+          </div>
           <p className="text-sm text-[#7F96B7]">{tenant.email as string} · {tenant.wilaya as string ?? '-'}</p>
         </div>
         <div className="flex gap-2">
+          <Button
+            onClick={() => setShowChangePlan(true)}
+            className="border border-[#7C3AED]/30 bg-transparent text-[#7C3AED] hover:bg-[#7C3AED]/10"
+          >
+            Changer le plan
+          </Button>
           <Button
             onClick={() => toggleMaintenance.mutate()}
             disabled={toggleMaintenance.isPending}
@@ -211,6 +225,15 @@ export function TenantDetailPage() {
           {history.length === 0 && <div className="py-8 text-center text-sm text-[#7F96B7]">Aucune activite</div>}
         </div>
       </div>
+
+      {/* Change plan modal */}
+      <ChangePlanModal
+        isOpen={showChangePlan}
+        onClose={() => setShowChangePlan(false)}
+        tenantId={tenantId!}
+        tenantName={tenant.name as string}
+        currentPlan={((tenant.plan as string) ?? 'free') as PlanKey}
+      />
     </div>
   )
 }

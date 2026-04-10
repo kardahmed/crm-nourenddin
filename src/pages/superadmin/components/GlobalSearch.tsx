@@ -1,0 +1,159 @@
+import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { Search, Building2, User, Home, X } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { useSuperAdminStore } from '@/store/superAdminStore'
+
+type ResultType = 'tenant' | 'client' | 'unit'
+
+interface SearchResult {
+  type: ResultType
+  id: string
+  title: string
+  subtitle: string
+  tenant_id: string
+  tenant_name: string
+}
+
+const ICONS: Record<ResultType, typeof Building2> = {
+  tenant: Building2,
+  client: User,
+  unit: Home,
+}
+
+export function GlobalSearch() {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
+  const { enterTenant } = useSuperAdminStore()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Close on click outside
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Keyboard shortcut: Ctrl+K
+  useEffect(() => {
+    function handler(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        inputRef.current?.focus()
+        setOpen(true)
+      }
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [])
+
+  const { data: results = [], isFetching } = useQuery({
+    queryKey: ['super-admin-global-search', query],
+    queryFn: async (): Promise<SearchResult[]> => {
+      if (query.length < 2) return []
+
+      const s = `%${query}%`
+      const all: SearchResult[] = []
+
+      // Search tenants
+      const { data: tenants } = await supabase.from('tenants').select('id, name, email, wilaya').ilike('name', s).limit(5)
+      for (const t of tenants ?? []) {
+        all.push({ type: 'tenant', id: t.id, title: t.name, subtitle: `${t.email ?? ''} · ${t.wilaya ?? ''}`, tenant_id: t.id, tenant_name: t.name })
+      }
+
+      // Search clients
+      const { data: clients } = await supabase.from('clients').select('id, full_name, phone, tenant_id').ilike('full_name', s).limit(5)
+      for (const c of (clients ?? []) as Array<{ id: string; full_name: string; phone: string | null; tenant_id: string }>) {
+        all.push({ type: 'client', id: c.id, title: c.full_name, subtitle: c.phone ?? '', tenant_id: c.tenant_id, tenant_name: '' })
+      }
+
+      // Search units
+      const { data: units } = await supabase.from('units').select('id, code, type, tenant_id').ilike('code', s).limit(5)
+      for (const u of (units ?? []) as Array<{ id: string; code: string; type: string; tenant_id: string }>) {
+        all.push({ type: 'unit', id: u.id, title: u.code, subtitle: u.type, tenant_id: u.tenant_id, tenant_name: '' })
+      }
+
+      return all
+    },
+    enabled: query.length >= 2 && open,
+  })
+
+  function handleSelect(r: SearchResult) {
+    setOpen(false)
+    setQuery('')
+    if (r.type === 'tenant') {
+      navigate(`/admin/tenants/${r.id}`)
+    } else {
+      // Enter tenant then navigate to the relevant page
+      enterTenant(r.tenant_id, r.tenant_name)
+      if (r.type === 'client') navigate(`/pipeline/clients/${r.id}`)
+      else navigate('/projects')
+    }
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4E6687]" />
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder="Recherche globale... (Ctrl+K)"
+          className="h-9 w-[320px] rounded-lg border border-[#1E325A] bg-[#0A1030] pl-9 pr-8 text-sm text-white placeholder-[#4E6687] outline-none focus:border-[#7C3AED]"
+        />
+        {query && (
+          <button onClick={() => { setQuery(''); setOpen(false) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#4E6687] hover:text-white">
+            <X className="h-3.5 w-3.5" />
+          </button>
+        )}
+      </div>
+
+      {/* Results dropdown */}
+      {open && query.length >= 2 && (
+        <div className="absolute left-0 top-full z-50 mt-1 w-[400px] rounded-xl border border-[#1E325A] bg-[#0F1830] shadow-2xl shadow-black/50">
+          {isFetching && (
+            <div className="px-4 py-3 text-center text-xs text-[#7F96B7]">Recherche...</div>
+          )}
+          {!isFetching && results.length === 0 && (
+            <div className="px-4 py-6 text-center text-xs text-[#7F96B7]">Aucun resultat pour "{query}"</div>
+          )}
+          {!isFetching && results.length > 0 && (
+            <div className="max-h-[400px] divide-y divide-[#1E325A] overflow-y-auto">
+              {results.map((r, i) => {
+                const Icon = ICONS[r.type]
+                return (
+                  <button
+                    key={`${r.type}-${r.id}-${i}`}
+                    onClick={() => handleSelect(r)}
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#1E325A]/50"
+                  >
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#7C3AED]/10">
+                      <Icon className="h-4 w-4 text-[#7C3AED]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm text-white">{r.title}</p>
+                      <p className="truncate text-[11px] text-[#7F96B7]">{r.subtitle}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[#1E325A] px-2 py-0.5 text-[9px] uppercase text-[#7F96B7]">
+                      {r.type}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}

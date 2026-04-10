@@ -8,6 +8,7 @@ import { KPICard, LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { useSuperAdminStore } from '@/store/superAdminStore'
 import { CreateTenantModal } from './components/CreateTenantModal'
+import { PlanBadge } from './components/PlanBadge'
 import { useTenantHealth } from './hooks/useTenantHealth'
 import type { HealthStatus } from './hooks/useTenantHealth'
 
@@ -17,6 +18,7 @@ interface TenantRow {
   email: string | null
   phone: string | null
   wilaya: string | null
+  plan: string
   created_at: string
   agents_count: number
   clients_count: number
@@ -57,6 +59,7 @@ export function TenantsPage() {
             email: t.email as string | null,
             phone: t.phone as string | null,
             wilaya: t.wilaya as string | null,
+            plan: (t.plan as string) ?? 'free',
             created_at: t.created_at as string,
             agents_count: agents.count ?? 0,
             clients_count: clients.count ?? 0,
@@ -133,7 +136,7 @@ export function TenantsPage() {
         <table className="w-full">
           <thead>
             <tr className="bg-[#0F1830]">
-              {['Nom', 'Sante', 'Email', 'Wilaya', 'Agents', 'Clients', 'Projets', 'Biens', 'Cree le', 'Actions'].map(h => (
+              {['Nom', 'Plan', 'Sante', 'Email', 'Agents', 'Clients', 'Projets', 'Biens', 'Cree le', 'Actions'].map(h => (
                 <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#7F96B7]">{h}</th>
               ))}
             </tr>
@@ -142,9 +145,9 @@ export function TenantsPage() {
             {filtered.map(t => (
               <tr key={t.id} className="bg-[#0A1030] transition-colors hover:bg-[#0F1830]">
                 <td className="px-4 py-3.5 text-sm font-medium text-white">{t.name}</td>
+                <td className="px-4 py-3.5"><PlanBadge plan={t.plan} /></td>
                 <td className="px-4 py-3.5"><HealthBadge status={healthMap.get(t.id)?.status ?? 'healthy'} issues={healthMap.get(t.id)?.issues ?? []} /></td>
                 <td className="px-4 py-3.5 text-xs text-[#7F96B7]">{t.email ?? '-'}</td>
-                <td className="px-4 py-3.5 text-xs text-[#7F96B7]">{t.wilaya ?? '-'}</td>
                 <td className="px-4 py-3.5 text-center text-sm text-white">{t.agents_count}</td>
                 <td className="px-4 py-3.5 text-center text-sm text-white">{t.clients_count}</td>
                 <td className="px-4 py-3.5 text-center text-sm text-white">{t.projects_count}</td>

@@ -3,6 +3,7 @@ import { Building2, BarChart3, Settings, LogOut, ArrowLeft, ScrollText } from 'l
 import { useAuth } from '@/hooks/useAuth'
 import { useSuperAdminStore } from '@/store/superAdminStore'
 import { HealthAlertsBanner } from './components/HealthAlertsBanner'
+import { GlobalSearch } from './components/GlobalSearch'
 
 const NAV_ITEMS = [
   { to: '/admin', icon: Building2, labelKey: 'Tenants', end: true },
@@ -81,6 +82,12 @@ export function SuperAdminLayout() {
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
+        {/* Topbar with search */}
+        <div className="flex items-center justify-between border-b border-[#1E325A]/50 bg-[#060A15] px-6 py-3">
+          <GlobalSearch />
+          <div className="text-xs text-[#4E6687]">Super Admin Panel</div>
+        </div>
+
         {/* Inspection banner */}
         {inspectedTenantId && (
           <div className="flex items-center justify-between bg-[#FF9A1E] px-5 py-2">

@@ -1,33 +1,43 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useAuth } from '@/hooks/useAuth'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import { Eye, EyeOff, LogIn, Building2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
+
+const schema = z.object({
+  email: z.string().min(1, 'Email requis').email('Email invalide'),
+  password: z.string().min(1, 'Mot de passe requis'),
+})
+
+type FormData = z.infer<typeof schema>
 
 export function LoginPage() {
   const navigate = useNavigate()
   const { signIn, isAuthenticated } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormData>({
+    resolver: zodResolver(schema),
+  })
 
   if (isAuthenticated) {
     navigate('/dashboard', { replace: true })
     return null
   }
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function onSubmit(data: FormData) {
     setError('')
     setLoading(true)
-
     try {
-      await signIn(email, password)
+      await signIn(data.email, data.password)
       navigate('/dashboard', { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de connexion')
@@ -37,104 +47,122 @@ export function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-immo-bg-primary px-4">
-      {/* Background glow */}
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0A1030] px-4">
+      {/* Background atmospheric glows */}
       <div className="pointer-events-none fixed inset-0">
-        <div className="absolute left-1/2 top-1/3 h-[500px] w-[500px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-immo-accent-green/5 blur-[120px]" />
+        <div className="absolute -left-[200px] top-[20%] h-[600px] w-[600px] rounded-full bg-[#00D4A0] opacity-[0.03] blur-[150px]" />
+        <div className="absolute -right-[150px] bottom-[10%] h-[500px] w-[500px] rounded-full bg-[#00D4A0] opacity-[0.02] blur-[130px]" />
+        <div className="absolute left-[40%] top-[60%] h-[400px] w-[400px] rounded-full bg-[#3782FF] opacity-[0.02] blur-[120px]" />
       </div>
 
-      <Card className="relative w-full max-w-[420px] border-immo-border-default bg-immo-bg-card shadow-2xl">
-        <CardHeader className="space-y-4 pb-2 pt-8 text-center">
-          {/* Logo */}
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-immo-accent-green/10 ring-1 ring-immo-accent-green/20">
-            <Building2 className="h-7 w-7 text-immo-accent-green" />
+      {/* Card */}
+      <div className="relative w-full max-w-[420px] rounded-2xl border border-[#1E325A] bg-[#0F1830] p-10 shadow-2xl shadow-black/40">
+        {/* Error banner */}
+        {error && (
+          <div className="mb-6 flex items-center gap-3 rounded-lg border border-[#FF4949]/30 bg-[#320F0F] px-4 py-3">
+            <AlertCircle className="h-4 w-4 shrink-0 text-[#FF4949]" />
+            <p className="text-sm text-[#FF4949]">{error}</p>
           </div>
+        )}
 
+        {/* Logo + Title */}
+        <div className="mb-6 flex flex-col items-center">
+          <div className="mb-4 flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-[10px] bg-[#00D4A0]">
+              <span className="text-base font-bold text-white">IP</span>
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-tight text-white">IMMO PRO-X</h1>
+              <p className="text-xs text-[#4E6687]">v2.0</p>
+            </div>
+          </div>
+          <p className="text-sm text-[#7F96B7]">Connectez-vous à votre espace</p>
+        </div>
+
+        {/* Separator */}
+        <div className="mb-6 h-px bg-[#1E325A]" />
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Email */}
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-immo-text-primary">
-              IMMO PRO-X
-            </h1>
-            <p className="mt-1 text-sm text-immo-text-muted">
-              Connectez-vous à votre espace
-            </p>
-          </div>
-        </CardHeader>
-
-        <CardContent className="px-8 pb-8 pt-4">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {error && (
-              <div className="rounded-lg border border-immo-status-red/30 bg-immo-status-red-bg px-4 py-3 text-sm text-immo-status-red">
-                {error}
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm text-immo-text-secondary">
-                Adresse email
-              </Label>
-              <Input
+            <label htmlFor="email" className="mb-1.5 block text-xs font-medium text-[#7F96B7]">
+              Adresse email
+            </label>
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#4E6687]" />
+              <input
                 id="email"
                 type="email"
-                placeholder="vous@agence.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
                 autoComplete="email"
-                className="border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted focus:border-immo-accent-green focus:ring-immo-accent-green"
+                placeholder="vous@agence.com"
+                {...register('email')}
+                className={`h-12 w-full rounded-lg border bg-[#0A1030] pl-11 pr-4 text-sm text-white placeholder-[#4E6687] outline-none transition-colors ${
+                  errors.email ? 'border-[#FF4949]' : 'border-[#1E325A] focus:border-[#00D4A0]'
+                }`}
               />
             </div>
+            {errors.email && (
+              <p className="mt-1 text-xs text-[#FF4949]">{errors.email.message}</p>
+            )}
+          </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm text-immo-text-secondary">
-                Mot de passe
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  className="border-immo-border-default bg-immo-bg-primary pr-10 text-immo-text-primary placeholder:text-immo-text-muted focus:border-immo-accent-green focus:ring-immo-accent-green"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-immo-text-muted hover:text-immo-text-secondary"
-                  tabIndex={-1}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
+          {/* Password */}
+          <div>
+            <label htmlFor="password" className="mb-1.5 block text-xs font-medium text-[#7F96B7]">
+              Mot de passe
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#4E6687]" />
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                {...register('password')}
+                className={`h-12 w-full rounded-lg border bg-[#0A1030] pl-11 pr-12 text-sm text-white placeholder-[#4E6687] outline-none transition-colors ${
+                  errors.password ? 'border-[#FF4949]' : 'border-[#1E325A] focus:border-[#00D4A0]'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-[#4E6687] transition-colors hover:text-[#7F96B7]"
+              >
+                {showPassword ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+              </button>
             </div>
+            {errors.password && (
+              <p className="mt-1 text-xs text-[#FF4949]">{errors.password.message}</p>
+            )}
+          </div>
 
-            <Button
-              type="submit"
-              disabled={loading || !email || !password}
-              className="w-full bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50"
-            >
-              {loading ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Connexion
-                </>
-              )}
-            </Button>
-          </form>
+          {/* Submit */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#00D4A0] text-sm font-bold text-[#0A1030] transition-colors hover:bg-[#00B890] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {loading ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#0A1030] border-t-transparent" />
+                <span>Connexion en cours...</span>
+              </>
+            ) : (
+              <>
+                <span>Connexion</span>
+                <LogIn className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        </form>
 
-          <p className="mt-6 text-center text-xs text-immo-text-muted">
-            Première connexion ? Contactez votre administrateur
-          </p>
-        </CardContent>
-      </Card>
+        {/* Footer */}
+        <p className="mt-6 text-center text-[13px] text-[#4E6687]">
+          Première connexion ? Contactez votre administrateur
+        </p>
+      </div>
     </div>
   )
 }

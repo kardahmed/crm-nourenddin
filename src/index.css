@@ -3,7 +3,7 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
-/* ─── IMMO PRO-X v2 Design System ─── */
+/* ─── IMMO PRO-X v2 Design System — Light Theme ─── */
 
 @theme inline {
   /* Font */
@@ -26,7 +26,7 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
 
-  /* ─── Shadcn semantic colors (mapped to IMMO tokens) ─── */
+  /* ─── Shadcn semantic colors ─── */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -59,68 +59,68 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  /* ─── IMMO custom palette ─── */
-  --color-immo-bg-primary: #0A1030;
-  --color-immo-bg-card: #0F1830;
-  --color-immo-bg-card-hover: #131E37;
-  --color-immo-bg-sidebar: #060A15;
+  /* ─── IMMO custom palette — LIGHT THEME ─── */
+  --color-immo-bg-primary: #F6F9FC;
+  --color-immo-bg-card: #FFFFFF;
+  --color-immo-bg-card-hover: #F0F4F8;
+  --color-immo-bg-sidebar: #FFFFFF;
 
-  --color-immo-border-default: #1E325A;
-  --color-immo-border-glow: #00D4A0;
+  --color-immo-border-default: #E3E8EF;
+  --color-immo-border-glow: #0579DA;
 
-  --color-immo-accent-green: #00D4A0;
-  --color-immo-accent-green-dim: #007D5F;
-  --color-immo-accent-green-bg: #00261E;
-  --color-immo-accent-blue: #3782FF;
-  --color-immo-accent-blue-dim: #12317D;
-  --color-immo-accent-blue-bg: #0A173C;
+  --color-immo-accent-green: #0579DA;
+  --color-immo-accent-green-dim: #0461B3;
+  --color-immo-accent-green-bg: #EAF5FF;
+  --color-immo-accent-blue: #0579DA;
+  --color-immo-accent-blue-dim: #0461B3;
+  --color-immo-accent-blue-bg: #EAF5FF;
 
-  --color-immo-text-primary: #EDF4FC;
-  --color-immo-text-secondary: #7F96B7;
-  --color-immo-text-muted: #4E6687;
+  --color-immo-text-primary: #0A2540;
+  --color-immo-text-secondary: #425466;
+  --color-immo-text-muted: #8898AA;
 
-  --color-immo-status-orange: #FF9A1E;
-  --color-immo-status-orange-bg: #321F0A;
-  --color-immo-status-red: #FF4949;
-  --color-immo-status-red-bg: #320F0F;
+  --color-immo-status-orange: #F5A623;
+  --color-immo-status-orange-bg: #FFF8EB;
+  --color-immo-status-red: #CD3D64;
+  --color-immo-status-red-bg: #FFF0F3;
 }
 
-/* ─── Shadcn CSS variables → IMMO PRO-X dark theme ─── */
+/* ─── Shadcn CSS variables → Light Theme ─── */
 
 @layer base {
   :root {
-    --background: #0A1030;
-    --foreground: #EDF4FC;
-    --card: #0F1830;
-    --card-foreground: #EDF4FC;
-    --popover: #0F1830;
-    --popover-foreground: #EDF4FC;
-    --primary: #00D4A0;
-    --primary-foreground: #0A1030;
-    --secondary: #0A173C;
-    --secondary-foreground: #EDF4FC;
-    --muted: #131E37;
-    --muted-foreground: #7F96B7;
-    --accent: #3782FF;
-    --accent-foreground: #EDF4FC;
-    --destructive: #FF4949;
-    --border: #1E325A;
-    --input: #1E325A;
-    --ring: #00D4A0;
-    --chart-1: #00D4A0;
-    --chart-2: #3782FF;
-    --chart-3: #FF9A1E;
-    --chart-4: #FF4949;
-    --chart-5: #7F96B7;
+    --background: #F6F9FC;
+    --foreground: #0A2540;
+    --card: #FFFFFF;
+    --card-foreground: #0A2540;
+    --popover: #FFFFFF;
+    --popover-foreground: #0A2540;
+    --primary: #0579DA;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F0F4F8;
+    --secondary-foreground: #0A2540;
+    --muted: #F0F4F8;
+    --muted-foreground: #8898AA;
+    --accent: #0579DA;
+    --accent-foreground: #FFFFFF;
+    --destructive: #CD3D64;
+    --border: #E3E8EF;
+    --input: #E3E8EF;
+    --ring: #0579DA;
+    --chart-1: #0579DA;
+    --chart-2: #00D4A0;
+    --chart-3: #F5A623;
+    --chart-4: #CD3D64;
+    --chart-5: #8898AA;
     --radius: 8px;
-    --sidebar: #060A15;
-    --sidebar-foreground: #EDF4FC;
-    --sidebar-primary: #00D4A0;
-    --sidebar-primary-foreground: #060A15;
-    --sidebar-accent: #131E37;
-    --sidebar-accent-foreground: #EDF4FC;
-    --sidebar-border: #1E325A;
-    --sidebar-ring: #00D4A0;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #0A2540;
+    --sidebar-primary: #0579DA;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F0F4F8;
+    --sidebar-accent-foreground: #0A2540;
+    --sidebar-border: #E3E8EF;
+    --sidebar-ring: #0579DA;
   }
 
   * {
@@ -144,31 +144,31 @@
     height: 6px;
   }
   ::-webkit-scrollbar-track {
-    background: #060A15;
+    background: #F6F9FC;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1E325A;
+    background: #C1C9D2;
     border-radius: 9999px;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #3782FF;
+    background: #0579DA;
   }
 
   /* Firefox */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #1E325A #060A15;
+    scrollbar-color: #C1C9D2 #F6F9FC;
   }
 
   /* ─── Selection ─── */
   ::selection {
-    background: rgba(0, 212, 160, 0.25);
-    color: #EDF4FC;
+    background: rgba(5, 121, 218, 0.15);
+    color: #0A2540;
   }
 
   /* ─── Focus ring ─── */
   :focus-visible {
-    outline: 2px solid #00D4A0;
+    outline: 2px solid #0579DA;
     outline-offset: 2px;
   }
 }

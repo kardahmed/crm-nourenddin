@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import toast from 'react-hot-toast'
 
-const inputClass = 'border-[#1E325A] bg-[#0A1030] text-white placeholder-[#4E6687]'
+const inputClass = 'border-immo-border-default bg-immo-bg-card text-immo-text-primary placeholder-immo-text-muted'
 
 export function PlatformSettingsPage() {
   const qc = useQueryClient()
@@ -60,38 +60,38 @@ export function PlatformSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Parametres de la plateforme</h1>
-        <p className="text-sm text-[#7F96B7]">Configuration globale IMMO PRO-X</p>
+        <h1 className="text-2xl font-bold text-immo-text-primary">Parametres de la plateforme</h1>
+        <p className="text-sm text-immo-text-secondary">Configuration globale IMMO PRO-X</p>
       </div>
 
-      <div className="max-w-lg space-y-5 rounded-xl border border-[#1E325A] bg-[#0A1030] p-6">
+      <div className="max-w-lg space-y-5 rounded-xl border border-immo-border-default bg-immo-bg-card p-6">
         <div>
-          <Label className="text-[11px] font-medium text-[#7F96B7]">Nom de la plateforme</Label>
+          <Label className="text-[11px] font-medium text-immo-text-secondary">Nom de la plateforme</Label>
           <Input value={name} onChange={e => setName(e.target.value)} className={inputClass} />
         </div>
 
         <div>
-          <Label className="text-[11px] font-medium text-[#7F96B7]">Version</Label>
+          <Label className="text-[11px] font-medium text-immo-text-secondary">Version</Label>
           <Input value={version} onChange={e => setVersion(e.target.value)} className={inputClass} />
         </div>
 
         <div>
-          <Label className="text-[11px] font-medium text-[#7F96B7]">Email de support</Label>
+          <Label className="text-[11px] font-medium text-immo-text-secondary">Email de support</Label>
           <Input type="email" value={supportEmail} onChange={e => setSupportEmail(e.target.value)} placeholder="support@immoprox.com" className={inputClass} />
         </div>
 
-        <div className="rounded-lg border border-[#1E325A] p-4">
+        <div className="rounded-lg border border-immo-border-default p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <AlertTriangle className={`h-5 w-5 ${maintenance ? 'text-[#FF4949]' : 'text-[#7F96B7]'}`} />
+              <AlertTriangle className={`h-5 w-5 ${maintenance ? 'text-immo-status-red' : 'text-immo-text-secondary'}`} />
               <div>
-                <p className="text-sm font-medium text-white">Mode maintenance</p>
-                <p className="text-[11px] text-[#7F96B7]">Bloque l'acces a tous les utilisateurs</p>
+                <p className="text-sm font-medium text-immo-text-primary">Mode maintenance</p>
+                <p className="text-[11px] text-immo-text-secondary">Bloque l'acces a tous les utilisateurs</p>
               </div>
             </div>
             <button
               onClick={() => setMaintenance(!maintenance)}
-              className={`flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${maintenance ? 'bg-[#FF4949]' : 'bg-[#1E325A]'}`}
+              className={`flex h-6 w-11 items-center rounded-full p-0.5 transition-colors ${maintenance ? 'bg-immo-status-red' : 'bg-immo-border-default'}`}
             >
               <div className={`h-5 w-5 rounded-full bg-white transition-transform ${maintenance ? 'translate-x-5' : 'translate-x-0'}`} />
             </button>

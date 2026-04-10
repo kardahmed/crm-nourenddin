@@ -1,17 +1,26 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import type { User } from '@/types'
 
 async function fetchUserProfile(userId: string): Promise<User | null> {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .single()
+  try {
+    const { data, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .single()
 
-  if (error || !data) return null
-  return data as User
+    if (error) {
+      console.error('[Auth] Profile fetch error:', error.message)
+      return null
+    }
+    console.log('[Auth] Profile loaded — role:', data.role)
+    return data as User
+  } catch (err) {
+    console.error('[Auth] Profile fetch exception:', err)
+    return null
+  }
 }
 
 export function useAuth() {
@@ -27,54 +36,70 @@ export function useAuth() {
     reset,
   } = useAuthStore()
 
+  const fetchingRef = useRef(false)
+
   useEffect(() => {
     let mounted = true
 
-    async function initSession() {
-      const { data: { session } } = await supabase.auth.getSession()
+    async function loadProfile(userId: string) {
+      // Prevent concurrent profile fetches
+      if (fetchingRef.current) return
+      fetchingRef.current = true
+
+      console.log('[Auth] Loading profile for', userId)
+      const profile = await fetchUserProfile(userId)
+
+      if (!mounted) { fetchingRef.current = false; return }
+
+      if (profile?.status === 'inactive') {
+        console.log('[Auth] User inactive, signing out')
+        await supabase.auth.signOut()
+        reset()
+        fetchingRef.current = false
+        return
+      }
+
+      setUserProfile(profile) // profile may be null (RLS issue)
+      setLoading(false)
+      fetchingRef.current = false
+      console.log('[Auth] Done — loading=false, role=', profile?.role ?? 'null')
+    }
+
+    async function init() {
+      console.log('[Auth] init start')
+      const { data: { session: currentSession } } = await supabase.auth.getSession()
 
       if (!mounted) return
 
-      setSession(session)
-
-      if (session?.user) {
-        const profile = await fetchUserProfile(session.user.id)
-        if (!mounted) return
-
-        if (profile?.status === 'inactive') {
-          await supabase.auth.signOut()
-          reset()
-          return
-        }
-        setUserProfile(profile)
+      if (currentSession?.user) {
+        setSession(currentSession)
+        await loadProfile(currentSession.user.id)
+      } else {
+        setSession(null)
+        setLoading(false)
+        console.log('[Auth] No session, loading=false')
       }
-
-      if (mounted) setLoading(false)
     }
 
-    initSession()
+    init()
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (event, newSession) => {
         if (!mounted) return
-
-        setSession(session)
-
-        if (event === 'SIGNED_IN' && session?.user) {
-          const profile = await fetchUserProfile(session.user.id)
-          if (!mounted) return
-
-          if (profile?.status === 'inactive') {
-            await supabase.auth.signOut()
-            reset()
-            return
-          }
-          setUserProfile(profile)
-          setLoading(false)
-        }
+        console.log('[Auth] authStateChange:', event)
 
         if (event === 'SIGNED_OUT') {
           reset()
+          return
+        }
+
+        if (event === 'SIGNED_IN' && newSession?.user) {
+          setSession(newSession)
+          await loadProfile(newSession.user.id)
+        }
+
+        if (event === 'TOKEN_REFRESHED' && newSession) {
+          setSession(newSession)
         }
       },
     )
@@ -87,11 +112,7 @@ export function useAuth() {
 
   const signIn = useCallback(
     async (email: string, password: string) => {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-
+      const { error } = await supabase.auth.signInWithPassword({ email, password })
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           throw new Error('Email ou mot de passe incorrect')
@@ -107,20 +128,13 @@ export function useAuth() {
     reset()
   }, [reset])
 
-  // profileReady = true when either:
-  // - not authenticated (no profile needed)
-  // - profile is loaded (role is set)
-  const isAuthenticated = !!session
-  const profileReady = !isAuthenticated || role !== null
-
   return {
     user: session?.user ?? null,
     userProfile,
     role,
     tenantId,
-    // isLoading is true until BOTH session check AND profile fetch are done
-    isLoading: isLoading || (isAuthenticated && !profileReady),
-    isAuthenticated,
+    isLoading,
+    isAuthenticated: !!session,
     signIn,
     signOut,
   }

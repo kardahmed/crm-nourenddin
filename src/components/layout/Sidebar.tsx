@@ -56,8 +56,8 @@ export function Sidebar() {
     <aside className="flex h-screen w-[220px] shrink-0 flex-col border-r border-immo-border-default bg-immo-bg-sidebar rtl:border-l rtl:border-r-0">
       {/* Logo */}
       <div className="flex items-center gap-3 px-5 py-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-immo-accent-green font-bold text-immo-bg-sidebar text-sm">
-          IX
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-immo-accent-green font-bold text-white text-sm">
+          IP
         </div>
         <div>
           <div className="text-sm font-bold tracking-tight text-immo-text-primary">

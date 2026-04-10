@@ -63,14 +63,14 @@ export function ChangePlanModal({ isOpen, onClose, tenantId, tenantName, current
                 className={`relative rounded-xl border p-4 text-left transition-all ${
                   isSelected
                     ? 'border-[#7C3AED] bg-[#7C3AED]/5 ring-1 ring-[#7C3AED]/30'
-                    : 'border-[#1E325A] hover:border-[#7F96B7]'
+                    : 'border-immo-border-default hover:border-immo-text-secondary'
                 }`}
               >
                 {isCurrent && (
                   <span className="absolute -top-2 right-3 rounded-full bg-[#7C3AED] px-2 py-0.5 text-[9px] font-bold text-white">ACTUEL</span>
                 )}
                 <p className={`text-sm font-bold ${meta.color}`}>{meta.label}</p>
-                <p className="mt-1 text-lg font-bold text-white">{formatPlanPrice(p.price_monthly)}</p>
+                <p className="mt-1 text-lg font-bold text-immo-text-primary">{formatPlanPrice(p.price_monthly)}</p>
                 <div className="mt-3 space-y-1.5">
                   <LimitRow label="Agents" value={p.max_agents} />
                   <LimitRow label="Projets" value={p.max_projects} />
@@ -79,11 +79,11 @@ export function ChangePlanModal({ isOpen, onClose, tenantId, tenantName, current
                   <LimitRow label="Stockage" value={`${p.max_storage_mb} MB`} />
                 </div>
                 {/* Features */}
-                <div className="mt-3 border-t border-[#1E325A] pt-2 space-y-1">
+                <div className="mt-3 border-t border-immo-border-default pt-2 space-y-1">
                   {Object.entries(p.features).map(([key, enabled]) => (
                     <div key={key} className="flex items-center gap-1.5">
-                      <div className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-[#00D4A0]' : 'bg-[#1E325A]'}`} />
-                      <span className={`text-[10px] ${enabled ? 'text-[#7F96B7]' : 'text-[#4E6687] line-through'}`}>
+                      <div className={`h-1.5 w-1.5 rounded-full ${enabled ? 'bg-immo-accent-green' : 'bg-immo-border-default'}`} />
+                      <span className={`text-[10px] ${enabled ? 'text-immo-text-secondary' : 'text-immo-text-muted line-through'}`}>
                         {key.replace(/_/g, ' ')}
                       </span>
                     </div>
@@ -94,8 +94,8 @@ export function ChangePlanModal({ isOpen, onClose, tenantId, tenantName, current
           })}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-[#1E325A] pt-4">
-          <Button variant="ghost" onClick={onClose} className="text-[#7F96B7]">Annuler</Button>
+        <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary">Annuler</Button>
           <Button
             onClick={() => changePlan.mutate()}
             disabled={selected === currentPlan || changePlan.isPending}
@@ -116,8 +116,8 @@ function LimitRow({ label, value }: { label: string; value: number | string }) {
   const display = typeof value === 'number' && value >= 999 ? 'Illimite' : String(value)
   return (
     <div className="flex items-center justify-between">
-      <span className="text-[11px] text-[#7F96B7]">{label}</span>
-      <span className="text-[11px] font-medium text-white">{display}</span>
+      <span className="text-[11px] text-immo-text-secondary">{label}</span>
+      <span className="text-[11px] font-medium text-immo-text-primary">{display}</span>
     </div>
   )
 }

@@ -19,23 +19,23 @@ export function SuperAdminLayout() {
   const { inspectedTenantId, inspectedTenantName, leaveTenant } = useSuperAdminStore()
 
   return (
-    <div className="flex h-screen bg-[#060A15]">
+    <div className="flex h-screen bg-immo-bg-primary">
       {/* Sidebar */}
-      <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#1E325A]/50 bg-[#060A15]">
+      <aside className="flex w-[240px] shrink-0 flex-col border-r border-immo-border-default/50 bg-immo-bg-card">
         {/* Logo */}
         <div className="flex items-center gap-3 px-5 py-5">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-[#7C3AED]">
             <span className="text-sm font-bold text-white">IP</span>
           </div>
           <div>
-            <h1 className="text-sm font-bold text-white">IMMO PRO-X</h1>
+            <h1 className="text-sm font-bold text-immo-text-primary">IMMO PRO-X</h1>
             <span className="rounded-sm bg-[#7C3AED]/20 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-[#7C3AED]">
               Super Admin
             </span>
           </div>
         </div>
 
-        <div className="my-2 mx-5 h-px bg-[#1E325A]/50" />
+        <div className="my-2 mx-5 h-px bg-immo-border-default/50" />
 
         {/* Nav */}
         <nav className="flex-1 space-y-1 px-3 py-2">
@@ -48,7 +48,7 @@ export function SuperAdminLayout() {
                 `flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors ${
                   isActive
                     ? 'bg-[#7C3AED]/15 font-medium text-[#7C3AED]'
-                    : 'text-[#7F96B7] hover:bg-[#0F1830] hover:text-white'
+                    : 'text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary'
                 }`
               }
             >
@@ -70,10 +70,10 @@ export function SuperAdminLayout() {
         )}
 
         {/* Logout */}
-        <div className="border-t border-[#1E325A]/50 p-3">
+        <div className="border-t border-immo-border-default/50 p-3">
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[#7F96B7] hover:bg-[#0F1830] hover:text-white"
+            className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
             <LogOut className="h-4 w-4" />
             Deconnexion
@@ -84,23 +84,23 @@ export function SuperAdminLayout() {
       {/* Main content */}
       <main className="flex-1 overflow-y-auto">
         {/* Topbar with search */}
-        <div className="flex items-center justify-between border-b border-[#1E325A]/50 bg-[#060A15] px-6 py-3">
+        <div className="flex items-center justify-between border-b border-immo-border-default/50 bg-immo-bg-card px-6 py-3">
           <GlobalSearch />
           <div className="flex items-center gap-3">
             <NotificationCenter />
-            <span className="text-xs text-[#4E6687]">Super Admin Panel</span>
+            <span className="text-xs text-immo-text-muted">Super Admin Panel</span>
           </div>
         </div>
 
         {/* Inspection banner */}
         {inspectedTenantId && (
-          <div className="flex items-center justify-between bg-[#FF9A1E] px-5 py-2">
-            <span className="text-sm font-semibold text-[#0A1030]">
+          <div className="flex items-center justify-between bg-immo-status-orange px-5 py-2">
+            <span className="text-sm font-semibold text-white">
               Mode inspection : {inspectedTenantName}
             </span>
             <button
               onClick={() => { leaveTenant(); navigate('/admin') }}
-              className="rounded-md bg-[#0A1030]/20 px-3 py-1 text-xs font-medium text-[#0A1030] hover:bg-[#0A1030]/30"
+              className="rounded-md bg-black/20 px-3 py-1 text-xs font-medium text-white hover:bg-black/30"
             >
               Retour admin
             </button>

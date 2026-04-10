@@ -62,35 +62,35 @@ export function GlobalStatsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Statistiques globales</h1>
-        <p className="text-sm text-[#7F96B7]">Vue d'ensemble de la plateforme</p>
+        <h1 className="text-2xl font-bold text-immo-text-primary">Statistiques globales</h1>
+        <p className="text-sm text-immo-text-secondary">Vue d'ensemble de la plateforme</p>
       </div>
 
       {/* Charts */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {/* Clients per month */}
-        <div className="rounded-xl border border-[#1E325A] bg-[#0A1030] p-5">
-          <h3 className="mb-4 text-sm font-semibold text-white">Clients par mois</h3>
+        <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
+          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Clients par mois</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={data.months}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E325A" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-immo-border-default, #E2E8F0)" />
               <XAxis dataKey="month" tick={chartStyle} />
               <YAxis tick={chartStyle} />
-              <Tooltip contentStyle={{ background: '#0F1830', border: '1px solid #1E325A', borderRadius: 8, color: '#fff' }} />
+              <Tooltip contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, color: '#0A2540' }} />
               <Bar dataKey="clients" fill="#7C3AED" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Sales per month */}
-        <div className="rounded-xl border border-[#1E325A] bg-[#0A1030] p-5">
-          <h3 className="mb-4 text-sm font-semibold text-white">Ventes par mois</h3>
+        <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
+          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Ventes par mois</h3>
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={data.months}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1E325A" />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-immo-border-default, #E2E8F0)" />
               <XAxis dataKey="month" tick={chartStyle} />
               <YAxis tick={chartStyle} />
-              <Tooltip contentStyle={{ background: '#0F1830', border: '1px solid #1E325A', borderRadius: 8, color: '#fff' }} />
+              <Tooltip contentStyle={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 8, color: '#0A2540' }} />
               <Line type="monotone" dataKey="sales" stroke="#00D4A0" strokeWidth={2} dot={{ fill: '#00D4A0', r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -100,36 +100,36 @@ export function GlobalStatsPage() {
       {/* Top tables */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
         {/* Top by revenue */}
-        <div className="rounded-xl border border-[#1E325A] bg-[#0A1030]">
-          <div className="border-b border-[#1E325A] px-5 py-4">
-            <h3 className="text-sm font-semibold text-white">Top 5 — Chiffre d'affaires</h3>
+        <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
+          <div className="border-b border-immo-border-default px-5 py-4">
+            <h3 className="text-sm font-semibold text-immo-text-primary">Top 5 — Chiffre d'affaires</h3>
           </div>
-          <div className="divide-y divide-[#1E325A]">
+          <div className="divide-y divide-immo-border-default">
             {data.topRevenue.map((t, i) => (
               <div key={t.name} className="flex items-center gap-3 px-5 py-3">
                 <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7C3AED]/15 text-xs font-bold text-[#7C3AED]">{i + 1}</span>
-                <span className="flex-1 text-sm text-white">{t.name}</span>
-                <span className="text-sm font-semibold text-[#00D4A0]">{formatPriceCompact(t.revenue)}</span>
+                <span className="flex-1 text-sm text-immo-text-primary">{t.name}</span>
+                <span className="text-sm font-semibold text-immo-accent-green">{formatPriceCompact(t.revenue)}</span>
               </div>
             ))}
-            {data.topRevenue.length === 0 && <div className="py-6 text-center text-sm text-[#7F96B7]">Aucune donnee</div>}
+            {data.topRevenue.length === 0 && <div className="py-6 text-center text-sm text-immo-text-secondary">Aucune donnee</div>}
           </div>
         </div>
 
         {/* Top by clients */}
-        <div className="rounded-xl border border-[#1E325A] bg-[#0A1030]">
-          <div className="border-b border-[#1E325A] px-5 py-4">
-            <h3 className="text-sm font-semibold text-white">Top 5 — Nombre de clients</h3>
+        <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
+          <div className="border-b border-immo-border-default px-5 py-4">
+            <h3 className="text-sm font-semibold text-immo-text-primary">Top 5 — Nombre de clients</h3>
           </div>
-          <div className="divide-y divide-[#1E325A]">
+          <div className="divide-y divide-immo-border-default">
             {data.topClients.map((t, i) => (
               <div key={t.name} className="flex items-center gap-3 px-5 py-3">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF9A1E]/15 text-xs font-bold text-[#FF9A1E]">{i + 1}</span>
-                <span className="flex-1 text-sm text-white">{t.name}</span>
-                <span className="text-sm font-semibold text-white">{t.clients}</span>
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-immo-status-orange/15 text-xs font-bold text-immo-status-orange">{i + 1}</span>
+                <span className="flex-1 text-sm text-immo-text-primary">{t.name}</span>
+                <span className="text-sm font-semibold text-immo-text-primary">{t.clients}</span>
               </div>
             ))}
-            {data.topClients.length === 0 && <div className="py-6 text-center text-sm text-[#7F96B7]">Aucune donnee</div>}
+            {data.topClients.length === 0 && <div className="py-6 text-center text-sm text-immo-text-secondary">Aucune donnee</div>}
           </div>
         </div>
       </div>

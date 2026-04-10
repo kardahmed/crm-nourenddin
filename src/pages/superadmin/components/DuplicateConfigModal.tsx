@@ -129,14 +129,14 @@ export function DuplicateConfigModal({ isOpen, onClose, sourceTenantId, sourceTe
       <div className="space-y-4">
         {/* Target tenant */}
         <div>
-          <Label className="text-[11px] font-medium text-[#7F96B7]">Tenant cible *</Label>
+          <Label className="text-[11px] font-medium text-immo-text-secondary">Tenant cible *</Label>
           <Select value={targetId} onValueChange={v => { if (v) setTargetId(v) }}>
-            <SelectTrigger className="border-[#1E325A] bg-[#0A1030] text-white">
+            <SelectTrigger className="border-immo-border-default bg-immo-bg-card text-immo-text-primary">
               <SelectValue placeholder="Selectionner un tenant..." />
             </SelectTrigger>
-            <SelectContent className="border-[#1E325A] bg-[#0F1830]">
+            <SelectContent className="border-immo-border-default bg-immo-bg-card">
               {tenants.map(t => (
-                <SelectItem key={t.id} value={t.id} className="text-white focus:bg-[#1E325A]">
+                <SelectItem key={t.id} value={t.id} className="text-immo-text-primary focus:bg-immo-bg-card-hover">
                   {t.name}
                 </SelectItem>
               ))}
@@ -146,18 +146,18 @@ export function DuplicateConfigModal({ isOpen, onClose, sourceTenantId, sourceTe
 
         {/* What to copy */}
         <div className="space-y-2">
-          <p className="text-xs font-medium text-[#7F96B7]">Elements a copier :</p>
+          <p className="text-xs font-medium text-immo-text-secondary">Elements a copier :</p>
           <CheckboxRow label="Parametres reservation (duree, acompte min)" checked={copySettings} onChange={setCopySettings} />
           <CheckboxRow label="Configuration pipeline (alertes urgentes, relance)" checked={copyPipeline} onChange={setCopyPipeline} />
           <CheckboxRow label="Templates documents (contrat, echeancier, bon)" checked={copyTemplates} onChange={setCopyTemplates} />
         </div>
 
-        <p className="text-[11px] text-[#FF9A1E]">
+        <p className="text-[11px] text-immo-status-orange">
           Les parametres existants du tenant cible seront ecrases.
         </p>
 
-        <div className="flex justify-end gap-3 border-t border-[#1E325A] pt-4">
-          <Button variant="ghost" onClick={onClose} className="text-[#7F96B7]">Annuler</Button>
+        <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary">Annuler</Button>
           <Button
             onClick={() => duplicate.mutate()}
             disabled={!targetId || (!copySettings && !copyTemplates && !copyPipeline) || duplicate.isPending}
@@ -176,16 +176,16 @@ export function DuplicateConfigModal({ isOpen, onClose, sourceTenantId, sourceTe
 
 function CheckboxRow({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-[#1E325A] px-3 py-2.5 hover:bg-[#0F1830]">
+    <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-immo-border-default px-3 py-2.5 hover:bg-immo-bg-card-hover">
       <div
         onClick={() => onChange(!checked)}
         className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border transition-colors ${
-          checked ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-[#1E325A]'
+          checked ? 'border-[#7C3AED] bg-[#7C3AED]' : 'border-immo-border-default'
         }`}
       >
-        {checked && <span className="text-[10px] text-white">✓</span>}
+        {checked && <span className="text-[10px] text-white">&#10003;</span>}
       </div>
-      <span className="text-xs text-[#7F96B7]">{label}</span>
+      <span className="text-xs text-immo-text-secondary">{label}</span>
     </label>
   )
 }

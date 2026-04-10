@@ -102,17 +102,17 @@ export function GlobalSearch() {
   return (
     <div ref={containerRef} className="relative">
       <div className="relative">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4E6687]" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-immo-text-muted" />
         <input
           ref={inputRef}
           value={query}
           onChange={e => { setQuery(e.target.value); setOpen(true) }}
           onFocus={() => setOpen(true)}
           placeholder="Recherche globale... (Ctrl+K)"
-          className="h-9 w-[320px] rounded-lg border border-[#1E325A] bg-[#0A1030] pl-9 pr-8 text-sm text-white placeholder-[#4E6687] outline-none focus:border-[#7C3AED]"
+          className="h-9 w-[320px] rounded-lg border border-immo-border-default bg-immo-bg-primary pl-9 pr-8 text-sm text-immo-text-primary placeholder-immo-text-muted outline-none focus:border-[#7C3AED]"
         />
         {query && (
-          <button onClick={() => { setQuery(''); setOpen(false) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-[#4E6687] hover:text-white">
+          <button onClick={() => { setQuery(''); setOpen(false) }} className="absolute right-2 top-1/2 -translate-y-1/2 text-immo-text-muted hover:text-immo-text-primary">
             <X className="h-3.5 w-3.5" />
           </button>
         )}
@@ -120,31 +120,31 @@ export function GlobalSearch() {
 
       {/* Results dropdown */}
       {open && query.length >= 2 && (
-        <div className="absolute left-0 top-full z-50 mt-1 w-[400px] rounded-xl border border-[#1E325A] bg-[#0F1830] shadow-2xl shadow-black/50">
+        <div className="absolute left-0 top-full z-50 mt-1 w-[400px] rounded-xl border border-immo-border-default bg-immo-bg-card shadow-2xl shadow-black/10">
           {isFetching && (
-            <div className="px-4 py-3 text-center text-xs text-[#7F96B7]">Recherche...</div>
+            <div className="px-4 py-3 text-center text-xs text-immo-text-secondary">Recherche...</div>
           )}
           {!isFetching && results.length === 0 && (
-            <div className="px-4 py-6 text-center text-xs text-[#7F96B7]">Aucun resultat pour "{query}"</div>
+            <div className="px-4 py-6 text-center text-xs text-immo-text-secondary">Aucun resultat pour "{query}"</div>
           )}
           {!isFetching && results.length > 0 && (
-            <div className="max-h-[400px] divide-y divide-[#1E325A] overflow-y-auto">
+            <div className="max-h-[400px] divide-y divide-immo-border-default overflow-y-auto">
               {results.map((r, i) => {
                 const Icon = ICONS[r.type]
                 return (
                   <button
                     key={`${r.type}-${r.id}-${i}`}
                     onClick={() => handleSelect(r)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#1E325A]/50"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-immo-bg-card-hover"
                   >
                     <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#7C3AED]/10">
                       <Icon className="h-4 w-4 text-[#7C3AED]" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm text-white">{r.title}</p>
-                      <p className="truncate text-[11px] text-[#7F96B7]">{r.subtitle}</p>
+                      <p className="text-sm text-immo-text-primary">{r.title}</p>
+                      <p className="truncate text-[11px] text-immo-text-secondary">{r.subtitle}</p>
                     </div>
-                    <span className="shrink-0 rounded-full bg-[#1E325A] px-2 py-0.5 text-[9px] uppercase text-[#7F96B7]">
+                    <span className="shrink-0 rounded-full bg-immo-bg-primary px-2 py-0.5 text-[9px] uppercase text-immo-text-secondary">
                       {r.type}
                     </span>
                   </button>

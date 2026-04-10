@@ -6,7 +6,7 @@ export function ProtectedRoute() {
   const { isAuthenticated, isLoading, role } = useAuth()
   const { inspectedTenantId } = useSuperAdminStore()
 
-  // Wait until session AND profile are fully loaded
+  // Wait until session check AND profile fetch are complete
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-immo-bg-primary">
@@ -19,6 +19,12 @@ export function ProtectedRoute() {
   }
 
   if (!isAuthenticated) {
+    return <Navigate to="/login" replace />
+  }
+
+  // Profile loaded but role is null (fetch failed) → login
+  if (role === null) {
+    console.warn('[ProtectedRoute] Role is null after loading, redirecting to login')
     return <Navigate to="/login" replace />
   }
 

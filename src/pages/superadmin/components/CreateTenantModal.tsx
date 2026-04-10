@@ -8,8 +8,8 @@ import { Separator } from '@/components/ui/separator'
 import { WILAYAS } from '@/lib/constants'
 import toast from 'react-hot-toast'
 
-const inputClass = 'border-[#1E325A] bg-[#0A1030] text-white placeholder-[#4E6687]'
-const labelClass = 'text-[11px] font-medium text-[#7F96B7]'
+const inputClass = 'border-immo-border-default bg-immo-bg-card text-immo-text-primary placeholder-immo-text-muted'
+const labelClass = 'text-[11px] font-medium text-immo-text-secondary'
 
 interface CreateTenantModalProps {
   isOpen: boolean
@@ -100,12 +100,12 @@ export function CreateTenantModal({ isOpen, onClose, onSuccess }: CreateTenantMo
           </div>
         </div>
 
-        <Separator className="bg-[#1E325A]" />
+        <Separator className="bg-immo-border-default" />
 
         {/* Admin info */}
         <div>
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-[#7C3AED]">Administrateur du tenant</h4>
-          <p className="mb-3 text-[11px] text-[#7F96B7]">Un email d'invitation sera envoye a cet administrateur</p>
+          <p className="mb-3 text-[11px] text-immo-text-secondary">Un email d'invitation sera envoye a cet administrateur</p>
           <div className="grid grid-cols-2 gap-3">
             <div><Label className={labelClass}>Prenom *</Label><Input value={adminFirstName} onChange={e => setAdminFirstName(e.target.value)} className={inputClass} /></div>
             <div><Label className={labelClass}>Nom *</Label><Input value={adminLastName} onChange={e => setAdminLastName(e.target.value)} className={inputClass} /></div>
@@ -114,8 +114,8 @@ export function CreateTenantModal({ isOpen, onClose, onSuccess }: CreateTenantMo
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-3 border-t border-[#1E325A] pt-4">
-          <Button variant="ghost" onClick={onClose} className="text-[#7F96B7] hover:bg-[#1E325A] hover:text-white">
+        <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary">
             Annuler
           </Button>
           <Button

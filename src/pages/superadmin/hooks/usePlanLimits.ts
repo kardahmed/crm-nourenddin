@@ -15,10 +15,10 @@ export interface PlanLimit {
 }
 
 export const PLAN_LABELS: Record<PlanKey, { label: string; color: string; bg: string }> = {
-  free:       { label: 'Free',       color: 'text-[#7F96B7]', bg: 'bg-[#7F96B7]/10' },
-  starter:    { label: 'Starter',    color: 'text-[#3782FF]', bg: 'bg-[#3782FF]/10' },
+  free:       { label: 'Free',       color: 'text-immo-text-secondary', bg: 'bg-immo-text-secondary/10' },
+  starter:    { label: 'Starter',    color: 'text-immo-accent-blue', bg: 'bg-immo-accent-blue/10' },
   pro:        { label: 'Pro',        color: 'text-[#7C3AED]', bg: 'bg-[#7C3AED]/10' },
-  enterprise: { label: 'Enterprise', color: 'text-[#FF9A1E]', bg: 'bg-[#FF9A1E]/10' },
+  enterprise: { label: 'Enterprise', color: 'text-immo-status-orange', bg: 'bg-immo-status-orange/10' },
 }
 
 export function usePlanLimits() {

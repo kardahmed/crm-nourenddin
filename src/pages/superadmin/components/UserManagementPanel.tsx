@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import toast from 'react-hot-toast'
 
-const inputClass = 'border-[#1E325A] bg-[#0A1030] text-white placeholder-[#4E6687]'
+const inputClass = 'border-immo-border-default bg-immo-bg-card text-immo-text-primary placeholder-immo-text-muted'
 
 interface UserRow {
   id: string
@@ -74,7 +74,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     qc.invalidateQueries({ queryKey: ['super-admin-tenant-kpis', tenantId] })
   }
 
-  // ─── Change role ───
+  // --- Change role ---
   const changeRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
       await callManageUser('update_role', { tenant_id: tenantId, user_id: userId, new_role: newRole })
@@ -83,7 +83,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     onError: (err: Error) => toast.error(err.message),
   })
 
-  // ─── Toggle status ───
+  // --- Toggle status ---
   const toggleStatus = useMutation({
     mutationFn: async ({ userId, newStatus }: { userId: string; newStatus: string }) => {
       await callManageUser('toggle_status', { tenant_id: tenantId, user_id: userId, new_status: newStatus })
@@ -92,7 +92,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     onError: (err: Error) => toast.error(err.message),
   })
 
-  // ─── Reset password ───
+  // --- Reset password ---
   const resetPassword = useMutation({
     mutationFn: async (userId: string) => {
       return await callManageUser('reset_password', { tenant_id: tenantId, user_id: userId })
@@ -101,7 +101,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     onError: (err: Error) => toast.error(err.message),
   })
 
-  // ─── Delete user ───
+  // --- Delete user ---
   const deleteUser = useMutation({
     mutationFn: async (userId: string) => {
       await callManageUser('delete_user', { tenant_id: tenantId, user_id: userId })
@@ -111,17 +111,17 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
   })
 
   return (
-    <div className="rounded-xl border border-[#1E325A] bg-[#0A1030]">
-      <div className="flex items-center justify-between border-b border-[#1E325A] px-5 py-4">
-        <h3 className="text-sm font-semibold text-white">Utilisateurs ({users.length})</h3>
+    <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
+      <div className="flex items-center justify-between border-b border-immo-border-default px-5 py-4">
+        <h3 className="text-sm font-semibold text-immo-text-primary">Utilisateurs ({users.length})</h3>
         <Button onClick={() => setShowCreate(true)} size="sm" className="bg-[#7C3AED] text-xs font-semibold text-white hover:bg-[#6D28D9]">
           <Plus className="mr-1 h-3.5 w-3.5" /> Ajouter
         </Button>
       </div>
 
-      <div className="max-h-[500px] divide-y divide-[#1E325A] overflow-y-auto">
+      <div className="max-h-[500px] divide-y divide-immo-border-default overflow-y-auto">
         {users.map(u => (
-          <div key={u.id} className="flex items-center gap-3 px-5 py-3 hover:bg-[#0F1830]">
+          <div key={u.id} className="flex items-center gap-3 px-5 py-3 hover:bg-immo-bg-card-hover">
             {/* Avatar */}
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#7C3AED]/15 text-xs font-semibold text-[#7C3AED]">
               {u.first_name[0]}{u.last_name[0]}
@@ -129,8 +129,8 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-              <p className="text-sm text-white">{u.first_name} {u.last_name}</p>
-              <p className="text-[11px] text-[#7F96B7]">{u.email}</p>
+              <p className="text-sm text-immo-text-primary">{u.first_name} {u.last_name}</p>
+              <p className="text-[11px] text-immo-text-secondary">{u.email}</p>
             </div>
 
             {/* Role badge */}
@@ -141,14 +141,14 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
 
             {/* Actions dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger className="rounded-md p-1.5 text-[#7F96B7] hover:bg-[#1E325A] hover:text-white">
+              <DropdownMenuTrigger className="rounded-md p-1.5 text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary">
                 <MoreVertical className="h-4 w-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="border-[#1E325A] bg-[#0F1830]">
+              <DropdownMenuContent align="end" className="border-immo-border-default bg-immo-bg-card">
                 {/* Toggle role */}
                 <DropdownMenuItem
                   onClick={() => changeRole.mutate({ userId: u.id, newRole: u.role === 'admin' ? 'agent' : 'admin' })}
-                  className="text-sm text-[#7F96B7] focus:bg-[#1E325A] focus:text-white"
+                  className="text-sm text-immo-text-secondary focus:bg-immo-bg-card-hover focus:text-immo-text-primary"
                 >
                   {u.role === 'admin' ? <Shield className="mr-2 h-4 w-4" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                   {u.role === 'admin' ? 'Passer en Agent' : 'Passer en Admin'}
@@ -160,7 +160,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
                     type: 'toggle_status', user: u,
                     newStatus: u.status === 'active' ? 'inactive' : 'active',
                   })}
-                  className="text-sm text-[#7F96B7] focus:bg-[#1E325A] focus:text-white"
+                  className="text-sm text-immo-text-secondary focus:bg-immo-bg-card-hover focus:text-immo-text-primary"
                 >
                   <UserX className="mr-2 h-4 w-4" />
                   {u.status === 'active' ? 'Desactiver' : 'Reactiver'}
@@ -169,7 +169,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
                 {/* Reset password */}
                 <DropdownMenuItem
                   onClick={() => setConfirmAction({ type: 'reset_password', user: u })}
-                  className="text-sm text-[#7F96B7] focus:bg-[#1E325A] focus:text-white"
+                  className="text-sm text-immo-text-secondary focus:bg-immo-bg-card-hover focus:text-immo-text-primary"
                 >
                   <KeyRound className="mr-2 h-4 w-4" />
                   Reset mot de passe
@@ -178,7 +178,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
                 {/* Delete */}
                 <DropdownMenuItem
                   onClick={() => setConfirmAction({ type: 'delete_user', user: u })}
-                  className="text-sm text-[#FF4949] focus:bg-[#320F0F] focus:text-[#FF4949]"
+                  className="text-sm text-immo-status-red focus:bg-immo-status-red-bg focus:text-immo-status-red"
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Supprimer
@@ -188,7 +188,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
           </div>
         ))}
         {users.length === 0 && !isLoading && (
-          <div className="py-8 text-center text-sm text-[#7F96B7]">Aucun utilisateur</div>
+          <div className="py-8 text-center text-sm text-immo-text-secondary">Aucun utilisateur</div>
         )}
       </div>
 
@@ -234,7 +234,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
   )
 }
 
-// ─── Create User Modal ───
+// --- Create User Modal ---
 
 function CreateUserModal({ isOpen, tenantId, onClose, onSuccess }: {
   isOpen: boolean; tenantId: string; onClose: () => void; onSuccess: () => void
@@ -271,23 +271,23 @@ function CreateUserModal({ isOpen, tenantId, onClose, onSuccess }: {
     <Modal isOpen={isOpen} onClose={onClose} title="Ajouter un utilisateur" size="sm">
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-[11px] text-[#7F96B7]">Prenom *</Label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className={inputClass} /></div>
-          <div><Label className="text-[11px] text-[#7F96B7]">Nom *</Label><Input value={lastName} onChange={e => setLastName(e.target.value)} className={inputClass} /></div>
+          <div><Label className="text-[11px] text-immo-text-secondary">Prenom *</Label><Input value={firstName} onChange={e => setFirstName(e.target.value)} className={inputClass} /></div>
+          <div><Label className="text-[11px] text-immo-text-secondary">Nom *</Label><Input value={lastName} onChange={e => setLastName(e.target.value)} className={inputClass} /></div>
         </div>
-        <div><Label className="text-[11px] text-[#7F96B7]">Email *</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} /></div>
+        <div><Label className="text-[11px] text-immo-text-secondary">Email *</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} className={inputClass} /></div>
         <div>
-          <Label className="text-[11px] text-[#7F96B7]">Role</Label>
+          <Label className="text-[11px] text-immo-text-secondary">Role</Label>
           <Select value={role} onValueChange={v => setRole(v as 'admin' | 'agent')}>
             <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-            <SelectContent className="border-[#1E325A] bg-[#0F1830]">
-              <SelectItem value="admin" className="text-white focus:bg-[#1E325A]">Administrateur</SelectItem>
-              <SelectItem value="agent" className="text-white focus:bg-[#1E325A]">Agent commercial</SelectItem>
+            <SelectContent className="border-immo-border-default bg-immo-bg-card">
+              <SelectItem value="admin" className="text-immo-text-primary focus:bg-immo-bg-card-hover">Administrateur</SelectItem>
+              <SelectItem value="agent" className="text-immo-text-primary focus:bg-immo-bg-card-hover">Agent commercial</SelectItem>
             </SelectContent>
           </Select>
         </div>
-        <p className="text-[11px] text-[#7F96B7]">Un email d'invitation sera envoye automatiquement.</p>
+        <p className="text-[11px] text-immo-text-secondary">Un email d'invitation sera envoye automatiquement.</p>
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="ghost" onClick={onClose} className="text-[#7F96B7]">Annuler</Button>
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary">Annuler</Button>
           <Button onClick={handleCreate} disabled={!firstName || !lastName || !email || loading}
             className="bg-[#7C3AED] font-semibold text-white hover:bg-[#6D28D9]">
             {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : 'Inviter'}

@@ -117,20 +117,20 @@ export function TenantDetailPage() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <button onClick={() => navigate('/admin')} className="rounded-lg p-2 text-[#7F96B7] hover:bg-[#1E325A]">
+        <button onClick={() => navigate('/admin')} className="rounded-lg p-2 text-immo-text-secondary hover:bg-immo-bg-card-hover">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="flex-1">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-white">{tenant.name as string}</h1>
+            <h1 className="text-2xl font-bold text-immo-text-primary">{tenant.name as string}</h1>
             <PlanBadge plan={(tenant.plan as string) ?? 'free'} />
           </div>
-          <p className="text-sm text-[#7F96B7]">{tenant.email as string} · {tenant.wilaya as string ?? '-'}</p>
+          <p className="text-sm text-immo-text-secondary">{tenant.email as string} · {tenant.wilaya as string ?? '-'}</p>
         </div>
         <div className="flex gap-2">
           <Button
             onClick={() => setShowDuplicate(true)}
-            className="border border-[#1E325A] bg-transparent text-[#7F96B7] hover:bg-[#1E325A] hover:text-white"
+            className="border border-immo-border-default bg-transparent text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
             Dupliquer config
           </Button>
@@ -144,8 +144,8 @@ export function TenantDetailPage() {
             onClick={() => toggleMaintenance.mutate()}
             disabled={toggleMaintenance.isPending}
             className={isMaintenance
-              ? 'border border-[#FF4949]/30 bg-[#FF4949]/10 text-[#FF4949] hover:bg-[#FF4949]/20'
-              : 'border border-[#1E325A] bg-transparent text-[#7F96B7] hover:bg-[#1E325A] hover:text-white'
+              ? 'border border-immo-status-red/30 bg-immo-status-red/10 text-immo-status-red hover:bg-immo-status-red/20'
+              : 'border border-immo-border-default bg-transparent text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary'
             }
           >
             <Power className="mr-1.5 h-4 w-4" />
@@ -160,11 +160,11 @@ export function TenantDetailPage() {
 
       {/* Maintenance banner */}
       {isMaintenance && (
-        <div className="flex items-center gap-3 rounded-xl border border-[#FF4949]/30 bg-[#320F0F]/50 px-4 py-3">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-[#FF4949]" />
+        <div className="flex items-center gap-3 rounded-xl border border-immo-status-red/30 bg-immo-status-red-bg px-4 py-3">
+          <AlertTriangle className="h-5 w-5 shrink-0 text-immo-status-red" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-[#FF4949]">Mode maintenance actif</p>
-            <p className="text-[11px] text-[#FF9A9A]">Les utilisateurs de ce tenant ne peuvent pas acceder a l'application</p>
+            <p className="text-sm font-semibold text-immo-status-red">Mode maintenance actif</p>
+            <p className="text-[11px] text-immo-status-red/70">Les utilisateurs de ce tenant ne peuvent pas acceder a l'application</p>
           </div>
         </div>
       )}
@@ -172,13 +172,13 @@ export function TenantDetailPage() {
       {/* KPIs */}
       {kpis && (
         <div className="grid grid-cols-4 gap-4 xl:grid-cols-7">
-          <KPICard label="Agents" value={kpis.agents} accent="blue" icon={<Users className="h-5 w-5 text-[#3782FF]" />} />
-          <KPICard label="Clients" value={kpis.clients} accent="orange" icon={<Briefcase className="h-5 w-5 text-[#FF9A1E]" />} />
+          <KPICard label="Agents" value={kpis.agents} accent="blue" icon={<Users className="h-5 w-5 text-immo-accent-blue" />} />
+          <KPICard label="Clients" value={kpis.clients} accent="orange" icon={<Briefcase className="h-5 w-5 text-immo-status-orange" />} />
           <KPICard label="Projets" value={kpis.projects} accent="blue" icon={<Building2 className="h-5 w-5 text-[#7C3AED]" />} />
-          <KPICard label="Biens" value={kpis.units} accent="blue" icon={<Home className="h-5 w-5 text-[#3782FF]" />} />
-          <KPICard label="CA" value={formatPriceCompact(kpis.revenue)} accent="green" icon={<DollarSign className="h-5 w-5 text-[#00D4A0]" />} />
-          <KPICard label="Reservations" value={kpis.reservations} accent="orange" icon={<Bookmark className="h-5 w-5 text-[#FF9A1E]" />} />
-          <KPICard label="Ventes" value={kpis.sales} accent="green" icon={<CheckCircle className="h-5 w-5 text-[#00D4A0]" />} />
+          <KPICard label="Biens" value={kpis.units} accent="blue" icon={<Home className="h-5 w-5 text-immo-accent-blue" />} />
+          <KPICard label="CA" value={formatPriceCompact(kpis.revenue)} accent="green" icon={<DollarSign className="h-5 w-5 text-immo-accent-green" />} />
+          <KPICard label="Reservations" value={kpis.reservations} accent="orange" icon={<Bookmark className="h-5 w-5 text-immo-status-orange" />} />
+          <KPICard label="Ventes" value={kpis.sales} accent="green" icon={<CheckCircle className="h-5 w-5 text-immo-accent-green" />} />
         </div>
       )}
 
@@ -187,19 +187,19 @@ export function TenantDetailPage() {
         <UserManagementPanel tenantId={tenantId!} />
 
         {/* Projects */}
-        <div className="rounded-xl border border-[#1E325A] bg-[#0A1030]">
-          <div className="border-b border-[#1E325A] px-5 py-4">
-            <h3 className="text-sm font-semibold text-white">Projets ({projects.length})</h3>
+        <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
+          <div className="border-b border-immo-border-default px-5 py-4">
+            <h3 className="text-sm font-semibold text-immo-text-primary">Projets ({projects.length})</h3>
           </div>
-          <div className="max-h-[400px] divide-y divide-[#1E325A] overflow-y-auto">
+          <div className="max-h-[400px] divide-y divide-immo-border-default overflow-y-auto">
             {projects.map(p => {
               const units = (p.units as Array<{ id: string; status: string }>) ?? []
               const sold = units.filter(u => u.status === 'sold').length
               return (
                 <div key={p.id as string} className="flex items-center justify-between px-5 py-3">
                   <div>
-                    <p className="text-sm text-white">{p.name as string}</p>
-                    <p className="text-[11px] text-[#7F96B7]">{units.length} biens · {sold} vendus</p>
+                    <p className="text-sm text-immo-text-primary">{p.name as string}</p>
+                    <p className="text-[11px] text-immo-text-secondary">{units.length} biens · {sold} vendus</p>
                   </div>
                   <StatusBadge label={p.status as string} type={p.status === 'active' ? 'green' : 'muted'} />
                 </div>
@@ -210,27 +210,27 @@ export function TenantDetailPage() {
       </div>
 
       {/* Activity */}
-      <div className="rounded-xl border border-[#1E325A] bg-[#0A1030]">
-        <div className="border-b border-[#1E325A] px-5 py-4">
-          <h3 className="text-sm font-semibold text-white">Activite recente</h3>
+      <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
+        <div className="border-b border-immo-border-default px-5 py-4">
+          <h3 className="text-sm font-semibold text-immo-text-primary">Activite recente</h3>
         </div>
-        <div className="max-h-[300px] divide-y divide-[#1E325A] overflow-y-auto">
+        <div className="max-h-[300px] divide-y divide-immo-border-default overflow-y-auto">
           {history.map(h => {
             const agent = h.users as { first_name: string; last_name: string } | null
             return (
               <div key={h.id as string} className="flex items-center gap-3 px-5 py-3">
                 <div className="h-2 w-2 shrink-0 rounded-full bg-[#7C3AED]" />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm text-white">{h.title as string}</p>
-                  {agent && <p className="text-[11px] text-[#7F96B7]">{agent.first_name} {agent.last_name}</p>}
+                  <p className="text-sm text-immo-text-primary">{h.title as string}</p>
+                  {agent && <p className="text-[11px] text-immo-text-secondary">{agent.first_name} {agent.last_name}</p>}
                 </div>
-                <span className="shrink-0 text-[11px] text-[#7F96B7]">
+                <span className="shrink-0 text-[11px] text-immo-text-secondary">
                   {formatDistanceToNow(new Date(h.created_at as string), { addSuffix: true, locale: fr })}
                 </span>
               </div>
             )
           })}
-          {history.length === 0 && <div className="py-8 text-center text-sm text-[#7F96B7]">Aucune activite</div>}
+          {history.length === 0 && <div className="py-8 text-center text-sm text-immo-text-secondary">Aucune activite</div>}
         </div>
       </div>
 

@@ -100,8 +100,8 @@ export function TenantsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Gestion des Tenants</h1>
-          <p className="text-sm text-[#7F96B7]">Gerez les agences de la plateforme</p>
+          <h1 className="text-2xl font-bold text-immo-text-primary">Gestion des Tenants</h1>
+          <p className="text-sm text-immo-text-secondary">Gerez les agences de la plateforme</p>
         </div>
         <Button
           onClick={() => setShowCreate(true)}
@@ -114,48 +114,48 @@ export function TenantsPage() {
       {/* KPIs */}
       <div className="grid grid-cols-5 gap-4">
         <KPICard label="Total Tenants" value={totalTenants} accent="blue" icon={<Building2 className="h-5 w-5 text-[#7C3AED]" />} />
-        <KPICard label="Tenants actifs" value={activeTenants} accent="green" icon={<UserCheck className="h-5 w-5 text-[#00D4A0]" />} />
-        <KPICard label="Total Utilisateurs" value={totalUsers} accent="blue" icon={<Users className="h-5 w-5 text-[#3782FF]" />} />
-        <KPICard label="Total Clients" value={totalClients} accent="orange" icon={<Briefcase className="h-5 w-5 text-[#FF9A1E]" />} />
-        <KPICard label="Alertes critiques" value={criticalCount} accent={criticalCount > 0 ? 'red' : 'green'} icon={<AlertTriangle className={`h-5 w-5 ${criticalCount > 0 ? 'text-[#FF4949]' : 'text-[#00D4A0]'}`} />} />
+        <KPICard label="Tenants actifs" value={activeTenants} accent="green" icon={<UserCheck className="h-5 w-5 text-immo-accent-green" />} />
+        <KPICard label="Total Utilisateurs" value={totalUsers} accent="blue" icon={<Users className="h-5 w-5 text-immo-accent-blue" />} />
+        <KPICard label="Total Clients" value={totalClients} accent="orange" icon={<Briefcase className="h-5 w-5 text-immo-status-orange" />} />
+        <KPICard label="Alertes critiques" value={criticalCount} accent={criticalCount > 0 ? 'red' : 'green'} icon={<AlertTriangle className={`h-5 w-5 ${criticalCount > 0 ? 'text-immo-status-red' : 'text-immo-accent-green'}`} />} />
       </div>
 
       {/* Search */}
       <div className="relative max-w-md">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#4E6687]" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-immo-text-muted" />
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Rechercher un tenant..."
-          className="h-10 w-full rounded-lg border border-[#1E325A] bg-[#0F1830] pl-10 pr-4 text-sm text-white placeholder-[#4E6687] outline-none focus:border-[#7C3AED]"
+          className="h-10 w-full rounded-lg border border-immo-border-default bg-immo-bg-card pl-10 pr-4 text-sm text-immo-text-primary placeholder-immo-text-muted outline-none focus:border-[#7C3AED]"
         />
       </div>
 
       {/* Table */}
-      <div className="overflow-hidden rounded-xl border border-[#1E325A]">
+      <div className="overflow-hidden rounded-xl border border-immo-border-default">
         <table className="w-full">
           <thead>
-            <tr className="bg-[#0F1830]">
+            <tr className="bg-immo-bg-primary">
               {['Nom', 'Plan', 'Sante', 'Email', 'Agents', 'Clients', 'Projets', 'Biens', 'Cree le', 'Actions'].map(h => (
-                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-[#7F96B7]">{h}</th>
+                <th key={h} className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-secondary">{h}</th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-[#1E325A]">
+          <tbody className="divide-y divide-immo-border-default">
             {filtered.map(t => (
-              <tr key={t.id} className="bg-[#0A1030] transition-colors hover:bg-[#0F1830]">
-                <td className="px-4 py-3.5 text-sm font-medium text-white">{t.name}</td>
+              <tr key={t.id} className="bg-immo-bg-card transition-colors hover:bg-immo-bg-card-hover">
+                <td className="px-4 py-3.5 text-sm font-medium text-immo-text-primary">{t.name}</td>
                 <td className="px-4 py-3.5"><PlanBadge plan={t.plan} /></td>
                 <td className="px-4 py-3.5"><HealthBadge status={healthMap.get(t.id)?.status ?? 'healthy'} issues={healthMap.get(t.id)?.issues ?? []} /></td>
-                <td className="px-4 py-3.5 text-xs text-[#7F96B7]">{t.email ?? '-'}</td>
-                <td className="px-4 py-3.5 text-center text-sm text-white">{t.agents_count}</td>
-                <td className="px-4 py-3.5 text-center text-sm text-white">{t.clients_count}</td>
-                <td className="px-4 py-3.5 text-center text-sm text-white">{t.projects_count}</td>
-                <td className="px-4 py-3.5 text-center text-sm text-white">{t.units_count}</td>
-                <td className="px-4 py-3.5 text-xs text-[#7F96B7]">{new Date(t.created_at).toLocaleDateString('fr')}</td>
+                <td className="px-4 py-3.5 text-xs text-immo-text-secondary">{t.email ?? '-'}</td>
+                <td className="px-4 py-3.5 text-center text-sm text-immo-text-primary">{t.agents_count}</td>
+                <td className="px-4 py-3.5 text-center text-sm text-immo-text-primary">{t.clients_count}</td>
+                <td className="px-4 py-3.5 text-center text-sm text-immo-text-primary">{t.projects_count}</td>
+                <td className="px-4 py-3.5 text-center text-sm text-immo-text-primary">{t.units_count}</td>
+                <td className="px-4 py-3.5 text-xs text-immo-text-secondary">{new Date(t.created_at).toLocaleDateString('fr')}</td>
                 <td className="px-4 py-3.5">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => navigate(`/admin/tenants/${t.id}`)} title="Voir" className="rounded-md p-1.5 text-[#7F96B7] hover:bg-[#1E325A] hover:text-white">
+                    <button onClick={() => navigate(`/admin/tenants/${t.id}`)} title="Voir" className="rounded-md p-1.5 text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary">
                       <Eye className="h-3.5 w-3.5" />
                     </button>
                     <button onClick={() => handleAccessTenant(t)} title="Acceder" className="rounded-md p-1.5 text-[#7C3AED] hover:bg-[#7C3AED]/10">
@@ -168,7 +168,7 @@ export function TenantsPage() {
           </tbody>
         </table>
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-sm text-[#7F96B7]">Aucun tenant trouve</div>
+          <div className="py-12 text-center text-sm text-immo-text-secondary">Aucun tenant trouve</div>
         )}
       </div>
 
@@ -178,9 +178,9 @@ export function TenantsPage() {
 }
 
 const HEALTH_STYLES: Record<HealthStatus, { bg: string; text: string; label: string }> = {
-  healthy: { bg: 'bg-[#00D4A0]/10', text: 'text-[#00D4A0]', label: 'OK' },
-  warning: { bg: 'bg-[#FF9A1E]/10', text: 'text-[#FF9A1E]', label: 'Attention' },
-  critical: { bg: 'bg-[#FF4949]/10', text: 'text-[#FF4949]', label: 'Critique' },
+  healthy: { bg: 'bg-immo-accent-green/10', text: 'text-immo-accent-green', label: 'OK' },
+  warning: { bg: 'bg-immo-status-orange/10', text: 'text-immo-status-orange', label: 'Attention' },
+  critical: { bg: 'bg-immo-status-red/10', text: 'text-immo-status-red', label: 'Critique' },
 }
 
 function HealthBadge({ status, issues }: { status: HealthStatus; issues: string[] }) {
@@ -188,13 +188,13 @@ function HealthBadge({ status, issues }: { status: HealthStatus; issues: string[
   return (
     <div className="group relative">
       <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${style.bg} ${style.text}`}>
-        <span className={`h-1.5 w-1.5 rounded-full ${status === 'healthy' ? 'bg-[#00D4A0]' : status === 'warning' ? 'bg-[#FF9A1E]' : 'bg-[#FF4949]'}`} />
+        <span className={`h-1.5 w-1.5 rounded-full ${status === 'healthy' ? 'bg-immo-accent-green' : status === 'warning' ? 'bg-immo-status-orange' : 'bg-immo-status-red'}`} />
         {style.label}
       </span>
       {issues.length > 0 && (
-        <div className="absolute left-0 top-full z-50 mt-1 hidden w-48 rounded-lg border border-[#1E325A] bg-[#0F1830] p-2 shadow-xl group-hover:block">
+        <div className="absolute left-0 top-full z-50 mt-1 hidden w-48 rounded-lg border border-immo-border-default bg-immo-bg-card p-2 shadow-xl group-hover:block">
           {issues.map((issue, i) => (
-            <p key={i} className="text-[11px] text-[#7F96B7]">{issue}</p>
+            <p key={i} className="text-[11px] text-immo-text-secondary">{issue}</p>
           ))}
         </div>
       )}

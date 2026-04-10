@@ -128,11 +128,11 @@ export function NotificationCenter() {
       {/* Bell button */}
       <button
         onClick={() => setOpen(!open)}
-        className="relative rounded-lg p-2 text-[#7F96B7] hover:bg-[#1E325A] hover:text-white"
+        className="relative rounded-lg p-2 text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#FF4949] text-[9px] font-bold text-white">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-immo-status-red text-[9px] font-bold text-white">
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         )}
@@ -140,10 +140,10 @@ export function NotificationCenter() {
 
       {/* Dropdown panel */}
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[380px] rounded-xl border border-[#1E325A] bg-[#0F1830] shadow-2xl shadow-black/50">
+        <div className="absolute right-0 top-full z-50 mt-2 w-[380px] rounded-xl border border-immo-border-default bg-immo-bg-card shadow-2xl shadow-black/10">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-[#1E325A] px-4 py-3">
-            <h3 className="text-sm font-semibold text-white">Notifications</h3>
+          <div className="flex items-center justify-between border-b border-immo-border-default px-4 py-3">
+            <h3 className="text-sm font-semibold text-immo-text-primary">Notifications</h3>
             {unreadCount > 0 && (
               <button onClick={markAllRead} className="flex items-center gap-1 text-[11px] text-[#7C3AED] hover:text-[#9F67FF]">
                 <CheckCheck className="h-3.5 w-3.5" /> Tout marquer lu
@@ -152,9 +152,9 @@ export function NotificationCenter() {
           </div>
 
           {/* List */}
-          <div className="max-h-[400px] divide-y divide-[#1E325A] overflow-y-auto">
+          <div className="max-h-[400px] divide-y divide-immo-border-default overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-xs text-[#7F96B7]">Aucune notification</div>
+              <div className="px-4 py-8 text-center text-xs text-immo-text-secondary">Aucune notification</div>
             ) : (
               notifications.map(n => {
                 const isRead = readIds.has(n.id)
@@ -162,24 +162,24 @@ export function NotificationCenter() {
                   <button
                     key={n.id}
                     onClick={() => handleClick(n)}
-                    className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-[#1E325A]/30 ${
+                    className={`flex w-full items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-immo-bg-card-hover ${
                       !isRead ? 'bg-[#7C3AED]/5' : ''
                     }`}
                   >
                     {/* Dot */}
                     <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${
-                      n.type === 'alert' ? 'bg-[#FF4949]' : !isRead ? 'bg-[#7C3AED]' : 'bg-[#1E325A]'
+                      n.type === 'alert' ? 'bg-immo-status-red' : !isRead ? 'bg-[#7C3AED]' : 'bg-immo-border-default'
                     }`} />
 
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm ${!isRead ? 'font-medium text-white' : 'text-[#7F96B7]'}`}>{n.title}</p>
-                      {n.message && <p className="mt-0.5 truncate text-[11px] text-[#7F96B7]">{n.message}</p>}
-                      <p className="mt-1 text-[10px] text-[#4E6687]">
+                      <p className={`text-sm ${!isRead ? 'font-medium text-immo-text-primary' : 'text-immo-text-secondary'}`}>{n.title}</p>
+                      {n.message && <p className="mt-0.5 truncate text-[11px] text-immo-text-secondary">{n.message}</p>}
+                      <p className="mt-1 text-[10px] text-immo-text-muted">
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
                       </p>
                     </div>
 
-                    {n.tenant_id && <ExternalLink className="mt-1 h-3 w-3 shrink-0 text-[#4E6687]" />}
+                    {n.tenant_id && <ExternalLink className="mt-1 h-3 w-3 shrink-0 text-immo-text-muted" />}
                   </button>
                 )
               })

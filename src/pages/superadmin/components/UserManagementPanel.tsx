@@ -141,10 +141,8 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
 
             {/* Actions dropdown */}
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className="rounded-md p-1.5 text-[#7F96B7] hover:bg-[#1E325A] hover:text-white">
-                  <MoreVertical className="h-4 w-4" />
-                </button>
+              <DropdownMenuTrigger className="rounded-md p-1.5 text-[#7F96B7] hover:bg-[#1E325A] hover:text-white">
+                <MoreVertical className="h-4 w-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="border-[#1E325A] bg-[#0F1830]">
                 {/* Toggle role */}

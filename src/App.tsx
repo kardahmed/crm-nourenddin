@@ -29,6 +29,7 @@ const TenantsPage = lazy(() => import('@/pages/superadmin/TenantsPage').then(m =
 const TenantDetailPage = lazy(() => import('@/pages/superadmin/TenantDetailPage').then(m => ({ default: m.TenantDetailPage })))
 const GlobalStatsPage = lazy(() => import('@/pages/superadmin/GlobalStatsPage').then(m => ({ default: m.GlobalStatsPage })))
 const PlatformSettingsPage = lazy(() => import('@/pages/superadmin/PlatformSettingsPage').then(m => ({ default: m.PlatformSettingsPage })))
+const AuditLogsPage = lazy(() => import('@/pages/superadmin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })))
 
 function PageLoader() {
   return <LoadingSpinner size="lg" className="h-screen" />
@@ -46,6 +47,7 @@ function App() {
           <Route path="/admin" element={<SuperAdminLayout />}>
             <Route index element={<TenantsPage />} />
             <Route path="tenants/:tenantId" element={<TenantDetailPage />} />
+            <Route path="logs" element={<AuditLogsPage />} />
             <Route path="stats" element={<GlobalStatsPage />} />
             <Route path="settings" element={<PlatformSettingsPage />} />
           </Route>

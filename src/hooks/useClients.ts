@@ -14,6 +14,15 @@ interface ClientFilters {
   agentId?: string
   search?: string
   isPriority?: boolean
+  page?: number
+  pageSize?: number
+}
+
+const DEFAULT_PAGE_SIZE = 50
+
+/** Escape special PostgREST filter characters to prevent filter injection */
+function sanitizeSearch(input: string): string {
+  return input.replace(/[%_(),.\\]/g, (ch) => `\\${ch}`)
 }
 
 export function useClients(filters?: ClientFilters) {
@@ -25,7 +34,7 @@ export function useClients(filters?: ClientFilters) {
     queryFn: async () => {
       let query = supabase
         .from('clients')
-        .select('*, users!clients_agent_id_fkey(first_name, last_name)')
+        .select('*, users!clients_agent_id_fkey(first_name, last_name)', { count: 'exact' })
         .eq('tenant_id', tenantId)
 
       if (filters?.stage) query = query.eq('pipeline_stage', filters.stage)
@@ -33,31 +42,24 @@ export function useClients(filters?: ClientFilters) {
       if (filters?.agentId) query = query.eq('agent_id', filters.agentId)
       if (filters?.isPriority) query = query.eq('is_priority', true)
       if (filters?.search) {
-        query = query.or(`full_name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%`)
+        const s = sanitizeSearch(filters.search)
+        query = query.or(`full_name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%`)
       }
 
-      const { data, error } = await query.order('created_at', { ascending: false })
+      // Pagination
+      const page = filters?.page ?? 0
+      const pageSize = filters?.pageSize ?? DEFAULT_PAGE_SIZE
+      const from = page * pageSize
+      const to = from + pageSize - 1
+
+      const { data, error, count } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to)
 
       if (error) { handleSupabaseError(error); throw error }
-      return data
+      return { data: data ?? [], count: count ?? 0 }
     },
   })
-
-  const clientByIdQuery = (id: string) =>
-    useQuery({
-      queryKey: ['clients', id],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from('clients')
-          .select('*, users!clients_agent_id_fkey(first_name, last_name)')
-          .eq('id', id)
-          .single()
-
-        if (error) { handleSupabaseError(error); throw error }
-        return data
-      },
-      enabled: !!id,
-    })
 
   const createClient = useMutation({
     mutationFn: async (input: Omit<ClientInsert, 'tenant_id'>) => {
@@ -72,7 +74,7 @@ export function useClients(filters?: ClientFilters) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clients'] })
-      toast.success('Client ajouté avec succès')
+      toast.success('Client ajoute avec succes')
     },
   })
 
@@ -90,7 +92,7 @@ export function useClients(filters?: ClientFilters) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clients'] })
-      toast.success('Client mis à jour')
+      toast.success('Client mis a jour')
     },
   })
 
@@ -114,13 +116,32 @@ export function useClients(filters?: ClientFilters) {
   })
 
   return {
-    clients: clientsQuery.data ?? [],
+    clients: clientsQuery.data?.data ?? [],
+    totalCount: clientsQuery.data?.count ?? 0,
     isLoading: clientsQuery.isLoading,
     error: clientsQuery.error,
     refetch: clientsQuery.refetch,
-    clientByIdQuery,
     createClient,
     updateClient,
     updateClientStage,
   }
+}
+
+/** Standalone hook for fetching a single client by ID (defense-in-depth with tenant_id) */
+export function useClientById(id: string, tenantId: string) {
+  return useQuery({
+    queryKey: ['clients', id, tenantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*, users!clients_agent_id_fkey(first_name, last_name)')
+        .eq('id', id)
+        .eq('tenant_id', tenantId)
+        .single()
+
+      if (error) { handleSupabaseError(error); throw error }
+      return data
+    },
+    enabled: !!id && !!tenantId,
+  })
 }

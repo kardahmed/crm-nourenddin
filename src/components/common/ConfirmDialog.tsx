@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { AlertTriangle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface ConfirmDialogProps {
   isOpen: boolean
@@ -26,11 +27,13 @@ export function ConfirmDialog({
   onConfirm,
   title,
   description,
-  confirmLabel = 'Confirmer',
+  confirmLabel,
   confirmVariant = 'default',
   loading = false,
   children,
 }: ConfirmDialogProps) {
+  const { t } = useTranslation()
+  const resolvedConfirmLabel = confirmLabel ?? t('action.confirm')
   const isDanger = confirmVariant === 'danger'
 
   return (
@@ -65,7 +68,7 @@ export function ConfirmDialog({
             disabled={loading}
             className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
-            Annuler
+            {t('action.cancel')}
           </Button>
           <Button
             onClick={onConfirm}
@@ -79,7 +82,7 @@ export function ConfirmDialog({
             {loading ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
             ) : (
-              confirmLabel
+              resolvedConfirmLabel
             )}
           </Button>
         </div>

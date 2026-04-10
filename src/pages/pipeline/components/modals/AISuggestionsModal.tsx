@@ -137,24 +137,12 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     return Array.from(set)
   }, [filtered])
 
-  // AI ranking call
+  // AI ranking call (via secure Edge Function)
   async function requestAIRanking() {
     if (!client || filtered.length === 0) return
 
     setAiLoading(true)
     try {
-      const apiKey = import.meta.env.VITE_ANTHROPIC_API_KEY
-      if (!apiKey) {
-        console.warn('No Anthropic API key configured')
-        // Fallback: random ranking
-        const shuffled = filtered.map(u => u.id).sort(() => Math.random() - 0.5)
-        const map = new Map<string, number>()
-        shuffled.forEach((id, i) => map.set(id, i + 1))
-        setAiRanking(map)
-        setSortKey('ai')
-        return
-      }
-
       const clientProfile = {
         budget: client.confirmed_budget,
         desired_types: client.desired_unit_types,
@@ -174,41 +162,28 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
         delivery_date: u.delivery_date,
       }))
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('No active session')
+
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const response = await fetch(`${supabaseUrl}/functions/v1/ai-suggestions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-api-key': apiKey,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
+          'Authorization': `Bearer ${session.access_token}`,
         },
-        body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
-          system: 'Tu es un expert immobilier algérien. Classe ces unités selon leur adéquation avec le profil client. Critères : budget, type souhaité, rapport qualité/prix, étage, surface. Réponds UNIQUEMENT avec un JSON array : [{"unit_id":"...","rank":1},...]',
-          messages: [{
-            role: 'user',
-            content: `Profil client: ${JSON.stringify(clientProfile)}\n\nUnités disponibles: ${JSON.stringify(unitsList)}`,
-          }],
-        }),
+        body: JSON.stringify({ clientProfile, unitsList }),
       })
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`)
+        throw new Error(`Edge Function error: ${response.status}`)
       }
 
-      const data = await response.json()
-      const text = data.content?.[0]?.text ?? ''
-
-      // Parse JSON from response
-      const jsonMatch = text.match(/\[[\s\S]*\]/)
-      if (jsonMatch) {
-        const ranking = JSON.parse(jsonMatch[0]) as Array<{ unit_id: string; rank: number }>
-        const map = new Map<string, number>()
-        ranking.forEach(r => map.set(r.unit_id, r.rank))
-        setAiRanking(map)
-        setSortKey('ai')
-      }
+      const { ranking } = await response.json() as { ranking: Array<{ unit_id: string; rank: number }> }
+      const map = new Map<string, number>()
+      ranking.forEach(r => map.set(r.unit_id, r.rank))
+      setAiRanking(map)
+      setSortKey('ai')
     } catch (err) {
       console.error('AI ranking error:', err)
       // Fallback: budget proximity ranking

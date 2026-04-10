@@ -21,6 +21,7 @@ export function useHistory(clientId: string, filters?: HistoryFilters) {
         .from('history')
         .select('*, users!history_agent_id_fkey(first_name, last_name)')
         .eq('client_id', clientId)
+        .eq('tenant_id', tenantId)
 
       if (filters?.type) query = query.eq('type', filters.type)
 

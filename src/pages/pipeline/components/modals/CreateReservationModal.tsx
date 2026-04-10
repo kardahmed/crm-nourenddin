@@ -164,8 +164,8 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
         .upload(path, cinFile)
       if (uploadErr) { handleSupabaseError(uploadErr); throw uploadErr }
 
-      const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
-      const cinUrl = urlData.publicUrl
+      // Use storage path as reference (signed URLs generated on-demand for viewing)
+      const cinUrl = path
 
       // 2. Update client NIN + CIN doc
       await supabase.from('clients').update({

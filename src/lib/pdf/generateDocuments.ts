@@ -15,7 +15,9 @@ import { format } from 'date-fns'
 // ═══ Helpers ═══
 
 function contractNumber(): string {
-  return `CTR-${Date.now().toString(36).toUpperCase()}`
+  const timestamp = Date.now().toString(36).toUpperCase()
+  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+  return `CTR-${timestamp}-${random}`
 }
 
 async function uploadPDF(blob: Blob, tenantId: string, clientId: string, prefix: string): Promise<string> {
@@ -28,8 +30,29 @@ async function uploadPDF(blob: Blob, tenantId: string, clientId: string, prefix:
 
   if (error) { handleSupabaseError(error); throw error }
 
-  const { data: urlData } = supabase.storage.from('documents').getPublicUrl(path)
-  return urlData.publicUrl
+  // Use signed URL (private bucket) instead of public URL
+  const { data: urlData, error: signErr } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(path, 60 * 60 * 24 * 7) // 7-day expiry
+
+  if (signErr || !urlData?.signedUrl) {
+    throw new Error(`Failed to create signed URL: ${signErr?.message ?? 'unknown error'}`)
+  }
+
+  return urlData.signedUrl
+}
+
+/** Get a fresh signed URL for a document path (call when displaying documents) */
+export async function getDocumentSignedUrl(path: string): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from('documents')
+    .createSignedUrl(path, 60 * 60) // 1-hour expiry for viewing
+
+  if (error || !data?.signedUrl) {
+    throw new Error(`Failed to get signed URL: ${error?.message ?? 'unknown error'}`)
+  }
+
+  return data.signedUrl
 }
 
 async function insertDocRecord(tenantId: string, clientId: string, saleId: string | null, type: string, name: string, url: string) {

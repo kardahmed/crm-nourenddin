@@ -14,12 +14,14 @@ import { formatPriceCompact } from '@/lib/constants'
 import { HISTORY_TYPE_LABELS } from '@/types'
 import type { HistoryType } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr as frLocale } from 'date-fns/locale'
+import { ar as arLocale } from 'date-fns/locale'
 
 export function DashboardPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { data, isLoading } = useDashboardStats()
   const { isAgent } = usePermissions()
+  const dateLocale = i18n.language === 'ar' ? arLocale : frLocale
 
   if (isLoading || !data) {
     return <LoadingSpinner size="lg" className="h-96" />
@@ -37,7 +39,7 @@ export function DashboardPage() {
           icon={<Building2 className="h-5 w-5 text-immo-accent-blue" />}
         />
         <KPICard
-          label="Total biens"
+          label={t('field.total_units')}
           value={data.totalUnits}
           accent="blue"
           icon={<Home className="h-5 w-5 text-immo-accent-blue" />}
@@ -75,7 +77,7 @@ export function DashboardPage() {
           <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
             <div className="border-b border-immo-border-default px-5 py-4">
               <h3 className="text-sm font-semibold text-immo-text-primary">
-                Progression par projet
+                {t('dashboard.project_progress')}
               </h3>
             </div>
             <div className="max-h-[420px] divide-y divide-immo-border-default overflow-y-auto">
@@ -116,11 +118,11 @@ export function DashboardPage() {
                       </div>
                       {/* Counters */}
                       <div className="flex gap-4 text-[11px]">
-                        <span className="text-immo-accent-green">{p.sold} vendus</span>
-                        <span className="text-immo-status-orange">{p.reserved} réservés</span>
-                        <span className="text-immo-text-muted">{p.available} dispos</span>
+                        <span className="text-immo-accent-green">{t('dashboard.sold_count', { count: p.sold })}</span>
+                        <span className="text-immo-status-orange">{t('dashboard.reserved_count', { count: p.reserved })}</span>
+                        <span className="text-immo-text-muted">{t('dashboard.available_count', { count: p.available })}</span>
                         {p.blocked > 0 && (
-                          <span className="text-immo-status-red">{p.blocked} bloqués</span>
+                          <span className="text-immo-status-red">{t('dashboard.blocked_count', { count: p.blocked })}</span>
                         )}
                       </div>
                     </div>
@@ -136,7 +138,7 @@ export function DashboardPage() {
           <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
             <div className="border-b border-immo-border-default px-5 py-4">
               <h3 className="text-sm font-semibold text-immo-text-primary">
-                Activité récente
+                {t('dashboard.recent_activity')}
               </h3>
             </div>
             <div className="max-h-[420px] divide-y divide-immo-border-default overflow-y-auto">
@@ -165,7 +167,7 @@ export function DashboardPage() {
                       <span className="shrink-0 text-[11px] text-immo-text-muted">
                         {formatDistanceToNow(new Date(a.created_at), {
                           addSuffix: true,
-                          locale: fr,
+                          locale: dateLocale,
                         })}
                       </span>
                     </div>
@@ -182,7 +184,7 @@ export function DashboardPage() {
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card">
           <div className="border-b border-immo-border-default px-5 py-4">
             <h3 className="text-sm font-semibold text-immo-text-primary">
-              Performances agents — ce mois
+              {t('dashboard.agent_performance')}
             </h3>
           </div>
           <div className="overflow-x-auto">
@@ -202,7 +204,7 @@ export function DashboardPage() {
                     {t('kpi.revenue')}
                   </th>
                   <th className="px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">
-                    Dernière activité
+                    {t('dashboard.last_activity')}
                   </th>
                 </tr>
               </thead>
@@ -241,7 +243,7 @@ export function DashboardPage() {
                       {agent.last_activity
                         ? formatDistanceToNow(new Date(agent.last_activity), {
                             addSuffix: true,
-                            locale: fr,
+                            locale: dateLocale,
                           })
                         : '-'}
                     </td>

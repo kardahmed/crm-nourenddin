@@ -1,14 +1,14 @@
--- ═══════════════════════════════════════════
+-- ================================================
 -- SQL function: mark overdue payments as late
 -- Run via pg_cron daily at 9:00 AM
--- ═══════════════════════════════════════════
+-- ================================================
 
 CREATE OR REPLACE FUNCTION check_overdue_payments()
 RETURNS INTEGER AS $$
 DECLARE
   updated_count INTEGER;
 BEGIN
-  -- Mark all pending payments past due date as late
+  -- Atomically mark all pending payments past due date as late
   WITH late_payments AS (
     UPDATE payment_schedules
     SET status = 'late'
@@ -21,14 +21,14 @@ BEGIN
   RAISE NOTICE 'Marked % payment(s) as late', updated_count;
   RETURN updated_count;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- ═══════════════════════════════════════════
+-- ================================================
 -- Schedule: daily at 9:00 AM
--- ═══════════════════════════════════════════
+-- ================================================
 
--- SELECT cron.schedule(
---   'check-overdue-payments',
---   '0 9 * * *',
---   'SELECT check_overdue_payments()'
--- );
+SELECT cron.schedule(
+  'check-overdue-payments',
+  '0 9 * * *',
+  'SELECT check_overdue_payments()'
+);

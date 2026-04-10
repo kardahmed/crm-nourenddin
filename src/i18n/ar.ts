@@ -55,6 +55,12 @@ export const ar = {
     assign: 'تعيين',
     logout: 'تسجيل الخروج',
     login: 'تسجيل الدخول',
+    reset: 'إعادة تعيين',
+    generate_doc: 'إنشاء مستند',
+    mark_lost: 'تمييز كخسارة',
+    advanced_filters: 'تصفية متقدمة',
+    clear: 'مسح',
+    select: 'اختيار',
   },
 
   // Statuts
@@ -123,6 +129,7 @@ export const ar = {
   // Champs communs
   field: {
     name: 'الاسم',
+    full_name: 'الاسم الكامل',
     email: 'البريد الإلكتروني',
     phone: 'الهاتف',
     address: 'العنوان',
@@ -144,6 +151,18 @@ export const ar = {
     stage: 'المرحلة',
     priority: 'الأولوية',
     created_at: 'تاريخ الإنشاء',
+    location: 'الموقع',
+    total_units: 'إجمالي العقارات',
+    interest_level: 'مستوى الاهتمام',
+    last_contact: 'آخر اتصال',
+    nin_cin: 'رقم الهوية',
+    deposit: 'العربون',
+    duration: 'المدة',
+    amount: 'المبلغ',
+    due_date: 'تاريخ الاستحقاق',
+    installment: 'القسط',
+    reference: 'المرجع',
+    method: 'الطريقة',
   },
 
   // Messages de succès
@@ -169,6 +188,8 @@ export const ar = {
     session_expired: 'انتهت الجلسة، يرجى إعادة تسجيل الدخول',
     network: 'خطأ في الاتصال بالخادم',
     fk_constraint: 'لا يمكن الحذف: توجد عناصر مرتبطة',
+    boundary_title: 'حدث خطأ',
+    boundary_back: 'العودة إلى لوحة التحكم',
   },
 
   // Commun
@@ -176,6 +197,7 @@ export const ar = {
     loading: 'جاري التحميل...',
     no_data: 'لا توجد بيانات',
     no_results: 'لا توجد نتائج',
+    no_match: 'لا توجد عناصر مطابقة لمعاييرك',
     all: 'الكل',
     yes: 'نعم',
     no: 'لا',
@@ -192,6 +214,10 @@ export const ar = {
     not_found_title: 'الصفحة غير موجودة',
     not_found_back: 'العودة إلى لوحة التحكم',
     language: 'اللغة',
+    active_filter: 'تصفية نشطة',
+    rows_per_page: 'صفوف في الصفحة',
+    page_of: 'الصفحة {{current}} من {{total}}',
+    showing: '{{count}} نتيجة',
   },
 
   // KPI
@@ -204,5 +230,106 @@ export const ar = {
     revenue: 'الإيرادات',
     conversion_rate: 'معدل التحويل',
     avg_deal_time: 'متوسط المدة',
+    total_potential: 'الإمكانات الإجمالية',
+    avg_budget: 'متوسط الميزانية',
+    pending_visits: 'زيارات في الانتظار',
+    in_negotiation: 'قيد التفاوض',
+    converted: 'محوّلون',
+  },
+
+  // Dashboard
+  dashboard: {
+    project_progress: 'تقدم المشاريع',
+    recent_activity: 'النشاط الأخير',
+    agent_performance: 'أداء الوكلاء — هذا الشهر',
+    last_activity: 'آخر نشاط',
+    sold_count: '{{count}} مباع',
+    reserved_count: '{{count}} محجوز',
+    available_count: '{{count}} متاح',
+    blocked_count: '{{count}} محظور',
+  },
+
+  // Pipeline
+  pipeline_page: {
+    clients: 'العملاء',
+    edit_client: 'تعديل العميل',
+    client_info: 'معلومات العميل',
+    new_client: 'عميل جديد',
+    all_projects: 'جميع المشاريع',
+    all_agents: 'جميع الوكلاء',
+    hot: 'ساخن',
+  },
+
+  // Projects
+  project_page: {
+    info: 'المعلومات',
+    units: 'عقارات المشروع',
+    no_units: 'لا توجد وحدات في هذا المشروع',
+    recent_activity: 'النشاط الأخير',
+    new_project: 'مشروع جديد',
+    all_types: 'جميع الأنواع',
+    all_statuses: 'جميع الحالات',
+  },
+
+  // Client tabs
+  tab: {
+    visits: 'الزيارات',
+    reservation: 'الحجز',
+    sale: 'البيع',
+    schedule: 'جدول الدفع',
+    payment: 'الدفع',
+    documents: 'الوثائق',
+    charges: 'المصاريف',
+    notes: 'الملاحظات',
+    tasks: 'المهام',
+    history: 'السجل',
+  },
+
+  // Units
+  unit: {
+    subtype: {
+      f1: 'F1',
+      f2: 'F2',
+      f3: 'F3',
+      f4: 'F4',
+      f5: 'F5',
+      duplex: 'دوبلكس',
+      studio: 'استوديو',
+      penthouse: 'بنتهاوس',
+    },
+  },
+
+  // Financing
+  financing: {
+    cash: 'نقدي',
+    installments: 'تسهيلات',
+    bank_loan: 'قرض بنكي',
+    mixed: 'مختلط',
+  },
+
+  // Deposit methods
+  deposit_method: {
+    cash: 'نقدي',
+    bank_transfer: 'تحويل بنكي',
+    cheque: 'شيك',
+  },
+
+  // History types
+  history_type: {
+    stage_change: 'تغيير المرحلة',
+    visit_planned: 'زيارة مخططة',
+    visit_confirmed: 'زيارة مؤكدة',
+    visit_completed: 'زيارة مكتملة',
+    call: 'مكالمة',
+    whatsapp_call: 'مكالمة واتساب',
+    whatsapp_message: 'رسالة واتساب',
+    sms: 'رسالة نصية',
+    email: 'بريد إلكتروني',
+    reservation: 'حجز',
+    sale: 'بيع',
+    payment: 'دفع',
+    document: 'مستند',
+    note: 'ملاحظة',
+    ai_task: 'مهمة ذكاء اصطناعي',
   },
 } as const

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react'
 
@@ -24,11 +25,13 @@ export function Wizard({
   onNext,
   onPrev,
   onFinish,
-  finishLabel = 'Créer',
+  finishLabel,
   children,
   sidebar,
   loading = false,
 }: WizardProps) {
+  const { t } = useTranslation()
+  const resolvedFinishLabel = finishLabel ?? t('action.create')
   const isFirst = currentStep === 0
   const isLast = currentStep === steps.length - 1
 
@@ -99,7 +102,7 @@ export function Wizard({
           className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary disabled:opacity-30"
         >
           <ChevronLeft className="mr-1 h-4 w-4" />
-          Précédent
+          {t('action.previous')}
         </Button>
 
         {isLast ? (
@@ -111,7 +114,7 @@ export function Wizard({
             {loading ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
             ) : (
-              finishLabel
+              resolvedFinishLabel
             )}
           </Button>
         ) : (
@@ -120,7 +123,7 @@ export function Wizard({
             disabled={loading}
             className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
           >
-            Suivant
+            {t('action.next')}
             <ChevronRight className="ml-1 h-4 w-4" />
           </Button>
         )}

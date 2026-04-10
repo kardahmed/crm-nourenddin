@@ -55,6 +55,12 @@ export const fr = {
     assign: 'Assigner',
     logout: 'Déconnexion',
     login: 'Connexion',
+    reset: 'Réinitialiser',
+    generate_doc: 'Générer un document',
+    mark_lost: 'Marquer comme perdu',
+    advanced_filters: 'Filtres avancés',
+    clear: 'Effacer',
+    select: 'Sélectionner',
   },
 
   // Statuts
@@ -123,6 +129,7 @@ export const fr = {
   // Champs communs
   field: {
     name: 'Nom',
+    full_name: 'Nom complet',
     email: 'Email',
     phone: 'Téléphone',
     address: 'Adresse',
@@ -144,6 +151,18 @@ export const fr = {
     stage: 'Étape',
     priority: 'Priorité',
     created_at: 'Date de création',
+    location: 'Emplacement',
+    total_units: 'Total biens',
+    interest_level: "Niveau d'intérêt",
+    last_contact: 'Dernier contact',
+    nin_cin: 'NIN / CIN',
+    deposit: 'Acompte',
+    duration: 'Durée',
+    amount: 'Montant',
+    due_date: 'Échéance',
+    installment: 'Versement',
+    reference: 'Référence',
+    method: 'Méthode',
   },
 
   // Messages de succès
@@ -169,6 +188,8 @@ export const fr = {
     session_expired: 'Session expirée, veuillez vous reconnecter',
     network: 'Erreur de connexion au serveur',
     fk_constraint: 'Impossible de supprimer : des éléments liés existent encore',
+    boundary_title: 'Une erreur est survenue',
+    boundary_back: 'Retour au tableau de bord',
   },
 
   // Commun
@@ -176,6 +197,7 @@ export const fr = {
     loading: 'Chargement...',
     no_data: 'Aucune donnée',
     no_results: 'Aucun résultat',
+    no_match: 'Aucun élément ne correspond à vos critères',
     all: 'Tous',
     yes: 'Oui',
     no: 'Non',
@@ -192,6 +214,10 @@ export const fr = {
     not_found_title: 'Page introuvable',
     not_found_back: 'Retour au dashboard',
     language: 'Langue',
+    active_filter: 'Filtre actif',
+    rows_per_page: 'Lignes par page',
+    page_of: 'Page {{current}} sur {{total}}',
+    showing: '{{count}} résultat(s)',
   },
 
   // KPI
@@ -204,5 +230,106 @@ export const fr = {
     revenue: "Chiffre d'affaires",
     conversion_rate: 'Taux de conversion',
     avg_deal_time: 'Durée moyenne',
+    total_potential: 'Potentiel total',
+    avg_budget: 'Budget moyen',
+    pending_visits: 'Visites en attente',
+    in_negotiation: 'En négociation',
+    converted: 'Convertis',
+  },
+
+  // Dashboard
+  dashboard: {
+    project_progress: 'Progression par projet',
+    recent_activity: 'Activité récente',
+    agent_performance: 'Performances agents — ce mois',
+    last_activity: 'Dernière activité',
+    sold_count: '{{count}} vendus',
+    reserved_count: '{{count}} réservés',
+    available_count: '{{count}} dispos',
+    blocked_count: '{{count}} bloqués',
+  },
+
+  // Pipeline
+  pipeline_page: {
+    clients: 'Clients',
+    edit_client: 'Modifier le client',
+    client_info: 'Informations client',
+    new_client: 'Nouveau client',
+    all_projects: 'Tous les projets',
+    all_agents: 'Tous les agents',
+    hot: 'HOT',
+  },
+
+  // Projects
+  project_page: {
+    info: 'Informations',
+    units: 'Biens du projet',
+    no_units: 'Aucune unité dans ce projet',
+    recent_activity: 'Activité récente',
+    new_project: 'Nouveau projet',
+    all_types: 'Tous les types',
+    all_statuses: 'Tous les statuts',
+  },
+
+  // Client tabs
+  tab: {
+    visits: 'Visites',
+    reservation: 'Réservation',
+    sale: 'Vente',
+    schedule: 'Échéancier',
+    payment: 'Paiement',
+    documents: 'Documents',
+    charges: 'Charges',
+    notes: 'Notes',
+    tasks: 'Tâches',
+    history: 'Historique',
+  },
+
+  // Units
+  unit: {
+    subtype: {
+      f1: 'F1',
+      f2: 'F2',
+      f3: 'F3',
+      f4: 'F4',
+      f5: 'F5',
+      duplex: 'Duplex',
+      studio: 'Studio',
+      penthouse: 'Penthouse',
+    },
+  },
+
+  // Financing
+  financing: {
+    cash: 'Comptant',
+    installments: 'Facilités',
+    bank_loan: 'Crédit bancaire',
+    mixed: 'Mixte',
+  },
+
+  // Deposit methods
+  deposit_method: {
+    cash: 'Espèces',
+    bank_transfer: 'Virement bancaire',
+    cheque: 'Chèque',
+  },
+
+  // History types
+  history_type: {
+    stage_change: 'Changement d\'étape',
+    visit_planned: 'Visite planifiée',
+    visit_confirmed: 'Visite confirmée',
+    visit_completed: 'Visite terminée',
+    call: 'Appel',
+    whatsapp_call: 'Appel WhatsApp',
+    whatsapp_message: 'Message WhatsApp',
+    sms: 'SMS',
+    email: 'Email',
+    reservation: 'Réservation',
+    sale: 'Vente',
+    payment: 'Paiement',
+    document: 'Document',
+    note: 'Note',
+    ai_task: 'Tâche IA',
   },
 } as const

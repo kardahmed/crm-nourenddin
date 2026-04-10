@@ -37,22 +37,6 @@ export function useUnits(filters?: UnitFilters) {
     },
   })
 
-  const unitsByProject = (projectId: string) =>
-    useQuery({
-      queryKey: ['units', 'project', projectId],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from('units')
-          .select('*')
-          .eq('project_id', projectId)
-          .order('code')
-
-        if (error) { handleSupabaseError(error); throw error }
-        return data
-      },
-      enabled: !!projectId,
-    })
-
   const createUnit = useMutation({
     mutationFn: async (input: Omit<UnitInsert, 'tenant_id'>) => {
       const { data, error } = await supabase
@@ -66,7 +50,7 @@ export function useUnits(filters?: UnitFilters) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['units'] })
-      toast.success('Unité créée avec succès')
+      toast.success('Unite creee avec succes')
     },
   })
 
@@ -84,7 +68,7 @@ export function useUnits(filters?: UnitFilters) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['units'] })
-      toast.success('Unité mise à jour')
+      toast.success('Unite mise a jour')
     },
   })
 
@@ -110,9 +94,27 @@ export function useUnits(filters?: UnitFilters) {
     isLoading: unitsQuery.isLoading,
     error: unitsQuery.error,
     refetch: unitsQuery.refetch,
-    unitsByProject,
     createUnit,
     updateUnit,
     updateUnitStatus,
   }
+}
+
+/** Standalone hook for fetching units by project (defense-in-depth with tenant_id) */
+export function useUnitsByProject(projectId: string, tenantId: string) {
+  return useQuery({
+    queryKey: ['units', 'project', projectId, tenantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('units')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('tenant_id', tenantId)
+        .order('code')
+
+      if (error) { handleSupabaseError(error); throw error }
+      return data
+    },
+    enabled: !!projectId && !!tenantId,
+  })
 }

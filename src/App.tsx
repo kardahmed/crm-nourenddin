@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { RoleRoute } from '@/components/auth/RoleRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
@@ -34,6 +35,7 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
+            {/* Accessible to all authenticated users */}
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
@@ -41,12 +43,16 @@ function App() {
             <Route path="/pipeline/clients/:clientId" element={<ClientDetailPage />} />
             <Route path="/planning" element={<PlanningPage />} />
             <Route path="/dossiers" element={<DossiersPage />} />
-            <Route path="/goals" element={<GoalsPage />} />
-            <Route path="/performance" element={<PerformancePage />} />
-            <Route path="/agents" element={<AgentsPage />} />
-            <Route path="/agents/:agentId" element={<AgentDetailPage />} />
-            <Route path="/reports" element={<ReportsPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
+
+            {/* Admin & super_admin only */}
+            <Route element={<RoleRoute allowedRoles={['admin', 'super_admin']} />}>
+              <Route path="/goals" element={<GoalsPage />} />
+              <Route path="/performance" element={<PerformancePage />} />
+              <Route path="/agents" element={<AgentsPage />} />
+              <Route path="/agents/:agentId" element={<AgentDetailPage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+            </Route>
           </Route>
         </Route>
 

@@ -26,22 +26,6 @@ export function useProjects() {
     },
   })
 
-  const projectByIdQuery = (id: string) =>
-    useQuery({
-      queryKey: ['projects', id],
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*, units(*)')
-          .eq('id', id)
-          .single()
-
-        if (error) { handleSupabaseError(error); throw error }
-        return data
-      },
-      enabled: !!id,
-    })
-
   const createProject = useMutation({
     mutationFn: async (input: Omit<ProjectInsert, 'tenant_id'>) => {
       const { data, error } = await supabase
@@ -55,7 +39,7 @@ export function useProjects() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects'] })
-      toast.success('Projet créé avec succès')
+      toast.success('Projet cree avec succes')
     },
   })
 
@@ -73,7 +57,7 @@ export function useProjects() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects'] })
-      toast.success('Projet mis à jour')
+      toast.success('Projet mis a jour')
     },
   })
 
@@ -88,7 +72,7 @@ export function useProjects() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['projects'] })
-      toast.success('Projet supprimé')
+      toast.success('Projet supprime')
     },
   })
 
@@ -97,9 +81,27 @@ export function useProjects() {
     isLoading: projectsQuery.isLoading,
     error: projectsQuery.error,
     refetch: projectsQuery.refetch,
-    projectByIdQuery,
     createProject,
     updateProject,
     deleteProject,
   }
+}
+
+/** Standalone hook for fetching a single project by ID (defense-in-depth with tenant_id) */
+export function useProjectById(id: string, tenantId: string) {
+  return useQuery({
+    queryKey: ['projects', id, tenantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*, units(*)')
+        .eq('id', id)
+        .eq('tenant_id', tenantId)
+        .single()
+
+      if (error) { handleSupabaseError(error); throw error }
+      return data
+    },
+    enabled: !!id && !!tenantId,
+  })
 }

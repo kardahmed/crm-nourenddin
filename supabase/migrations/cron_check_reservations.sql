@@ -1,7 +1,7 @@
--- ═══════════════════════════════════════════
--- Alternative 1: Pure SQL function (no Edge Function needed)
+-- ================================================
+-- SQL function: expire active reservations past deadline
 -- Run via pg_cron every hour
--- ═══════════════════════════════════════════
+-- ================================================
 
 CREATE OR REPLACE FUNCTION check_expired_reservations()
 RETURNS INTEGER AS $$
@@ -9,10 +9,12 @@ DECLARE
   expired_record RECORD;
   processed INTEGER := 0;
 BEGIN
+  -- Use FOR UPDATE to prevent concurrent processing
   FOR expired_record IN
     SELECT id, tenant_id, client_id, unit_id
     FROM reservations
     WHERE status = 'active' AND expires_at < NOW()
+    FOR UPDATE SKIP LOCKED
   LOOP
     -- a. Expire the reservation
     UPDATE reservations SET status = 'expired' WHERE id = expired_record.id;
@@ -29,8 +31,8 @@ BEGIN
       expired_record.client_id,
       NULL,
       'stage_change',
-      'Réservation expirée — client passé en relancement',
-      'Réservation ' || expired_record.id || ' expirée automatiquement',
+      'Reservation expiree -- client passe en relancement',
+      'Reservation ' || expired_record.id || ' expiree automatiquement',
       jsonb_build_object(
         'reservation_id', expired_record.id,
         'unit_id', expired_record.unit_id,
@@ -51,45 +53,18 @@ BEGIN
   RAISE NOTICE 'Processed % expired reservations', processed;
   RETURN processed;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
--- ═══════════════════════════════════════════
+-- ================================================
 -- Schedule with pg_cron (every hour at :00)
--- ═══════════════════════════════════════════
+-- ================================================
 
 -- Enable pg_cron extension (run once as superuser)
--- CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_cron;
 
 -- Schedule the job
--- SELECT cron.schedule(
---   'check-expired-reservations',
---   '0 * * * *',
---   'SELECT check_expired_reservations()'
--- );
-
--- To verify the schedule:
--- SELECT * FROM cron.job;
-
--- To remove the schedule:
--- SELECT cron.unschedule('check-expired-reservations');
-
--- ═══════════════════════════════════════════
--- Alternative 2: Call Edge Function via pg_cron + pg_net
--- ═══════════════════════════════════════════
-
--- CREATE EXTENSION IF NOT EXISTS pg_net;
-
--- SELECT cron.schedule(
---   'check-reservations-edge',
---   '0 * * * *',
---   $$
---   SELECT net.http_post(
---     url := 'https://YOUR_PROJECT_REF.supabase.co/functions/v1/check-reservations',
---     headers := jsonb_build_object(
---       'Authorization', 'Bearer ' || current_setting('app.settings.service_role_key'),
---       'Content-Type', 'application/json'
---     ),
---     body := '{}'::jsonb
---   );
---   $$
--- );
+SELECT cron.schedule(
+  'check-expired-reservations',
+  '0 * * * *',
+  'SELECT check_expired_reservations()'
+);

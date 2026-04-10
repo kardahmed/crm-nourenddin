@@ -3,46 +3,48 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
-Deno.serve(async (_req) => {
+Deno.serve(async (req) => {
+  // Verify authorization: must provide service role key as Bearer token
+  const authHeader = req.headers.get('Authorization')
+  if (authHeader !== `Bearer ${supabaseServiceKey}`) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
+  }
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
 
   try {
-    // 1. Find overdue payments
-    const { data: overdue, error: fetchErr } = await supabase
+    // 1. Atomically mark overdue payments as late and return them
+    // Use a single UPDATE with WHERE to avoid race conditions (fetch-then-update)
+    const { data: updated, error: updateErr } = await supabase
       .from('payment_schedules')
-      .select('id, tenant_id, sale_id, amount, due_date, installment_number, sales(client_id, agent_id, clients(full_name, phone), units(code))')
+      .update({ status: 'late' })
       .eq('status', 'pending')
       .lt('due_date', new Date().toISOString().split('T')[0])
+      .select('id, tenant_id, sale_id, amount, due_date, installment_number, sales(client_id, agent_id, clients(full_name, phone), units(code))')
 
-    if (fetchErr) {
-      console.error('Fetch error:', fetchErr)
-      return new Response(JSON.stringify({ error: fetchErr.message }), { status: 500 })
+    if (updateErr) {
+      console.error('Update error:', updateErr)
+      return new Response(JSON.stringify({ error: updateErr.message }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      })
     }
 
-    if (!overdue || overdue.length === 0) {
+    if (!updated || updated.length === 0) {
       return new Response(JSON.stringify({ message: 'No overdue payments', count: 0 }), {
         headers: { 'Content-Type': 'application/json' },
       })
     }
 
-    console.log(`Found ${overdue.length} overdue payment(s)`)
+    console.log(`Marked ${updated.length} overdue payment(s) as late`)
 
-    // 2. Batch update all to 'late'
-    const ids = overdue.map((p: { id: string }) => p.id)
-    const { error: updateErr } = await supabase
-      .from('payment_schedules')
-      .update({ status: 'late' })
-      .in('id', ids)
-
-    if (updateErr) {
-      console.error('Update error:', updateErr)
-      return new Response(JSON.stringify({ error: updateErr.message }), { status: 500 })
-    }
-
-    // 3. Check tenant notification preferences and send alerts
-    const tenantIds = [...new Set(overdue.map((p: { tenant_id: string }) => p.tenant_id))]
+    // 2. Check tenant notification preferences and send alerts
+    const tenantIds = [...new Set(updated.map((p: { tenant_id: string }) => p.tenant_id))]
 
     const { data: settings } = await supabase
       .from('tenant_settings')
@@ -65,7 +67,7 @@ Deno.serve(async (_req) => {
       installment: number
     }>>()
 
-    for (const payment of overdue) {
+    for (const payment of updated) {
       const sale = payment.sales as {
         client_id: string
         agent_id: string
@@ -91,7 +93,7 @@ Deno.serve(async (_req) => {
 
     for (const [tenantId, payments] of byTenant) {
       const details = payments.map(
-        (p) => `${p.client_name} — ${p.unit_code} — Échéance #${p.installment} — ${p.amount} DA — Dû le ${p.due_date}`
+        (p) => `${p.client_name} — ${p.unit_code} — Echeance #${p.installment} — ${p.amount} DA — Du le ${p.due_date}`
       )
 
       notifications.push({
@@ -102,18 +104,11 @@ Deno.serve(async (_req) => {
 
       console.log(`[Tenant ${tenantId}] ${payments.length} paiement(s) en retard:`)
       details.forEach((d) => console.log(`  - ${d}`))
-
-      // TODO: Send actual email notification
-      // await sendEmail({
-      //   to: adminEmail,
-      //   subject: `${payments.length} paiement(s) en retard`,
-      //   body: details.join('\n'),
-      // })
     }
 
     const result = {
-      message: `Marked ${ids.length} payment(s) as late`,
-      updated: ids.length,
+      message: `Marked ${updated.length} payment(s) as late`,
+      updated: updated.length,
       notifications_sent: notifications.length,
       notifications,
     }
@@ -124,6 +119,9 @@ Deno.serve(async (_req) => {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('Fatal error:', msg)
-    return new Response(JSON.stringify({ error: msg }), { status: 500 })
+    return new Response(JSON.stringify({ error: msg }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 })

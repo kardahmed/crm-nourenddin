@@ -4,14 +4,13 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 Deno.serve(async (req) => {
-  // Verify authorization (cron or admin call)
+  // Verify authorization: must provide service role key as Bearer token
   const authHeader = req.headers.get('Authorization')
   if (authHeader !== `Bearer ${supabaseServiceKey}`) {
-    // Allow if called from pg_cron (no auth header but internal)
-    const isInternal = req.headers.get('x-forwarded-for') === null
-    if (!isInternal && !authHeader) {
-      return new Response('Unauthorized', { status: 401 })
-    }
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    })
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey, {

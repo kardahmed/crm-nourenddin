@@ -1,0 +1,389 @@
+import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import {
+  DollarSign, CreditCard, AlertTriangle, Clock,
+  FileText, Upload,
+} from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { handleSupabaseError } from '@/lib/errors'
+import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
+import {
+  KPICard, SearchInput, FilterDropdown, LoadingSpinner,
+  StatusBadge,
+} from '@/components/common'
+import { Button } from '@/components/ui/button'
+import { formatPrice, formatPriceCompact } from '@/lib/constants'
+import { format } from 'date-fns'
+
+/* ═══ Types ═══ */
+
+interface DossierRow {
+  client_id: string
+  client_name: string
+  client_phone: string
+  project_name: string
+  unit_codes: string[]
+  agent_name: string
+  total_price: number
+  paid: number
+  due: number
+  late: number
+  next_payment_date: string | null
+  next_payment_amount: number
+  status: 'reservation' | 'sale' | 'late' | 'cancelled'
+  sale_id: string | null
+  reservation_id: string | null
+}
+
+type TabKey = 'reservations' | 'sales' | 'upcoming' | 'late' | 'cancelled'
+
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'reservations', label: 'Réservations' },
+  { key: 'sales', label: 'Ventes' },
+  { key: 'upcoming', label: 'À venir' },
+  { key: 'late', label: 'En retard' },
+  { key: 'cancelled', label: 'Annulées' },
+]
+
+/* ═══ Component ═══ */
+
+export function DossiersPage() {
+  const navigate = useNavigate()
+  const { tenantId, session } = useAuthStore()
+  const userId = session?.user?.id
+  const { isAgent } = usePermissions()
+
+  const [search, setSearch] = useState('')
+  const [projectFilter, setProjectFilter] = useState('all')
+  const [activeTab, setActiveTab] = useState<TabKey>('sales')
+
+  // Fetch all data in parallel
+  const { data, isLoading } = useQuery({
+    queryKey: ['dossiers', tenantId, userId, isAgent],
+    queryFn: async () => {
+      if (!tenantId) throw new Error('No tenant')
+
+      const [salesRes, reservationsRes, schedulesRes, projectsRes] = await Promise.all([
+        (() => {
+          let q = supabase
+            .from('sales')
+            .select('id, client_id, agent_id, project_id, unit_id, final_price, status, clients(full_name, phone), projects(name), units(code), users!sales_agent_id_fkey(first_name, last_name)')
+            .eq('tenant_id', tenantId)
+          if (isAgent && userId) q = q.eq('agent_id', userId)
+          return q
+        })(),
+        (() => {
+          let q = supabase
+            .from('reservations')
+            .select('id, client_id, agent_id, project_id, unit_id, deposit_amount, status, expires_at, clients(full_name, phone), projects(name), units(code), users!reservations_agent_id_fkey(first_name, last_name)')
+            .eq('tenant_id', tenantId)
+          if (isAgent && userId) q = q.eq('agent_id', userId)
+          return q
+        })(),
+        supabase
+          .from('payment_schedules')
+          .select('sale_id, amount, status, due_date')
+          .eq('tenant_id', tenantId),
+        supabase
+          .from('projects')
+          .select('id, name')
+          .eq('tenant_id', tenantId)
+          .eq('status', 'active'),
+      ])
+
+      for (const res of [salesRes, reservationsRes, schedulesRes, projectsRes]) {
+        if (res.error) { handleSupabaseError(res.error); throw res.error }
+      }
+
+      return {
+        sales: (salesRes.data ?? []) as unknown as Array<Record<string, unknown>>,
+        reservations: (reservationsRes.data ?? []) as unknown as Array<Record<string, unknown>>,
+        schedules: (schedulesRes.data ?? []) as unknown as Array<{ sale_id: string; amount: number; status: string; due_date: string }>,
+        projects: (projectsRes.data ?? []) as unknown as Array<{ id: string; name: string }>,
+      }
+    },
+    enabled: !!tenantId,
+  })
+
+  const sales = data?.sales ?? []
+  const reservations = data?.reservations ?? []
+  const schedules = data?.schedules ?? []
+  const projectsList = data?.projects ?? []
+
+  // Build schedule aggregates per sale
+  const scheduleAgg = useMemo(() => {
+    const map = new Map<string, { paid: number; due: number; late: number; nextDate: string | null; nextAmount: number }>()
+    const bySale = new Map<string, typeof schedules>()
+
+    for (const s of schedules) {
+      if (!bySale.has(s.sale_id)) bySale.set(s.sale_id, [])
+      bySale.get(s.sale_id)!.push(s)
+    }
+
+    for (const [saleId, lines] of bySale) {
+      const paid = lines.filter(l => l.status === 'paid').reduce((s, l) => s + l.amount, 0)
+      const pending = lines.filter(l => l.status === 'pending')
+      const lateLines = lines.filter(l => l.status === 'late')
+      const due = pending.reduce((s, l) => s + l.amount, 0) + lateLines.reduce((s, l) => s + l.amount, 0)
+      const late = lateLines.reduce((s, l) => s + l.amount, 0)
+
+      const upcoming = pending.sort((a, b) => a.due_date.localeCompare(b.due_date))
+      const next = upcoming[0] ?? lateLines.sort((a, b) => a.due_date.localeCompare(b.due_date))[0]
+
+      map.set(saleId, {
+        paid,
+        due,
+        late,
+        nextDate: next?.due_date ?? null,
+        nextAmount: next?.amount ?? 0,
+      })
+    }
+    return map
+  }, [schedules])
+
+  // Build dossier rows
+  const dossiers = useMemo((): DossierRow[] => {
+    const rows: DossierRow[] = []
+
+    // Sales
+    for (const s of sales) {
+      const client = s.clients as { full_name: string; phone: string } | null
+      const project = s.projects as { name: string } | null
+      const unit = s.units as { code: string } | null
+      const agent = s.users as { first_name: string; last_name: string } | null
+      const saleId = s.id as string
+      const agg = scheduleAgg.get(saleId)
+
+      rows.push({
+        client_id: s.client_id as string,
+        client_name: client?.full_name ?? '-',
+        client_phone: client?.phone ?? '',
+        project_name: project?.name ?? '-',
+        unit_codes: unit ? [unit.code] : [],
+        agent_name: agent ? `${agent.first_name} ${agent.last_name}` : '-',
+        total_price: s.final_price as number,
+        paid: agg?.paid ?? 0,
+        due: agg?.due ?? 0,
+        late: agg?.late ?? 0,
+        next_payment_date: agg?.nextDate ?? null,
+        next_payment_amount: agg?.nextAmount ?? 0,
+        status: (agg?.late ?? 0) > 0 ? 'late' : s.status === 'cancelled' ? 'cancelled' : 'sale',
+        sale_id: saleId,
+        reservation_id: null,
+      })
+    }
+
+    // Reservations without sale
+    const saleClientUnits = new Set(sales.map(s => `${s.client_id}-${s.unit_id}`))
+    for (const r of reservations) {
+      const key = `${r.client_id}-${r.unit_id}`
+      if (saleClientUnits.has(key)) continue
+      const client = r.clients as { full_name: string; phone: string } | null
+      const project = r.projects as { name: string } | null
+      const unit = r.units as { code: string } | null
+      const agent = r.users as { first_name: string; last_name: string } | null
+
+      rows.push({
+        client_id: r.client_id as string,
+        client_name: client?.full_name ?? '-',
+        client_phone: client?.phone ?? '',
+        project_name: project?.name ?? '-',
+        unit_codes: unit ? [unit.code] : [],
+        agent_name: agent ? `${agent.first_name} ${agent.last_name}` : '-',
+        total_price: (r.deposit_amount as number) ?? 0,
+        paid: (r.deposit_amount as number) ?? 0,
+        due: 0,
+        late: 0,
+        next_payment_date: r.expires_at as string,
+        next_payment_amount: 0,
+        status: r.status === 'cancelled' ? 'cancelled' : 'reservation',
+        sale_id: null,
+        reservation_id: r.id as string,
+      })
+    }
+
+    return rows
+  }, [sales, reservations, scheduleAgg])
+
+  // KPIs
+  const kpi = useMemo(() => {
+    const activeSales = dossiers.filter(d => d.status === 'sale' || d.status === 'late')
+    return {
+      totalSales: activeSales.length,
+      totalCA: activeSales.reduce((s, d) => s + d.total_price, 0),
+      collected: activeSales.reduce((s, d) => s + d.paid, 0),
+      totalDue: activeSales.reduce((s, d) => s + d.due, 0),
+      totalLate: activeSales.reduce((s, d) => s + d.late, 0),
+      lateDossiers: activeSales.filter(d => d.late > 0).length,
+    }
+  }, [dossiers])
+
+  // Filter
+  const filtered = useMemo(() => {
+    let list = dossiers
+
+    // Tab filter
+    switch (activeTab) {
+      case 'reservations': list = list.filter(d => d.status === 'reservation'); break
+      case 'sales': list = list.filter(d => d.status === 'sale' || d.status === 'late'); break
+      case 'upcoming': list = list.filter(d => d.next_payment_date && d.due > 0 && d.status !== 'cancelled'); break
+      case 'late': list = list.filter(d => d.late > 0); break
+      case 'cancelled': list = list.filter(d => d.status === 'cancelled'); break
+    }
+
+    // Search
+    if (search) {
+      const q = search.toLowerCase()
+      list = list.filter(d => d.client_name.toLowerCase().includes(q) || d.client_phone.includes(q))
+    }
+
+    // Project
+    if (projectFilter !== 'all') {
+      list = list.filter(d => d.project_name === projectsList.find(p => p.id === projectFilter)?.name)
+    }
+
+    return list
+  }, [dossiers, activeTab, search, projectFilter, projectsList])
+
+  // Tab counts
+  const tabCounts = useMemo(() => ({
+    reservations: dossiers.filter(d => d.status === 'reservation').length,
+    sales: dossiers.filter(d => d.status === 'sale' || d.status === 'late').length,
+    upcoming: dossiers.filter(d => d.next_payment_date && d.due > 0 && d.status !== 'cancelled').length,
+    late: dossiers.filter(d => d.late > 0).length,
+    cancelled: dossiers.filter(d => d.status === 'cancelled').length,
+  }), [dossiers])
+
+  const projectOptions = [
+    { value: 'all', label: 'Tous les projets' },
+    ...projectsList.map(p => ({ value: p.id, label: p.name })),
+  ]
+
+  if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
+
+  return (
+    <div className="space-y-5">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+        <KPICard label="Ventes totales" value={kpi.totalSales} accent="blue" icon={<FileText className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label="CA total" value={formatPriceCompact(kpi.totalCA)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label="Encaissé" value={formatPriceCompact(kpi.collected)} accent="green" icon={<CreditCard className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label="Total dû" value={formatPriceCompact(kpi.totalDue)} accent="orange" icon={<Clock className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label="En retard" value={formatPriceCompact(kpi.totalLate)} accent="red" icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
+        <KPICard label="Dossiers en retard" value={kpi.lateDossiers} accent="red" icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput placeholder="Nom, téléphone..." value={search} onChange={setSearch} className="w-[240px]" />
+        <FilterDropdown label="Projet" options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
+        <Button variant="ghost" size="sm" className="border border-immo-border-default text-xs text-immo-text-muted">
+          <Upload className="mr-1 h-3.5 w-3.5" /> Importer
+        </Button>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 border-b border-immo-border-default">
+        {TABS.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-xs transition-colors ${
+              activeTab === tab.key
+                ? 'border-immo-accent-green font-medium text-immo-accent-green'
+                : 'border-transparent text-immo-text-muted hover:text-immo-text-secondary'
+            }`}
+          >
+            {tab.label}
+            <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
+              activeTab === tab.key ? 'bg-immo-accent-green/10' : 'bg-immo-bg-card-hover'
+            }`}>
+              {tabCounts[tab.key]}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* List */}
+      {filtered.length === 0 ? (
+        <div className="py-16 text-center text-sm text-immo-text-muted">Aucun dossier</div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-immo-border-default">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-immo-bg-card-hover">
+                  {['Client', 'Projet', 'Unités', 'Total', 'Encaissé', 'Restant dû', 'Prochain paiement', 'Statut', 'Agent'].map((h) => (
+                    <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-immo-border-default">
+                {filtered.map((d, i) => {
+                  const hasLate = d.late > 0
+                  return (
+                    <tr
+                      key={`${d.client_id}-${d.sale_id ?? d.reservation_id ?? i}`}
+                      onClick={() => navigate(`/pipeline/clients/${d.client_id}?from=dossiers`)}
+                      className={`cursor-pointer transition-colors ${hasLate ? 'bg-immo-status-red-bg/30' : 'bg-immo-bg-card'} hover:bg-immo-bg-card-hover`}
+                    >
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div>
+                          <p className="text-sm font-medium text-immo-text-primary">{d.client_name}</p>
+                          <p className="text-[11px] text-immo-text-muted">{d.client_phone}</p>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-secondary">{d.project_name}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs font-mono text-immo-text-muted">{d.unit_codes.join(', ') || '-'}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs font-medium text-immo-text-primary">{formatPrice(d.total_price)}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-accent-green">{formatPrice(d.paid)}</td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <span className={`text-xs font-medium ${d.due > 0 ? (hasLate ? 'text-immo-status-red' : 'text-immo-status-orange') : 'text-immo-text-muted'}`}>
+                          {d.due > 0 ? formatPrice(d.due) : '-'}
+                        </span>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        {d.next_payment_date ? (
+                          <div>
+                            <p className="text-xs text-immo-text-primary">{format(new Date(d.next_payment_date), 'dd/MM/yyyy')}</p>
+                            {d.next_payment_amount > 0 && (
+                              <p className="text-[10px] text-immo-text-muted">{formatPriceCompact(d.next_payment_amount)}</p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-immo-text-muted">-</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <StatusBadge
+                          label={
+                            d.status === 'late' ? 'En retard'
+                            : d.status === 'sale' ? 'Vente'
+                            : d.status === 'reservation' ? 'Réservation'
+                            : 'Annulé'
+                          }
+                          type={
+                            d.status === 'late' ? 'red'
+                            : d.status === 'sale' ? 'green'
+                            : d.status === 'reservation' ? 'orange'
+                            : 'muted'
+                          }
+                        />
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-muted">{d.agent_name}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+          <div className="border-t border-immo-border-default bg-immo-bg-card-hover px-4 py-2 text-xs text-immo-text-muted">
+            {filtered.length} dossier(s)
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

@@ -1,0 +1,208 @@
+export const ar = {
+  // Navigation
+  nav: {
+    dashboard: 'لوحة التحكم',
+    projects: 'المشاريع',
+    pipeline: 'مسار العملاء',
+    planning: 'التخطيط',
+    dossiers: 'الملفات',
+    goals: 'الأهداف',
+    performance: 'الأداء',
+    agents: 'الوكلاء',
+    reports: 'التقارير',
+    settings: 'الإعدادات',
+  },
+
+  // Page meta
+  page: {
+    dashboard_subtitle: 'نظرة عامة على نشاطك',
+    projects_subtitle: 'إدارة البرامج العقارية',
+    pipeline_subtitle: 'متابعة العملاء حسب المرحلة',
+    planning_subtitle: 'الزيارات والمواعيد',
+    dossiers_subtitle: 'الوثائق والعقود',
+    goals_subtitle: 'متابعة الأهداف التجارية',
+    performance_subtitle: 'تحليل الأداء',
+    agents_subtitle: 'إدارة الفريق التجاري',
+    reports_subtitle: 'التقارير والإحصائيات',
+    settings_subtitle: 'إعدادات الوكالة',
+  },
+
+  // Actions
+  action: {
+    add: 'إضافة',
+    create: 'إنشاء',
+    edit: 'تعديل',
+    delete: 'حذف',
+    cancel: 'إلغاء',
+    confirm: 'تأكيد',
+    save: 'حفظ',
+    search: 'بحث',
+    filter: 'تصفية',
+    export: 'تصدير',
+    import: 'استيراد',
+    close: 'إغلاق',
+    back: 'رجوع',
+    next: 'التالي',
+    previous: 'السابق',
+    refresh: 'تحديث',
+    view: 'عرض',
+    download: 'تحميل',
+    upload: 'رفع',
+    print: 'طباعة',
+    duplicate: 'نسخ',
+    archive: 'أرشفة',
+    restore: 'استعادة',
+    assign: 'تعيين',
+    logout: 'تسجيل الخروج',
+    login: 'تسجيل الدخول',
+  },
+
+  // Statuts
+  status: {
+    active: 'نشط',
+    inactive: 'غير نشط',
+    archived: 'مؤرشف',
+    available: 'متاح',
+    reserved: 'محجوز',
+    sold: 'مباع',
+    blocked: 'محظور',
+    pending: 'قيد الانتظار',
+    paid: 'مدفوع',
+    late: 'متأخر',
+    planned: 'مخطط',
+    confirmed: 'مؤكد',
+    completed: 'مكتمل',
+    cancelled: 'ملغى',
+    rescheduled: 'مؤجل',
+    expired: 'منتهي',
+    converted: 'محوّل',
+  },
+
+  // Étapes pipeline
+  pipeline: {
+    accueil: 'استقبال',
+    visite_a_gerer: 'زيارة للتنظيم',
+    visite_confirmee: 'زيارة مؤكدة',
+    visite_terminee: 'زيارة منتهية',
+    negociation: 'تفاوض',
+    reservation: 'حجز',
+    vente: 'بيع',
+    relancement: 'إعادة تواصل',
+    perdue: 'خسارة',
+  },
+
+  // Sources
+  source: {
+    facebook_ads: 'إعلانات فيسبوك',
+    google_ads: 'إعلانات جوجل',
+    instagram_ads: 'إعلانات إنستغرام',
+    appel_entrant: 'مكالمة واردة',
+    reception: 'استقبال',
+    bouche_a_oreille: 'توصية شفهية',
+    reference_client: 'إحالة عميل',
+    site_web: 'موقع إلكتروني',
+    portail_immobilier: 'بوابة عقارية',
+    autre: 'أخرى',
+  },
+
+  // Rôles
+  role: {
+    super_admin: 'مدير عام',
+    admin: 'مدير',
+    agent: 'وكيل تجاري',
+  },
+
+  // Types d'unités
+  unit_type: {
+    apartment: 'شقة',
+    local: 'محل تجاري',
+    villa: 'فيلا',
+    parking: 'موقف سيارات',
+  },
+
+  // Champs communs
+  field: {
+    name: 'الاسم',
+    email: 'البريد الإلكتروني',
+    phone: 'الهاتف',
+    address: 'العنوان',
+    date: 'التاريخ',
+    price: 'السعر',
+    status: 'الحالة',
+    type: 'النوع',
+    description: 'الوصف',
+    notes: 'ملاحظات',
+    agent: 'الوكيل',
+    client: 'العميل',
+    project: 'المشروع',
+    unit: 'الوحدة',
+    surface: 'المساحة',
+    floor: 'الطابق',
+    building: 'المبنى',
+    budget: 'الميزانية',
+    source: 'المصدر',
+    stage: 'المرحلة',
+    priority: 'الأولوية',
+    created_at: 'تاريخ الإنشاء',
+  },
+
+  // Messages de succès
+  success: {
+    created: 'تم الإنشاء بنجاح',
+    updated: 'تم التحديث بنجاح',
+    deleted: 'تم الحذف بنجاح',
+    saved: 'تم الحفظ بنجاح',
+    assigned: 'تم التعيين بنجاح',
+    stage_changed: 'تم تغيير المرحلة',
+  },
+
+  // Messages d'erreur
+  error: {
+    generic: 'حدث خطأ غير متوقع',
+    not_found: 'العنصر غير موجود',
+    unauthorized: 'ليس لديك صلاحية لهذا الإجراء',
+    duplicate: 'هذا العنصر موجود بالفعل',
+    required_field: 'هذا الحقل مطلوب',
+    invalid_email: 'عنوان بريد إلكتروني غير صالح',
+    invalid_phone: 'رقم هاتف غير صالح',
+    login_failed: 'البريد الإلكتروني أو كلمة المرور غير صحيحة',
+    session_expired: 'انتهت الجلسة، يرجى إعادة تسجيل الدخول',
+    network: 'خطأ في الاتصال بالخادم',
+    fk_constraint: 'لا يمكن الحذف: توجد عناصر مرتبطة',
+  },
+
+  // Commun
+  common: {
+    loading: 'جاري التحميل...',
+    no_data: 'لا توجد بيانات',
+    no_results: 'لا توجد نتائج',
+    all: 'الكل',
+    yes: 'نعم',
+    no: 'لا',
+    or: 'أو',
+    and: 'و',
+    of: 'من',
+    total: 'المجموع',
+    version: 'v2.0',
+    app_name: 'IMMO PRO-X',
+    first_login: 'أول تسجيل دخول؟ تواصل مع المدير',
+    search_placeholder: 'بحث...',
+    confirm_delete_title: 'تأكيد الحذف',
+    confirm_delete_desc: 'هذا الإجراء لا يمكن التراجع عنه.',
+    not_found_title: 'الصفحة غير موجودة',
+    not_found_back: 'العودة إلى لوحة التحكم',
+    language: 'اللغة',
+  },
+
+  // KPI
+  kpi: {
+    total_clients: 'إجمالي العملاء',
+    new_clients: 'عملاء جدد',
+    active_visits: 'الزيارات النشطة',
+    reservations: 'الحجوزات',
+    sales: 'المبيعات',
+    revenue: 'الإيرادات',
+    conversion_rate: 'معدل التحويل',
+    avg_deal_time: 'متوسط المدة',
+  },
+} as const

@@ -1,0 +1,438 @@
+import { useState, useMemo } from 'react'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import {
+  Target, Plus, Download, TrendingUp,
+} from 'lucide-react'
+import { supabase } from '@/lib/supabase'
+import { handleSupabaseError } from '@/lib/errors'
+import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
+import {
+  KPICard, FilterDropdown, LoadingSpinner, StatusBadge, Modal,
+} from '@/components/common'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { GOAL_METRIC_LABELS } from '@/types'
+import type { GoalMetric, GoalPeriod, GoalStatus } from '@/types'
+import { formatPriceCompact } from '@/lib/constants'
+import {
+  startOfMonth, endOfMonth, startOfQuarter, endOfQuarter,
+  startOfYear, endOfYear, format,
+} from 'date-fns'
+import toast from 'react-hot-toast'
+
+/* ═══ Types ═══ */
+
+interface GoalRow {
+  id: string
+  agent_id: string
+  agent_name: string
+  metric: GoalMetric
+  period: GoalPeriod
+  target_value: number
+  current_value: number
+  started_at: string
+  ended_at: string
+  status: GoalStatus
+  progress: number
+}
+
+interface AgentActuals {
+  sales_count: number
+  reservations_count: number
+  visits_count: number
+  revenue: number
+  new_clients: number
+  conversion_rate: number
+}
+
+const PERIOD_LABELS: Record<GoalPeriod, string> = { monthly: 'Mensuel', quarterly: 'Trimestriel', yearly: 'Annuel' }
+const STATUS_CONFIG: Record<GoalStatus, { label: string; type: 'blue' | 'green' | 'red' | 'orange' }> = {
+  in_progress: { label: 'En cours', type: 'blue' },
+  achieved: { label: 'Atteint', type: 'green' },
+  exceeded: { label: 'Dépassé', type: 'green' },
+  not_achieved: { label: 'Non atteint', type: 'red' },
+}
+
+const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted'
+const labelClass = 'text-[11px] font-medium text-immo-text-muted'
+
+/* ═══ Component ═══ */
+
+export function GoalsPage() {
+  const { tenantId } = useAuthStore()
+  const { canManageGoals, isAgent } = usePermissions()
+  const userId = useAuthStore((s) => s.session?.user?.id)
+
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [agentFilter, setAgentFilter] = useState('all')
+  const [showCreate, setShowCreate] = useState(false)
+
+  // Fetch agents
+  const { data: agents = [] } = useQuery({
+    queryKey: ['goal-agents', tenantId],
+    queryFn: async () => {
+      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
+    },
+    enabled: !!tenantId,
+  })
+
+  const agentMap = useMemo(() => {
+    const m = new Map<string, string>()
+    agents.forEach(a => m.set(a.id, `${a.first_name} ${a.last_name}`))
+    return m
+  }, [agents])
+
+  // Fetch goals
+  const { data: rawGoals = [], isLoading: loadingGoals } = useQuery({
+    queryKey: ['goals', tenantId],
+    queryFn: async () => {
+      let q = supabase.from('agent_goals').select('*').eq('tenant_id', tenantId!)
+      if (isAgent && userId) q = q.eq('agent_id', userId)
+      const { data, error } = await q.order('created_at', { ascending: false })
+      if (error) { handleSupabaseError(error); throw error }
+      return data as unknown as Array<{
+        id: string; agent_id: string; metric: GoalMetric; period: GoalPeriod
+        target_value: number; current_value: number; status: GoalStatus
+        started_at: string; ended_at: string
+      }>
+    },
+    enabled: !!tenantId,
+  })
+
+  // Fetch actuals for all agents with goals
+  const agentIds = useMemo(() => [...new Set(rawGoals.map(g => g.agent_id))], [rawGoals])
+
+  const { data: actuals = new Map<string, AgentActuals>(), isLoading: loadingActuals } = useQuery({
+    queryKey: ['goal-actuals', tenantId, agentIds.join(',')],
+    queryFn: async () => {
+      if (agentIds.length === 0) return new Map<string, AgentActuals>()
+
+      const map = new Map<string, AgentActuals>()
+
+      for (const agentId of agentIds) {
+        // Get date range from goals for this agent
+        const agentGoals = rawGoals.filter(g => g.agent_id === agentId)
+        const starts = agentGoals.map(g => g.started_at)
+        const ends = agentGoals.map(g => g.ended_at)
+        const minStart = starts.sort()[0]
+        const maxEnd = ends.sort().reverse()[0]
+
+        const [salesRes, resRes, visitsRes, clientsRes] = await Promise.all([
+          supabase.from('sales').select('id, final_price').eq('agent_id', agentId).eq('status', 'active').gte('created_at', minStart).lte('created_at', maxEnd),
+          supabase.from('reservations').select('id').eq('agent_id', agentId).eq('status', 'active').gte('created_at', minStart).lte('created_at', maxEnd),
+          supabase.from('visits').select('id').eq('agent_id', agentId).eq('status', 'completed').gte('scheduled_at', minStart).lte('scheduled_at', maxEnd),
+          supabase.from('clients').select('id').eq('agent_id', agentId).gte('created_at', minStart).lte('created_at', maxEnd),
+        ])
+
+        const salesCount = salesRes.data?.length ?? 0
+        const revenue = (salesRes.data ?? []).reduce((s: number, r: { final_price?: number }) => s + (r.final_price ?? 0), 0)
+        const newClients = clientsRes.data?.length ?? 0
+
+        map.set(agentId, {
+          sales_count: salesCount,
+          reservations_count: resRes.data?.length ?? 0,
+          visits_count: visitsRes.data?.length ?? 0,
+          revenue,
+          new_clients: newClients,
+          conversion_rate: newClients > 0 ? (salesCount / newClients) * 100 : 0,
+        })
+      }
+
+      return map
+    },
+    enabled: !!tenantId && agentIds.length > 0,
+  })
+
+  // Build goal rows with computed values
+  const goals: GoalRow[] = useMemo(() => {
+    return rawGoals.map(g => {
+      const agentActuals = actuals.get(g.agent_id)
+      const currentValue = agentActuals ? agentActuals[g.metric] : g.current_value
+      const progress = g.target_value > 0 ? Math.min((currentValue / g.target_value) * 100, 150) : 0
+      const now = new Date()
+      const ended = new Date(g.ended_at)
+
+      let computedStatus: GoalStatus = g.status
+      if (now <= ended) {
+        computedStatus = progress >= 110 ? 'exceeded' : progress >= 100 ? 'achieved' : 'in_progress'
+      } else {
+        computedStatus = progress >= 110 ? 'exceeded' : progress >= 100 ? 'achieved' : 'not_achieved'
+      }
+
+      return {
+        id: g.id,
+        agent_id: g.agent_id,
+        agent_name: agentMap.get(g.agent_id) ?? '-',
+        metric: g.metric,
+        period: g.period,
+        target_value: g.target_value,
+        current_value: Math.round(currentValue * 100) / 100,
+        started_at: g.started_at,
+        ended_at: g.ended_at,
+        status: computedStatus,
+        progress: Math.round(progress),
+      }
+    })
+  }, [rawGoals, actuals, agentMap])
+
+  // Filter
+  const filtered = useMemo(() => {
+    return goals.filter(g => {
+      if (statusFilter !== 'all' && g.status !== statusFilter) return false
+      if (agentFilter !== 'all' && g.agent_id !== agentFilter) return false
+      return true
+    })
+  }, [goals, statusFilter, agentFilter])
+
+  // KPIs
+  const totalGoals = goals.length
+  const inProgress = goals.filter(g => g.status === 'in_progress').length
+  const achieved = goals.filter(g => g.status === 'achieved' || g.status === 'exceeded').length
+  const avgProgress = goals.length > 0 ? Math.round(goals.reduce((s, g) => s + g.progress, 0) / goals.length) : 0
+
+  // Filter options
+  const statusOptions = [
+    { value: 'all', label: 'Tous les statuts' },
+    { value: 'in_progress', label: 'En cours' },
+    { value: 'achieved', label: 'Atteint' },
+    { value: 'exceeded', label: 'Dépassé' },
+    { value: 'not_achieved', label: 'Non atteint' },
+  ]
+  const agentOptions = [
+    { value: 'all', label: 'Tous les agents' },
+    ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` })),
+  ]
+
+  function formatMetricValue(metric: GoalMetric, value: number): string {
+    if (metric === 'revenue') return formatPriceCompact(value)
+    if (metric === 'conversion_rate') return `${value.toFixed(1)}%`
+    return String(Math.round(value))
+  }
+
+  const isLoading = loadingGoals || loadingActuals
+
+  if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
+
+  return (
+    <div className="space-y-5">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <KPICard label="Total objectifs" value={totalGoals} accent="blue" icon={<Target className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label="En cours" value={inProgress} accent="orange" icon={<Target className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label="Atteints" value={achieved} accent="green" icon={<Target className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label="Progression moyenne" value={`${avgProgress}%`} accent={avgProgress >= 80 ? 'green' : avgProgress >= 50 ? 'orange' : 'red'} icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
+      </div>
+
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center gap-3">
+        {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
+        <FilterDropdown label="Statut" options={statusOptions} value={statusFilter} onChange={setStatusFilter} />
+        <Button variant="ghost" size="sm" className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover">
+          <Download className="mr-1 h-3.5 w-3.5" /> Exporter
+        </Button>
+        {canManageGoals && (
+          <Button onClick={() => setShowCreate(true)} className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
+            <Plus className="mr-1 h-4 w-4" /> Nouvel objectif
+          </Button>
+        )}
+      </div>
+
+      {/* Table */}
+      {filtered.length === 0 ? (
+        <div className="py-16 text-center text-sm text-immo-text-muted">Aucun objectif</div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-immo-border-default">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-immo-bg-card-hover">
+                  {['Agent', 'Métrique', 'Période', 'Objectif', 'Actuel', 'Progression', 'Statut'].map(h => (
+                    <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-immo-border-default">
+                {filtered.map(g => {
+                  const stCfg = STATUS_CONFIG[g.status]
+                  const progressColor = g.progress >= 100 ? 'bg-immo-accent-green' : g.progress >= 70 ? 'bg-immo-status-orange' : 'bg-immo-status-red'
+                  return (
+                    <tr key={g.id} className="bg-immo-bg-card transition-colors hover:bg-immo-bg-card-hover">
+                      <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-immo-text-primary">{g.agent_name}</td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-secondary">{GOAL_METRIC_LABELS[g.metric]}</td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div>
+                          <span className="text-xs text-immo-text-primary">{PERIOD_LABELS[g.period]}</span>
+                          <p className="text-[10px] text-immo-text-muted">{format(new Date(g.started_at), 'dd/MM')} — {format(new Date(g.ended_at), 'dd/MM/yyyy')}</p>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs font-medium text-immo-text-primary">
+                        {formatMetricValue(g.metric, g.target_value)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-immo-accent-green">
+                        {formatMetricValue(g.metric, g.current_value)}
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-[80px] overflow-hidden rounded-full bg-immo-bg-primary">
+                            <div className={`h-full rounded-full ${progressColor}`} style={{ width: `${Math.min(g.progress, 100)}%` }} />
+                          </div>
+                          <span className={`text-xs font-semibold ${g.progress >= 100 ? 'text-immo-accent-green' : g.progress >= 70 ? 'text-immo-status-orange' : 'text-immo-status-red'}`}>
+                            {g.progress}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-3">
+                        <StatusBadge label={stCfg.label} type={stCfg.type} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Create modal */}
+      <CreateGoalModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        agents={agents}
+        tenantId={tenantId!}
+      />
+    </div>
+  )
+}
+
+/* ═══ Create Goal Modal ═══ */
+
+function CreateGoalModal({ isOpen, onClose, agents, tenantId }: {
+  isOpen: boolean
+  onClose: () => void
+  agents: Array<{ id: string; first_name: string; last_name: string }>
+  tenantId: string
+}) {
+  const qc = useQueryClient()
+  const [agentId, setAgentId] = useState('')
+  const [metric, setMetric] = useState<GoalMetric>('sales_count')
+  const [period, setPeriod] = useState<GoalPeriod>('monthly')
+  const [targetValue, setTargetValue] = useState('')
+
+  // Auto-compute dates
+  const now = new Date()
+  const dates = useMemo(() => {
+    switch (period) {
+      case 'monthly': return { start: startOfMonth(now), end: endOfMonth(now) }
+      case 'quarterly': return { start: startOfQuarter(now), end: endOfQuarter(now) }
+      case 'yearly': return { start: startOfYear(now), end: endOfYear(now) }
+    }
+  }, [period])
+
+  const createGoal = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('agent_goals').insert({
+        tenant_id: tenantId,
+        agent_id: agentId,
+        metric,
+        period,
+        target_value: Number(targetValue),
+        current_value: 0,
+        status: 'in_progress',
+        started_at: format(dates.start, 'yyyy-MM-dd'),
+        ended_at: format(dates.end, 'yyyy-MM-dd'),
+      } as never)
+      if (error) { handleSupabaseError(error); throw error }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['goals'] })
+      toast.success('Objectif créé avec succès')
+      resetAndClose()
+    },
+  })
+
+  function resetAndClose() {
+    setAgentId(''); setMetric('sales_count'); setPeriod('monthly'); setTargetValue('')
+    onClose()
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={resetAndClose} title="Nouvel objectif" subtitle="Définir un objectif de vente pour un agent" size="sm">
+      <div className="space-y-4">
+        <div>
+          <Label className={labelClass}>Agent *</Label>
+          <Select value={agentId} onValueChange={(v) => { if (v) setAgentId(v) }}>
+            <SelectTrigger className={`mt-1 ${inputClass}`}><SelectValue placeholder="Sélectionner l'agent" /></SelectTrigger>
+            <SelectContent className="border-immo-border-default bg-immo-bg-card">
+              {agents.map(a => (
+                <SelectItem key={a.id} value={a.id} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                  {a.first_name} {a.last_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className={labelClass}>Métrique *</Label>
+          <Select value={metric} onValueChange={(v) => { if (v) setMetric(v as GoalMetric) }}>
+            <SelectTrigger className={`mt-1 ${inputClass}`}><SelectValue /></SelectTrigger>
+            <SelectContent className="border-immo-border-default bg-immo-bg-card">
+              {Object.entries(GOAL_METRIC_LABELS).map(([val, label]) => (
+                <SelectItem key={val} value={val} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <Label className={labelClass}>Période *</Label>
+          <Select value={period} onValueChange={(v) => { if (v) setPeriod(v as GoalPeriod) }}>
+            <SelectTrigger className={`mt-1 ${inputClass}`}><SelectValue /></SelectTrigger>
+            <SelectContent className="border-immo-border-default bg-immo-bg-card">
+              {Object.entries(PERIOD_LABELS).map(([val, label]) => (
+                <SelectItem key={val} value={val} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="mt-1 text-[10px] text-immo-text-muted">
+            {format(dates.start, 'dd/MM/yyyy')} → {format(dates.end, 'dd/MM/yyyy')}
+          </p>
+        </div>
+
+        <div>
+          <Label className={labelClass}>Valeur cible *</Label>
+          <Input
+            type="number"
+            value={targetValue}
+            onChange={(e) => setTargetValue(e.target.value)}
+            placeholder={metric === 'revenue' ? '50000000' : metric === 'conversion_rate' ? '25' : '10'}
+            className={`mt-1 ${inputClass}`}
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
+          <Button variant="ghost" onClick={resetAndClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary">
+            Annuler
+          </Button>
+          <Button
+            onClick={() => createGoal.mutate()}
+            disabled={!agentId || !targetValue || createGoal.isPending}
+            className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+          >
+            {createGoal.isPending ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" /> : 'Créer l\'objectif'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}

@@ -1,0 +1,208 @@
+export const fr = {
+  // Navigation
+  nav: {
+    dashboard: 'Dashboard',
+    projects: 'Projets',
+    pipeline: 'Pipeline',
+    planning: 'Planning',
+    dossiers: 'Dossiers',
+    goals: 'Objectifs',
+    performance: 'Performance',
+    agents: 'Agents',
+    reports: 'Rapports',
+    settings: 'Paramètres',
+  },
+
+  // Page meta
+  page: {
+    dashboard_subtitle: "Vue d'ensemble de votre activité",
+    projects_subtitle: 'Gestion des programmes immobiliers',
+    pipeline_subtitle: 'Suivi des clients par étape',
+    planning_subtitle: 'Visites et rendez-vous',
+    dossiers_subtitle: 'Documents et contrats',
+    goals_subtitle: 'Suivi des objectifs commerciaux',
+    performance_subtitle: 'Analyse des performances',
+    agents_subtitle: "Gestion de l'équipe commerciale",
+    reports_subtitle: 'Rapports et statistiques',
+    settings_subtitle: "Configuration de l'agence",
+  },
+
+  // Actions
+  action: {
+    add: 'Ajouter',
+    create: 'Créer',
+    edit: 'Modifier',
+    delete: 'Supprimer',
+    cancel: 'Annuler',
+    confirm: 'Confirmer',
+    save: 'Enregistrer',
+    search: 'Rechercher',
+    filter: 'Filtrer',
+    export: 'Exporter',
+    import: 'Importer',
+    close: 'Fermer',
+    back: 'Retour',
+    next: 'Suivant',
+    previous: 'Précédent',
+    refresh: 'Actualiser',
+    view: 'Voir',
+    download: 'Télécharger',
+    upload: 'Téléverser',
+    print: 'Imprimer',
+    duplicate: 'Dupliquer',
+    archive: 'Archiver',
+    restore: 'Restaurer',
+    assign: 'Assigner',
+    logout: 'Déconnexion',
+    login: 'Connexion',
+  },
+
+  // Statuts
+  status: {
+    active: 'Actif',
+    inactive: 'Inactif',
+    archived: 'Archivé',
+    available: 'Disponible',
+    reserved: 'Réservé',
+    sold: 'Vendu',
+    blocked: 'Bloqué',
+    pending: 'En attente',
+    paid: 'Payé',
+    late: 'En retard',
+    planned: 'Planifiée',
+    confirmed: 'Confirmée',
+    completed: 'Terminée',
+    cancelled: 'Annulée',
+    rescheduled: 'Reportée',
+    expired: 'Expirée',
+    converted: 'Convertie',
+  },
+
+  // Étapes pipeline
+  pipeline: {
+    accueil: 'Accueil',
+    visite_a_gerer: 'Visite à gérer',
+    visite_confirmee: 'Visite confirmée',
+    visite_terminee: 'Visite terminée',
+    negociation: 'Négociation',
+    reservation: 'Réservation',
+    vente: 'Vente',
+    relancement: 'Relancement',
+    perdue: 'Perdue',
+  },
+
+  // Sources
+  source: {
+    facebook_ads: 'Facebook Ads',
+    google_ads: 'Google Ads',
+    instagram_ads: 'Instagram Ads',
+    appel_entrant: 'Appel entrant',
+    reception: 'Réception',
+    bouche_a_oreille: 'Bouche à oreille',
+    reference_client: 'Référence client',
+    site_web: 'Site web',
+    portail_immobilier: 'Portail immobilier',
+    autre: 'Autre',
+  },
+
+  // Rôles
+  role: {
+    super_admin: 'Super Admin',
+    admin: 'Administrateur',
+    agent: 'Agent commercial',
+  },
+
+  // Types d'unités
+  unit_type: {
+    apartment: 'Appartement',
+    local: 'Local commercial',
+    villa: 'Villa',
+    parking: 'Parking',
+  },
+
+  // Champs communs
+  field: {
+    name: 'Nom',
+    email: 'Email',
+    phone: 'Téléphone',
+    address: 'Adresse',
+    date: 'Date',
+    price: 'Prix',
+    status: 'Statut',
+    type: 'Type',
+    description: 'Description',
+    notes: 'Notes',
+    agent: 'Agent',
+    client: 'Client',
+    project: 'Projet',
+    unit: 'Unité',
+    surface: 'Surface',
+    floor: 'Étage',
+    building: 'Bâtiment',
+    budget: 'Budget',
+    source: 'Source',
+    stage: 'Étape',
+    priority: 'Priorité',
+    created_at: 'Date de création',
+  },
+
+  // Messages de succès
+  success: {
+    created: 'Créé avec succès',
+    updated: 'Mis à jour avec succès',
+    deleted: 'Supprimé avec succès',
+    saved: 'Enregistré avec succès',
+    assigned: 'Assigné avec succès',
+    stage_changed: 'Étape modifiée',
+  },
+
+  // Messages d'erreur
+  error: {
+    generic: 'Une erreur inattendue est survenue',
+    not_found: 'Élément introuvable',
+    unauthorized: "Vous n'avez pas les droits pour cette action",
+    duplicate: 'Cet élément existe déjà',
+    required_field: 'Ce champ est obligatoire',
+    invalid_email: 'Adresse email invalide',
+    invalid_phone: 'Numéro de téléphone invalide',
+    login_failed: 'Email ou mot de passe incorrect',
+    session_expired: 'Session expirée, veuillez vous reconnecter',
+    network: 'Erreur de connexion au serveur',
+    fk_constraint: 'Impossible de supprimer : des éléments liés existent encore',
+  },
+
+  // Commun
+  common: {
+    loading: 'Chargement...',
+    no_data: 'Aucune donnée',
+    no_results: 'Aucun résultat',
+    all: 'Tous',
+    yes: 'Oui',
+    no: 'Non',
+    or: 'ou',
+    and: 'et',
+    of: 'de',
+    total: 'Total',
+    version: 'v2.0',
+    app_name: 'IMMO PRO-X',
+    first_login: 'Première connexion ? Contactez votre administrateur',
+    search_placeholder: 'Rechercher...',
+    confirm_delete_title: 'Confirmer la suppression',
+    confirm_delete_desc: 'Cette action est irréversible.',
+    not_found_title: 'Page introuvable',
+    not_found_back: 'Retour au dashboard',
+    language: 'Langue',
+  },
+
+  // KPI
+  kpi: {
+    total_clients: 'Total clients',
+    new_clients: 'Nouveaux clients',
+    active_visits: 'Visites actives',
+    reservations: 'Réservations',
+    sales: 'Ventes',
+    revenue: "Chiffre d'affaires",
+    conversion_rate: 'Taux de conversion',
+    avg_deal_time: 'Durée moyenne',
+  },
+} as const

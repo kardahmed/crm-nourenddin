@@ -39,14 +39,14 @@ export function useAuth() {
 
       if (session?.user) {
         const profile = await fetchUserProfile(session.user.id)
-        if (mounted) {
-          if (profile?.status === 'inactive') {
-            await supabase.auth.signOut()
-            reset()
-            return
-          }
-          setUserProfile(profile)
+        if (!mounted) return
+
+        if (profile?.status === 'inactive') {
+          await supabase.auth.signOut()
+          reset()
+          return
         }
+        setUserProfile(profile)
       }
 
       if (mounted) setLoading(false)
@@ -62,15 +62,15 @@ export function useAuth() {
 
         if (event === 'SIGNED_IN' && session?.user) {
           const profile = await fetchUserProfile(session.user.id)
-          if (mounted) {
-            if (profile?.status === 'inactive') {
-              await supabase.auth.signOut()
-              reset()
-              return
-            }
-            setUserProfile(profile)
-            setLoading(false)
+          if (!mounted) return
+
+          if (profile?.status === 'inactive') {
+            await supabase.auth.signOut()
+            reset()
+            return
           }
+          setUserProfile(profile)
+          setLoading(false)
         }
 
         if (event === 'SIGNED_OUT') {
@@ -107,13 +107,20 @@ export function useAuth() {
     reset()
   }, [reset])
 
+  // profileReady = true when either:
+  // - not authenticated (no profile needed)
+  // - profile is loaded (role is set)
+  const isAuthenticated = !!session
+  const profileReady = !isAuthenticated || role !== null
+
   return {
     user: session?.user ?? null,
     userProfile,
     role,
     tenantId,
-    isLoading,
-    isAuthenticated: !!session,
+    // isLoading is true until BOTH session check AND profile fetch are done
+    isLoading: isLoading || (isAuthenticated && !profileReady),
+    isAuthenticated,
     signIn,
     signOut,
   }

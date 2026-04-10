@@ -5,6 +5,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 export function SuperAdminRoute() {
   const { isAuthenticated, isLoading, role } = useAuth()
 
+  // Wait until session AND profile are fully loaded
   if (isLoading) {
     return <LoadingSpinner size="lg" className="h-screen" />
   }

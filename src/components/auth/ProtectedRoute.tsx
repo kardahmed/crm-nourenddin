@@ -6,6 +6,7 @@ export function ProtectedRoute() {
   const { isAuthenticated, isLoading, role } = useAuth()
   const { inspectedTenantId } = useSuperAdminStore()
 
+  // Wait until session AND profile are fully loaded
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-immo-bg-primary">
@@ -28,4 +29,3 @@ export function ProtectedRoute() {
 
   return <Outlet />
 }
-

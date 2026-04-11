@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useClients } from '@/hooks/useClients'
+import { exportToCsv } from '@/lib/exportCsv'
 import { usePipelineStats } from '@/hooks/usePipelineStats'
 import type { PipelineAlert } from '@/hooks/usePipelineStats'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -311,6 +312,17 @@ export function PipelinePage() {
           variant="ghost"
           size="sm"
           className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover"
+          onClick={() => exportToCsv('clients-pipeline', filtered, [
+            { header: 'Nom', value: c => c.full_name },
+            { header: 'Telephone', value: c => c.phone },
+            { header: 'Email', value: c => c.email },
+            { header: 'Etape', value: c => c.pipeline_stage },
+            { header: 'Source', value: c => c.source },
+            { header: 'Budget', value: c => c.confirmed_budget },
+            { header: 'Interet', value: c => c.interest_level },
+            { header: 'Priorite', value: c => c.is_priority ? 'Oui' : 'Non' },
+            { header: 'Cree le', value: c => c.created_at?.split('T')[0] },
+          ])}
         >
           <Download className="mr-1.5 h-3.5 w-3.5" /> Export
         </Button>

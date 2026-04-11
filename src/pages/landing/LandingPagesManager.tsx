@@ -126,10 +126,10 @@ export function LandingPagesManager() {
 
       {/* KPIs */}
       <div className="grid grid-cols-4 gap-4">
-        <KPICard label="{t('landing_page.active_pages')}" value={pages.filter(p => p.is_active).length} accent="blue" />
-        <KPICard label="{t('landing_page.total_views')}" value={totalViews} accent="blue" />
-        <KPICard label="{t('landing_page.leads_captured')}" value={totalSubmissions} accent="green" />
-        <KPICard label="{t('landing_page.conversion_rate')}" value={`${conversionRate}%`} accent={Number(conversionRate) > 5 ? 'green' : 'orange'} />
+        <KPICard label={t('landing_page.active_pages')} value={pages.filter(p => p.is_active).length} accent="blue" />
+        <KPICard label={t('landing_page.total_views')} value={totalViews} accent="blue" />
+        <KPICard label={t('landing_page.leads_captured')} value={totalSubmissions} accent="green" />
+        <KPICard label={t('landing_page.conversion_rate')} value={`${conversionRate}%`} accent={Number(conversionRate) > 5 ? 'green' : 'orange'} />
       </div>
 
       {/* Pages list */}
@@ -207,8 +207,8 @@ export function LandingPagesManager() {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={() => deleteId && deletePage.mutate(deleteId)}
-        title="{t('landing_page.confirm_delete')}"
-        description="{t('landing_page.delete_desc')}"
+        title={t('landing_page.confirm_delete')}
+        description={t('landing_page.delete_desc')}
         confirmVariant="danger"
         loading={deletePage.isPending}
       />

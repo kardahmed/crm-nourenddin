@@ -36,5 +36,5 @@ export function usePlanLimits() {
 
 export function formatPlanPrice(price: number): string {
   if (price === 0) return 'Gratuit'
-  return `${(price / 100).toLocaleString('fr')} DA/mois`
+  return `${price.toLocaleString('fr')} DA/mois`
 }

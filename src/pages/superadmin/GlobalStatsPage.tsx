@@ -52,7 +52,7 @@ export function GlobalStatsPage() {
         const monthClients = clients.filter(c => { const d = new Date(c.created_at); return d >= start && d <= end }).length
         const monthSales = sales.filter(s => { const d = new Date(s.created_at); return d >= start && d <= end }).length
 
-        mrrByMonth.push({ month: label, mrr: monthMrr / 100, invoiced: monthInvoiced / 100, clients: monthClients, sales: monthSales })
+        mrrByMonth.push({ month: label, mrr: monthMrr, invoiced: monthInvoiced, clients: monthClients, sales: monthSales })
       }
 
       // ── Churn ──
@@ -67,7 +67,7 @@ export function GlobalStatsPage() {
       }
       const planDistribution = Array.from(revenueByPlan.entries()).map(([plan, revenue]) => ({
         name: plan.charAt(0).toUpperCase() + plan.slice(1),
-        value: revenue / 100,
+        value: revenue,
         plan,
         count: activeTenants.filter(t => (t.plan ?? 'free') === plan).length,
       }))
@@ -90,7 +90,7 @@ export function GlobalStatsPage() {
         ? tenants.reduce((s, t) => s + differenceInDays(new Date(), new Date(t.created_at)), 0) / tenants.length
         : 0
       const avgMonthlyRevenue = tenants.length > 0 ? mrr / tenants.length : 0
-      const ltv = avgTenantAge > 0 ? (avgMonthlyRevenue * (avgTenantAge / 30)) / 100 : 0
+      const ltv = avgTenantAge > 0 ? avgMonthlyRevenue * (avgTenantAge / 30) : 0
 
       // ── Invoice stats ──
       const totalInvoiced = invoices.reduce((s, i) => s + i.amount, 0)
@@ -118,8 +118,8 @@ export function GlobalStatsPage() {
 
       {/* Revenue KPIs */}
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
-        <KPICard label="MRR" value={formatPriceCompact(data.mrr / 100)} accent="green" icon={<DollarSign className="h-5 w-5 text-immo-accent-green" />} />
-        <KPICard label="ARR" value={formatPriceCompact(data.arr / 100)} accent="blue" icon={<TrendingUp className="h-5 w-5 text-immo-accent-blue" />} />
+        <KPICard label="MRR" value={formatPriceCompact(data.mrr)} accent="green" icon={<DollarSign className="h-5 w-5 text-immo-accent-green" />} />
+        <KPICard label="ARR" value={formatPriceCompact(data.arr)} accent="blue" icon={<TrendingUp className="h-5 w-5 text-immo-accent-blue" />} />
         <KPICard label="Churn rate" value={`${data.churnRate.toFixed(1)}%`} accent={data.churnRate > 10 ? 'red' : data.churnRate > 5 ? 'orange' : 'green'} icon={<TrendingDown className="h-5 w-5 text-immo-status-red" />} />
         <KPICard label="LTV moyen" value={formatPriceCompact(data.ltv)} accent="green" icon={<ArrowUpRight className="h-5 w-5 text-immo-accent-green" />} />
       </div>
@@ -128,8 +128,8 @@ export function GlobalStatsPage() {
       <div className="grid grid-cols-2 gap-4 xl:grid-cols-5">
         <KPICard label="Tenants actifs" value={data.activeTenants} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
         <KPICard label="Total clients" value={data.totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Facture (paye)" value={formatPriceCompact(data.totalPaid / 100)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Facture (en retard)" value={formatPriceCompact(data.totalOverdue / 100)} accent={data.totalOverdue > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
+        <KPICard label="Facture (paye)" value={formatPriceCompact(data.totalPaid)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label="Facture (en retard)" value={formatPriceCompact(data.totalOverdue)} accent={data.totalOverdue > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
         <KPICard label="Ventes plateforme" value={data.totalSales} accent="green" icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
       </div>
 
@@ -141,7 +141,7 @@ export function GlobalStatsPage() {
             <AreaChart data={data.mrrByMonth}>
               <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" />
               <XAxis dataKey="month" tick={CHART_STYLE} />
-              <YAxis tick={CHART_STYLE} tickFormatter={v => `${v / 1000}K`} />
+              <YAxis tick={CHART_STYLE} tickFormatter={v => `${Math.round(v / 1000)}K`} />
               <Tooltip contentStyle={{ background: '#fff', border: '1px solid #E3E8EF', borderRadius: 8, fontSize: 12 }} formatter={(v: unknown) => [`${Number(v).toLocaleString('fr')} DA`, '']} />
               <Area type="monotone" dataKey="mrr" name="MRR" stroke="#7C3AED" fill="#7C3AED" fillOpacity={0.1} strokeWidth={2} />
               <Area type="monotone" dataKey="invoiced" name="Facture" stroke="#0579DA" fill="#0579DA" fillOpacity={0.08} strokeWidth={2} />

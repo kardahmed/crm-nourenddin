@@ -51,9 +51,9 @@ function formatTokens(tokens: number): string {
   return String(tokens)
 }
 
-function formatPrice(cents: number): string {
-  if (cents === 0) return 'Gratuit'
-  return `${(cents / 100).toLocaleString('fr-FR')} DA`
+function formatPrice(da: number): string {
+  if (da === 0) return 'Gratuit'
+  return `${da.toLocaleString('fr-FR')} DA`
 }
 
 /* ═══ Component ═══ */
@@ -237,7 +237,7 @@ export function PlansConfigPage() {
               <div className="p-4 space-y-3">
                 {/* Price */}
                 <div>
-                  <Label className="text-[10px] font-medium text-immo-text-muted flex items-center gap-1"><DollarSign className="h-3 w-3" /> Prix mensuel (centimes)</Label>
+                  <Label className="text-[10px] font-medium text-immo-text-muted flex items-center gap-1"><DollarSign className="h-3 w-3" /> Prix mensuel (DA)</Label>
                   <Input type="number" value={plan.price_monthly} onChange={e => updatePlan(idx, 'price_monthly', parseInt(e.target.value) || 0)}
                     className="mt-1 h-8 border-immo-border-default bg-immo-bg-primary text-sm text-immo-text-primary" />
                   <p className="mt-0.5 text-[10px] text-immo-text-muted">{formatPrice(plan.price_monthly)}</p>

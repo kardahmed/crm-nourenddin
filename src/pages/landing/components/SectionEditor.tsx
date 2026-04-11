@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import toast from 'react-hot-toast'
+import { ImageUploader } from './ImageUploader'
 
 const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary text-sm'
 const labelClass = 'text-[11px] font-medium text-immo-text-muted'
@@ -162,24 +163,50 @@ function ContentEditor({ type, content, onUpdate }: { type: string; content: Rec
   switch (type) {
     case 'hero':
       return (
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div><Label className="text-[10px] text-immo-text-muted">Sous-titre</Label><Input value={(content.subtitle as string) ?? ''} onChange={e => set('subtitle', e.target.value)} className={inputClass} /></div>
-          <div><Label className="text-[10px] text-immo-text-muted">Image de fond (URL)</Label><Input value={(content.background_image as string) ?? ''} onChange={e => set('background_image', e.target.value)} placeholder="https://..." className={inputClass} /></div>
-          <div><Label className="text-[10px] text-immo-text-muted">Video de fond (URL mp4)</Label><Input value={(content.background_video as string) ?? ''} onChange={e => set('background_video', e.target.value)} placeholder="https://...mp4" className={inputClass} /></div>
+          <ImageUploader label="Image de fond" value={(content.background_image as string) ?? ''} onChange={url => set('background_image', url)} />
+          <p className="text-[9px] text-immo-text-muted">Ou coller une URL :</p>
+          <Input value={(content.background_image as string) ?? ''} onChange={e => set('background_image', e.target.value)} placeholder="https://..." className={inputClass} />
+          <ImageUploader label="Video de fond (mp4)" value={(content.background_video as string) ?? ''} onChange={url => set('background_video', url)} />
+          <Input value={(content.background_video as string) ?? ''} onChange={e => set('background_video', e.target.value)} placeholder="https://...mp4" className={inputClass} />
         </div>
       )
 
-    case 'gallery':
+    case 'gallery': {
+      const images = (content.images as Array<{url:string; caption?:string}>) ?? []
       return (
-        <div className="space-y-2">
-          <Label className="text-[10px] text-immo-text-muted">URLs des images (une par ligne)</Label>
+        <div className="space-y-3">
+          {/* Current images */}
+          {images.length > 0 && (
+            <div className="grid grid-cols-4 gap-2">
+              {images.map((img, i) => (
+                <div key={i} className="group relative">
+                  <img src={img.url} alt="" className="h-16 w-full rounded-lg object-cover" />
+                  <button onClick={() => set('images', images.filter((_, j) => j !== i))}
+                    className="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-immo-status-red text-white group-hover:flex">
+                    <span className="text-[9px]">×</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Upload */}
+          <ImageUploader
+            label="Uploader des images"
+            multiple
+            onMultiple={urls => set('images', [...images, ...urls.map(url => ({ url }))])}
+            onChange={() => {}}
+          />
+          <p className="text-[9px] text-immo-text-muted">Ou coller des URLs (une par ligne) :</p>
           <textarea
-            value={((content.images as Array<{url:string}>) ?? []).map(i => i.url).join('\n')}
+            value={images.map(i => i.url).join('\n')}
             onChange={e => set('images', e.target.value.split('\n').filter(u => u.trim()).map(url => ({ url: url.trim() })))}
-            rows={5} placeholder="https://image1.jpg&#10;https://image2.jpg" className={`w-full rounded-md border p-2 text-xs ${inputClass}`}
+            rows={3} placeholder="https://image1.jpg&#10;https://image2.jpg" className={`w-full rounded-md border p-2 text-xs ${inputClass}`}
           />
         </div>
       )
+    }
 
     case 'video':
       return (

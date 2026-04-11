@@ -21,6 +21,7 @@ import {
   startOfYear, endOfYear, format,
 } from 'date-fns'
 import toast from 'react-hot-toast'
+import { exportToCsv } from '@/lib/exportCsv'
 
 /* ═══ Types ═══ */
 
@@ -230,7 +231,15 @@ export function GoalsPage() {
       <div className="flex flex-wrap items-center gap-3">
         {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
         <FilterDropdown label="Statut" options={statusOptions} value={statusFilter} onChange={setStatusFilter} />
-        <Button variant="ghost" size="sm" className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover">
+        <Button variant="ghost" size="sm" onClick={() => exportToCsv('objectifs', filtered, [
+          { header: 'Agent', value: r => r.agent_name },
+          { header: 'Metrique', value: r => GOAL_METRIC_LABELS[r.metric] ?? r.metric },
+          { header: 'Periode', value: r => r.period },
+          { header: 'Objectif', value: r => r.target_value },
+          { header: 'Actuel', value: r => r.current_value },
+          { header: 'Progression', value: r => `${r.progress}%` },
+          { header: 'Statut', value: r => r.status },
+        ])} className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover">
           <Download className="mr-1 h-3.5 w-3.5" /> Exporter
         </Button>
         {canManageGoals && (

@@ -28,6 +28,8 @@ import { HISTORY_TYPE_LABELS } from '@/types'
 import type { Unit, HistoryType } from '@/types'
 import { format, formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
+import { Input } from '@/components/ui/input'
+import toast from 'react-hot-toast'
 
 const STATUS_MAP: Record<string, { label: string; type: 'green' | 'muted' | 'red' }> = {
   active: { label: 'Actif', type: 'green' },
@@ -57,6 +59,9 @@ export function ProjectDetailPage() {
   const { updateProject } = useProjects()
   const { canManageProjects } = usePermissions()
   const [galleryIndex, setGalleryIndex] = useState(0)
+  const [editMode, setEditMode] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editLocation, setEditLocation] = useState('')
 
   // Fetch project with units
   const { data: project, isLoading } = useQuery({
@@ -165,15 +170,32 @@ export function ProjectDetailPage() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-immo-text-primary">{project.name}</h1>
-              <span className="text-sm text-immo-text-muted">{project.code}</span>
-              <StatusBadge label={st.label} type={st.type} />
-            </div>
-            {project.location && (
-              <p className="mt-1 flex items-center gap-1 text-sm text-immo-text-muted">
-                <MapPin className="h-3.5 w-3.5" /> {project.location}
-              </p>
+            {editMode ? (
+              <div className="space-y-2">
+                <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nom du projet" className="h-9 w-[300px] border-immo-border-default text-sm" />
+                <Input value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Localisation" className="h-9 w-[300px] border-immo-border-default text-sm" />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={async () => {
+                    await updateProject.mutateAsync({ id: project.id, name: editName, location: editLocation })
+                    setEditMode(false)
+                    toast.success('Projet mis a jour')
+                  }} className="bg-immo-accent-green text-white text-xs">Enregistrer</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditMode(false)} className="text-xs text-immo-text-secondary">Annuler</Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-3">
+                  <h1 className="text-xl font-bold text-immo-text-primary">{project.name}</h1>
+                  <span className="text-sm text-immo-text-muted">{project.code}</span>
+                  <StatusBadge label={st.label} type={st.type} />
+                </div>
+                {project.location && (
+                  <p className="mt-1 flex items-center gap-1 text-sm text-immo-text-muted">
+                    <MapPin className="h-3.5 w-3.5" /> {project.location}
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -183,6 +205,7 @@ export function ProjectDetailPage() {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => { setEditName(project.name); setEditLocation(project.location ?? ''); setEditMode(!editMode) }}
               className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
             >
               <Pencil className="mr-1.5 h-3.5 w-3.5" /> Modifier

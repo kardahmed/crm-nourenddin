@@ -1,9 +1,12 @@
+import { useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Search } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { Input } from '@/components/ui/input'
 import { LanguageSwitch } from '@/components/common/LanguageSwitch'
 import { NotificationBell } from '@/components/common/NotificationBell'
+import { supabase } from '@/lib/supabase'
 
 interface TopbarProps {
   title: string
@@ -12,7 +15,20 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle }: TopbarProps) {
   const { t } = useTranslation()
-  const { userProfile } = useAuthStore()
+  const { userProfile, tenantId } = useAuthStore()
+  const navigate = useNavigate()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<Array<{ id: string; name: string; type: string }>>([])
+  const [showResults, setShowResults] = useState(false)
+
+  const handleSearch = useCallback(async (q: string) => {
+    setSearchQuery(q)
+    if (q.length < 2) { setSearchResults([]); setShowResults(false); return }
+    const { data } = await supabase.from('clients').select('id, full_name').eq('tenant_id', tenantId!).ilike('full_name', `%${q}%`).limit(5)
+    const results = (data ?? []).map(c => ({ id: c.id, name: (c as { full_name: string }).full_name, type: 'client' }))
+    setSearchResults(results)
+    setShowResults(results.length > 0)
+  }, [tenantId])
 
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b border-immo-border-default bg-immo-bg-sidebar px-6">
@@ -31,9 +47,25 @@ export function Topbar({ title, subtitle }: TopbarProps) {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-immo-text-muted rtl:left-auto rtl:right-3" />
           <Input
             type="text"
+            value={searchQuery}
+            onChange={e => handleSearch(e.target.value)}
+            onBlur={() => setTimeout(() => setShowResults(false), 200)}
+            onFocus={() => searchResults.length > 0 && setShowResults(true)}
             placeholder={t('common.search_placeholder')}
             className="h-9 w-[240px] border-immo-border-default bg-immo-bg-primary pl-9 text-sm text-immo-text-primary placeholder:text-immo-text-muted focus:border-immo-accent-green focus:ring-immo-accent-green rtl:pl-3 rtl:pr-9"
           />
+          {showResults && (
+            <div className="absolute top-full left-0 z-50 mt-1 w-[300px] rounded-lg border border-immo-border-default bg-immo-bg-card shadow-lg">
+              {searchResults.map(r => (
+                <button key={r.id} onClick={() => { navigate(`/pipeline/clients/${r.id}`); setShowResults(false); setSearchQuery('') }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-immo-text-primary hover:bg-immo-bg-card-hover">
+                  <Search className="h-3 w-3 text-immo-text-muted" />
+                  {r.name}
+                  <span className="ml-auto text-[10px] text-immo-text-muted">Client</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Language switch */}

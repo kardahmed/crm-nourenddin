@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CalendarDays, MapPin, Building2, Video } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -54,20 +54,34 @@ export function PlanVisitModal({
   const [notes, setNotes] = useState(prefillNotes)
 
   const userId = useAuthStore((s) => s.session?.user?.id)
+  const { tenantId } = useAuthStore()
   const qc = useQueryClient()
+  const [selectedClientId, setSelectedClientId] = useState('')
+
+  // Fetch clients list when no client is provided (planning page use case)
+  const { data: clientsList = [] } = useQuery({
+    queryKey: ['clients-for-visit', tenantId],
+    queryFn: async () => {
+      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage, tenant_id').eq('tenant_id', tenantId!).order('full_name')
+      return (data ?? []) as ClientInfo[]
+    },
+    enabled: !client && !!tenantId,
+  })
+
+  const effectiveClient = client ?? clientsList.find(c => c.id === selectedClientId) ?? null
 
   const effectiveTime = customTime || selectedSlot
 
   const mutation = useMutation({
     mutationFn: async () => {
-      if (!client || !userId || !date || !effectiveTime) return
+      if (!effectiveClient || !userId || !date || !effectiveTime) return
 
       const scheduledAt = `${date}T${effectiveTime}:00`
 
       // 1. Create visit
       const { error: visitErr } = await supabase.from('visits').insert({
-        tenant_id: client.tenant_id,
-        client_id: client.id,
+        tenant_id: effectiveClient.tenant_id,
+        client_id: effectiveClient.id,
         agent_id: userId,
         scheduled_at: scheduledAt,
         visit_type: visitType,
@@ -77,14 +91,14 @@ export function PlanVisitModal({
 
       // 2. Move client to visite_a_gerer (if still in earlier stages)
       const earlyStages: PipelineStage[] = ['accueil']
-      if (earlyStages.includes(client.pipeline_stage)) {
-        await supabase.from('clients').update({ pipeline_stage: 'visite_a_gerer' } as never).eq('id', client.id)
+      if (earlyStages.includes(effectiveClient.pipeline_stage)) {
+        await supabase.from('clients').update({ pipeline_stage: 'visite_a_gerer' } as never).eq('id', effectiveClient.id)
       }
 
       // 3. History entry
       const { error: histErr } = await supabase.from('history').insert({
-        tenant_id: client.tenant_id,
-        client_id: client.id,
+        tenant_id: effectiveClient.tenant_id,
+        client_id: effectiveClient.id,
         agent_id: userId,
         type: 'visit_planned',
         title: `Visite planifiée le ${date} à ${effectiveTime}`,
@@ -107,23 +121,37 @@ export function PlanVisitModal({
     onClose()
   }
 
-  if (!client) return null
+  const displayClient = effectiveClient
 
-  const stage = PIPELINE_STAGES[client.pipeline_stage]
-  const nextStage = client.pipeline_stage === 'accueil' ? PIPELINE_STAGES.visite_a_gerer : null
+  const stage = displayClient ? PIPELINE_STAGES[displayClient.pipeline_stage] : null
+  const nextStage = displayClient?.pipeline_stage === 'accueil' ? PIPELINE_STAGES.visite_a_gerer : null
 
   return (
     <Modal isOpen={isOpen} onClose={resetAndClose} title="Planifier une nouvelle visite" size="md">
       <div className="space-y-5">
+        {/* Client selector (when no client provided) */}
+        {!client && (
+          <div>
+            <Label className="mb-1 text-[11px] font-medium text-immo-text-secondary">Client</Label>
+            <select value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}
+              className="h-10 w-full rounded-lg border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary">
+              <option value="">Selectionnez un client</option>
+              {clientsList.map(c => <option key={c.id} value={c.id}>{c.full_name} — {c.phone}</option>)}
+            </select>
+          </div>
+        )}
+
         {/* Client mini-card */}
+        {displayClient && (
         <div className="flex items-center gap-3 rounded-lg border border-immo-border-default bg-immo-bg-primary p-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-immo-accent-green/15 text-sm font-bold text-immo-accent-green">
-            {client.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+            {displayClient.full_name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-immo-text-primary">{client.full_name}</p>
-            <p className="text-[11px] text-immo-text-muted">{client.phone}</p>
+            <p className="text-sm font-medium text-immo-text-primary">{displayClient.full_name}</p>
+            <p className="text-[11px] text-immo-text-muted">{displayClient.phone}</p>
           </div>
+          {stage && (
           <div className="flex items-center gap-2">
             <span
               className="rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -143,7 +171,9 @@ export function PlanVisitModal({
               </>
             )}
           </div>
+          )}
         </div>
+        )}
 
         {/* Date */}
         <div>

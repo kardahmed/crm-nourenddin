@@ -28,14 +28,14 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
 const SECTION_KEYS: Section[] = ['company', 'pipeline', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
-  company: 'nav.settings',
-  pipeline: 'nav.pipeline',
-  branding: 'common.language',
-  reservations: 'tab.reservation',
-  templates: 'tab.documents',
-  notifications: 'nav.reports',
-  language: 'common.language',
-  security: 'nav.settings',
+  company: 'Agence',
+  pipeline: 'Pipeline',
+  branding: 'Personnalisation',
+  reservations: 'Reservations',
+  templates: 'Documents',
+  notifications: 'Notifications',
+  language: 'Langue',
+  security: 'Securite',
 }
 
 export function SettingsPage() {

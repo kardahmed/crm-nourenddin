@@ -45,8 +45,8 @@ export function MonitoringPage() {
       <div className="grid grid-cols-4 gap-4">
         <KPICard label="Actions (24h)" value={data.totalLogs} accent="blue" icon={<Activity className="h-5 w-5 text-immo-accent-blue" />} />
         <KPICard label="Erreurs" value={data.errorCount} accent={data.errorCount > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-5 w-5 text-immo-status-red" />} />
-        <KPICard label="Edge Functions" value="8" accent="green" icon={<Zap className="h-5 w-5 text-immo-accent-green" />} />
-        <KPICard label="Statut" value="OK" accent="green" icon={<CheckCircle className="h-5 w-5 text-immo-accent-green" />} />
+        <KPICard label="Edge Functions" value={data.functionStats.length || 'N/A'} accent="green" icon={<Zap className="h-5 w-5 text-immo-accent-green" />} />
+        <KPICard label="Statut" value={data.errorCount > 5 ? 'Alerte' : data.errorCount > 0 ? 'Degradé' : 'OK'} accent={data.errorCount > 5 ? 'red' : data.errorCount > 0 ? 'orange' : 'green'} icon={<CheckCircle className="h-5 w-5 text-immo-accent-green" />} />
       </div>
 
       <div className="grid grid-cols-2 gap-6">

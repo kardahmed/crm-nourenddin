@@ -15,6 +15,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 import { KPICard, FilterDropdown, LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PIPELINE_STAGES, SOURCE_LABELS } from '@/types'
+import { exportToCsv } from '@/lib/exportCsv'
 import type { PipelineStage, ClientSource } from '@/types'
 import { formatPriceCompact } from '@/lib/constants'
 import { PIPELINE_ORDER } from '@/lib/constants'
@@ -233,7 +234,11 @@ export function PerformancePage() {
           >
             <RefreshCw className={`h-3 w-3 ${autoRefresh ? 'animate-spin' : ''}`} /> Auto
           </button>
-          <Button variant="ghost" size="sm" className="border border-immo-border-default text-xs text-immo-text-secondary">
+          <Button variant="ghost" size="sm" onClick={() => exportToCsv('performance', sales, [
+            { header: 'ID', value: r => r.id },
+            { header: 'Prix final', value: r => r.final_price },
+            { header: 'Date', value: r => r.created_at },
+          ])} className="border border-immo-border-default text-xs text-immo-text-secondary">
             <Download className="mr-1 h-3.5 w-3.5" /> Export
           </Button>
           <Link to="/goals">

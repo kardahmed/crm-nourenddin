@@ -411,7 +411,7 @@ export function PipelinePage() {
           clientsByStage={clientsByStage}
           onMoveClient={handleMoveClient}
           onViewClient={handleViewClient}
-          onAddClient={() => {}}
+          onAddClient={() => setShowClientForm(true)}
           compact={compact}
           selectedIds={selectedIds}
           onSelectClient={toggleSelect}

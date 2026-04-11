@@ -194,7 +194,7 @@ export function AgentsPage() {
                           <DropdownMenuItem onClick={() => navigate(`/agents/${a.id}`)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                             <Eye className="mr-2 h-3.5 w-3.5" /> Voir profil
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                          <DropdownMenuItem onClick={() => navigate(`/agents/${a.id}`)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                             <Pencil className="mr-2 h-3.5 w-3.5" /> Modifier
                           </DropdownMenuItem>
                           {a.status === 'active' && canManageAgents && (

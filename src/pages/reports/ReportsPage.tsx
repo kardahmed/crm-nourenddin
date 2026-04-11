@@ -18,6 +18,7 @@ import {
 } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { HISTORY_TYPE_LABELS } from '@/types'
+import { exportToCsv } from '@/lib/exportCsv'
 import type { HistoryType } from '@/types'
 // import { formatPriceCompact } from '@/lib/constants'
 import {
@@ -235,7 +236,13 @@ export function ReportsPage() {
       <div className="flex flex-wrap items-center gap-3">
         <FilterDropdown label="Période" options={periodOptions} value={period} onChange={(v) => setPeriod(v as PeriodKey)} />
         {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
-        <Button variant="ghost" size="sm" className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover">
+        <Button variant="ghost" size="sm" onClick={() => exportToCsv('rapports', allHistory, [
+          { header: 'Date', value: r => r.created_at },
+          { header: 'Type', value: r => HISTORY_TYPE_LABELS[r.type as HistoryType]?.label ?? r.type },
+          { header: 'Titre', value: r => r.title },
+          { header: 'Client', value: r => r.client_name },
+          { header: 'Description', value: r => r.description },
+        ])} className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover">
           <Download className="mr-1 h-3.5 w-3.5" /> Exporter
         </Button>
 

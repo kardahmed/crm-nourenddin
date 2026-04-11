@@ -226,19 +226,7 @@ function ContentEditor({ type, content, onUpdate }: { type: string; content: Rec
       )
 
     case 'features':
-      return (
-        <div className="space-y-2">
-          <Label className="text-[10px] text-immo-text-muted">Caracteristiques (une par ligne : titre | description)</Label>
-          <textarea
-            value={((content.items as Array<{title:string; description?:string}>) ?? []).map(i => i.description ? `${i.title} | ${i.description}` : i.title).join('\n')}
-            onChange={e => set('items', e.target.value.split('\n').filter(l => l.trim()).map(line => {
-              const [title, description] = line.split('|').map(s => s.trim())
-              return { title, description }
-            }))}
-            rows={5} placeholder="Parking sous-sol | 2 places&#10;Surface | 85 a 140 m²&#10;Livraison | Juin 2026" className={`w-full rounded-md border p-2 text-xs ${inputClass}`}
-          />
-        </div>
-      )
+      return <FeaturesEditor content={content} onUpdate={onUpdate} />
 
     case 'pricing':
       return (
@@ -304,6 +292,143 @@ function ContentEditor({ type, content, onUpdate }: { type: string; content: Rec
     default:
       return <p className="text-xs text-immo-text-muted">Section non configurable</p>
   }
+}
+
+/* ═══ Features Editor with Checkboxes ═══ */
+
+const AMENITIES_CATALOG = {
+  'Haut Standing': [
+    { icon: 'piscine', title: 'Piscine', description: '' },
+    { icon: 'ascenseur', title: 'Ascenseur', description: '' },
+    { icon: 'parking', title: 'Parking sous-sol', description: '' },
+    { icon: 'securite', title: 'Securite 24/7', description: 'Vigiles + cameras' },
+    { icon: 'climatisation', title: 'Climatisation centrale', description: '' },
+    { icon: 'chauffage', title: 'Chauffage central', description: '' },
+    { icon: 'terrasse', title: 'Terrasse privative', description: '' },
+    { icon: 'jardin', title: 'Jardin prive', description: '' },
+    { icon: 'cuisine', title: 'Cuisine equipee', description: 'Electromenager integre' },
+    { icon: 'vue', title: 'Vue panoramique', description: '' },
+    { icon: 'default', title: 'Domotique', description: 'Maison intelligente' },
+    { icon: 'default', title: 'Interphone video', description: '' },
+    { icon: 'default', title: 'Double vitrage', description: '' },
+    { icon: 'default', title: 'Isolation phonique', description: '' },
+    { icon: 'default', title: 'Salle de sport', description: '' },
+    { icon: 'default', title: 'Spa / Hammam', description: '' },
+    { icon: 'default', title: 'Conciergerie', description: '' },
+    { icon: 'default', title: 'Local poubelles', description: '' },
+  ],
+  'Moyen Standing': [
+    { icon: 'parking', title: 'Parking exterieur', description: '' },
+    { icon: 'ascenseur', title: 'Ascenseur', description: '' },
+    { icon: 'securite', title: 'Gardien', description: '' },
+    { icon: 'cuisine', title: 'Cuisine amenagee', description: '' },
+    { icon: 'chauffage', title: 'Chauffage individuel', description: '' },
+    { icon: 'default', title: 'Interphone', description: '' },
+    { icon: 'default', title: 'Placard integre', description: '' },
+    { icon: 'default', title: 'Balcon', description: '' },
+    { icon: 'default', title: 'Cave', description: '' },
+    { icon: 'default', title: 'Antenne collective', description: '' },
+  ],
+  'Environnement': [
+    { icon: 'jardin', title: 'Espaces verts', description: '' },
+    { icon: 'default', title: 'Aire de jeux enfants', description: '' },
+    { icon: 'default', title: 'Centre commercial integre', description: '' },
+    { icon: 'default', title: 'Pharmacie a proximite', description: '' },
+    { icon: 'default', title: 'Ecole a proximite', description: '' },
+    { icon: 'default', title: 'Mosquee a proximite', description: '' },
+    { icon: 'default', title: 'Transport en commun', description: '' },
+    { icon: 'default', title: 'Acces autoroute', description: '' },
+  ],
+  'Projet': [
+    { icon: 'etages', title: 'R+5', description: '' },
+    { icon: 'surface', title: '85 a 140 m²', description: 'Surfaces habitables' },
+    { icon: 'livraison', title: 'Livraison 2026', description: '' },
+    { icon: 'default', title: 'Titre de propriete', description: 'Acte notarie' },
+    { icon: 'default', title: 'Conformite parasismique', description: '' },
+    { icon: 'default', title: 'Garantie decennale', description: '' },
+  ],
+}
+
+function FeaturesEditor({ content, onUpdate }: { content: Record<string, unknown>; onUpdate: (c: Record<string, unknown>) => void }) {
+  const items = (content.items as Array<{ icon?: string; title: string; description?: string }>) ?? []
+
+  function isChecked(title: string) {
+    return items.some(i => i.title === title)
+  }
+
+  function toggle(amenity: { icon: string; title: string; description: string }) {
+    if (isChecked(amenity.title)) {
+      onUpdate({ ...content, items: items.filter(i => i.title !== amenity.title) })
+    } else {
+      onUpdate({ ...content, items: [...items, amenity] })
+    }
+  }
+
+  function updateItem(idx: number, field: string, value: string) {
+    const updated = [...items]
+    updated[idx] = { ...updated[idx], [field]: value }
+    onUpdate({ ...content, items: updated })
+  }
+
+  function addCustom() {
+    onUpdate({ ...content, items: [...items, { icon: 'default', title: 'Nouveau', description: '' }] })
+  }
+
+  function removeItem(idx: number) {
+    onUpdate({ ...content, items: items.filter((_, i) => i !== idx) })
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Checkbox catalog */}
+      {Object.entries(AMENITIES_CATALOG).map(([category, amenities]) => (
+        <div key={category}>
+          <p className="mb-2 text-[11px] font-semibold text-immo-accent-green">{category}</p>
+          <div className="grid grid-cols-2 gap-1.5">
+            {amenities.map(amenity => (
+              <label key={amenity.title} className="flex cursor-pointer items-center gap-2 rounded-md border border-immo-border-default px-2.5 py-1.5 hover:bg-immo-bg-card-hover">
+                <input
+                  type="checkbox"
+                  checked={isChecked(amenity.title)}
+                  onChange={() => toggle(amenity)}
+                  className="h-3.5 w-3.5 rounded accent-immo-accent-green"
+                />
+                <span className="text-[11px] text-immo-text-primary">{amenity.title}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {/* Selected items with editable descriptions */}
+      {items.length > 0 && (
+        <div className="border-t border-immo-border-default pt-3">
+          <div className="mb-2 flex items-center justify-between">
+            <p className="text-[11px] font-semibold text-immo-text-primary">Selectionnes ({items.length})</p>
+            <button onClick={addCustom} className="text-[10px] text-immo-accent-green hover:underline">+ Ajouter un custom</button>
+          </div>
+          <div className="space-y-1.5">
+            {items.map((item, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-md bg-immo-bg-primary px-2.5 py-1.5">
+                <Input
+                  value={item.title}
+                  onChange={e => updateItem(i, 'title', e.target.value)}
+                  className={`h-6 flex-1 text-[11px] ${inputClass}`}
+                />
+                <Input
+                  value={item.description ?? ''}
+                  onChange={e => updateItem(i, 'description', e.target.value)}
+                  placeholder="Detail..."
+                  className={`h-6 flex-1 text-[11px] ${inputClass}`}
+                />
+                <button onClick={() => removeItem(i)} className="text-immo-status-red text-[10px]">×</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 /* ═══ Form Fields Builder ═══ */

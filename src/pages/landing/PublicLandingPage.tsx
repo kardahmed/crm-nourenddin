@@ -200,8 +200,12 @@ export function PublicLandingPage() {
   const heroSection = sections.find(s => s.type === 'hero')
   const ogImage = (heroSection?.content as Record<string, string>)?.background_image ?? page.cover_image_url ?? undefined
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const pageLanguage = (page as any).language ?? 'fr'
+  const isRTL = pageLanguage === 'ar'
+
   return (
-    <div className="min-h-screen bg-[#F6F9FC]">
+    <div className="min-h-screen bg-[#F6F9FC]" dir={isRTL ? 'rtl' : 'ltr'} lang={pageLanguage}>
       {/* SEO */}
       <SEOHead title={page.title} description={page.description} ogImage={ogImage} slug={page.slug} tenantName={page.tenant?.name ?? undefined} />
 

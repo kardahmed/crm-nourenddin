@@ -55,6 +55,10 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
   const [googleMeasurementId, setGoogleMeasurementId] = useState('')
   const [tiktokPixelId, setTiktokPixelId] = useState('')
   const [tiktokAccessToken, setTiktokAccessToken] = useState('')
+  // Multi-lang + A/B
+  const [language, setLanguage] = useState('fr')
+  const [variant, setVariant] = useState('A')
+  const [abTestGroup, setAbTestGroup] = useState('')
 
   // Pre-fill on edit
   useEffect(() => {
@@ -75,12 +79,16 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
       setGoogleMeasurementId(editPage.google_measurement_id as string || '')
       setTiktokPixelId(editPage.tiktok_pixel_id as string || '')
       setTiktokAccessToken(editPage.tiktok_access_token as string || '')
+      setLanguage(editPage.language as string || 'fr')
+      setVariant(editPage.variant as string || 'A')
+      setAbTestGroup(editPage.ab_test_group as string || '')
     } else {
       setTitle(''); setSlug(''); setDescription(''); setProjectId(''); setAccentColor('#0579DA')
       setAgentId(''); setDistribution('fixed'); setSource('facebook_ads')
       setMetaPixelId(''); setMetaAccessToken(''); setMetaTestCode('')
       setGoogleTagId(''); setGoogleApiSecret(''); setGoogleMeasurementId('')
       setTiktokPixelId(''); setTiktokAccessToken('')
+      setLanguage('fr'); setVariant('A'); setAbTestGroup('')
     }
   }, [editPage, isOpen])
 
@@ -109,6 +117,9 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
         google_measurement_id: googleMeasurementId || null,
         tiktok_pixel_id: tiktokPixelId || null,
         tiktok_access_token: tiktokAccessToken || null,
+        language,
+        variant,
+        ab_test_group: abTestGroup || null,
       }
 
       if (isEdit) {
@@ -221,6 +232,35 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
             <div><Label className={labelClass}>Pixel ID</Label><Input value={tiktokPixelId} onChange={e => setTiktokPixelId(e.target.value)} placeholder="C1234567890" className={inputClass} /></div>
             <div><Label className={labelClass}>Access Token</Label><Input value={tiktokAccessToken} onChange={e => setTiktokAccessToken(e.target.value)} placeholder="xxxx" className={inputClass} /></div>
           </div>
+        </div>
+        <Separator className="bg-immo-border-default" />
+
+        {/* Section: Langue + A/B Testing */}
+        <div>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-immo-accent-green">Langue & A/B Testing</h4>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className={labelClass}>Langue</Label>
+              <select value={language} onChange={e => setLanguage(e.target.value)} className={`h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
+                <option value="fr">Francais</option>
+                <option value="ar">Arabe</option>
+                <option value="en">Anglais</option>
+              </select>
+            </div>
+            <div>
+              <Label className={labelClass}>Variante</Label>
+              <select value={variant} onChange={e => setVariant(e.target.value)} className={`h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
+                <option value="A">Variante A</option>
+                <option value="B">Variante B</option>
+                <option value="C">Variante C</option>
+              </select>
+            </div>
+            <div>
+              <Label className={labelClass}>Groupe A/B Test</Label>
+              <Input value={abTestGroup} onChange={e => setAbTestGroup(e.target.value)} placeholder="test-hero-2024" className={inputClass} />
+            </div>
+          </div>
+          <p className="mt-2 text-[10px] text-immo-text-muted">Pour l'A/B testing : creez 2 pages avec le meme slug de base (ex: el-feth-a, el-feth-b) et le meme groupe. Les stats permettront de comparer les taux de conversion.</p>
         </div>
       </div>
 

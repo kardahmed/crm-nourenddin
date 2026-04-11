@@ -15,6 +15,7 @@ import { formatDistanceToNow, isToday, isTomorrow, format } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 import { TaskConfigSection } from '@/pages/settings/sections/TaskConfigSection'
+import { TaskDetailModal } from './components/TaskDetailModal'
 
 interface ClientTask {
   id: string; title: string; stage: string; status: string; priority: string
@@ -47,6 +48,7 @@ export function TasksPage() {
   const [tab, setTab] = useState<TabKey>('today')
   const [agentFilter, setAgentFilter] = useState('all')
   const [stageFilter, setStageFilter] = useState('all')
+  const [detailTask, setDetailTask] = useState<ClientTask | null>(null)
 
   // Fetch all tasks with client + agent relations
   const { data: allTasks = [], isLoading } = useQuery({
@@ -368,6 +370,10 @@ export function TasksPage() {
                 {/* Actions */}
                 {isPending && (
                   <div className="flex gap-1 shrink-0">
+                    <button onClick={() => setDetailTask(task)} title="Apercu"
+                      className="rounded-lg border border-immo-border-default px-2.5 py-1.5 text-[10px] font-medium text-immo-text-secondary hover:bg-immo-bg-card-hover transition-colors">
+                      Apercu
+                    </button>
                     {task.channel === 'whatsapp' && (
                       <button onClick={() => executeTask(task)} title="Ouvrir WhatsApp avec message"
                         className="flex items-center gap-1 rounded-lg bg-[#25D366]/10 px-2.5 py-1.5 text-[10px] font-semibold text-[#25D366] hover:bg-[#25D366]/20 transition-colors">
@@ -408,6 +414,10 @@ export function TasksPage() {
             )
           })}
         </div>
+      )}
+      {/* Task detail modal */}
+      {detailTask && (
+        <TaskDetailModal task={detailTask} isOpen={!!detailTask} onClose={() => setDetailTask(null)} />
       )}
     </div>
   )

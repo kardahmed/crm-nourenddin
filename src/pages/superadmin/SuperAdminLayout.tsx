@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { Building2, BarChart3, Settings, LogOut, ArrowLeft, ScrollText, CreditCard, MessageSquare, Headphones, Megaphone, Activity } from 'lucide-react'
+import { Building2, BarChart3, Settings, LogOut, ArrowLeft, ScrollText, CreditCard, MessageSquare, Headphones, Megaphone, Activity, Layers } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 import { useSuperAdminStore } from '@/store/superAdminStore'
 import { HealthAlertsBanner } from './components/HealthAlertsBanner'
@@ -8,6 +8,7 @@ import { NotificationCenter } from './components/NotificationCenter'
 
 const NAV_ITEMS = [
   { to: '/admin', icon: Building2, labelKey: 'Tenants', end: true },
+  { to: '/admin/plans', icon: Layers, labelKey: 'Plans' },
   { to: '/admin/billing', icon: CreditCard, labelKey: 'Facturation' },
   { to: '/admin/messages', icon: MessageSquare, labelKey: 'Messages' },
   { to: '/admin/support', icon: Headphones, labelKey: 'Support' },

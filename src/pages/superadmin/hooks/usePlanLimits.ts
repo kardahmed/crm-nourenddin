@@ -10,6 +10,7 @@ export interface PlanLimit {
   max_units: number
   max_clients: number
   max_storage_mb: number
+  max_ai_tokens_monthly: number
   features: Record<string, boolean>
   price_monthly: number
 }

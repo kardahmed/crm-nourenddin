@@ -42,6 +42,7 @@ import { CardsView } from './components/CardsView'
 import { TableView } from './components/TableView'
 import { ClientFormModal } from './components/ClientFormModal'
 import { StageChangeDialog } from './components/StageChangeDialog'
+import { ClientSidePanel } from './components/ClientSidePanel'
 
 type ViewMode = 'kanban' | 'cards' | 'table'
 
@@ -105,8 +106,10 @@ export function PipelinePage() {
   const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('all')
   const [view, setView] = useState<ViewMode>('kanban')
+  const [compact, setCompact] = useState(() => localStorage.getItem('pipeline-compact') === 'true')
   const [alertFilter, setAlertFilter] = useState<string[] | null>(null)
   const [showClientForm, setShowClientForm] = useState(false)
+  const [sidePanelClientId, setSidePanelClientId] = useState<string | null>(null)
   const [pendingMove, setPendingMove] = useState<{ clientId: string; clientName: string; fromStage: PipelineStage; toStage: PipelineStage } | null>(null)
 
   // Filter clients
@@ -190,7 +193,7 @@ export function PipelinePage() {
   }
 
   function handleViewClient(clientId: string) {
-    navigate(`/pipeline/clients/${clientId}`)
+    setSidePanelClientId(clientId)
   }
 
   function handlePriorityAction(clientId: string, action: string) {
@@ -327,6 +330,20 @@ export function PipelinePage() {
           <Download className="mr-1.5 h-3.5 w-3.5" /> Export
         </Button>
 
+        {/* Compact toggle */}
+        {view === 'kanban' && (
+          <button
+            onClick={() => { setCompact(!compact); localStorage.setItem('pipeline-compact', String(!compact)) }}
+            className={`ml-2 rounded-md border px-2 py-1.5 text-[10px] font-medium transition-colors ${
+              compact
+                ? 'border-immo-accent-green/30 bg-immo-accent-green/10 text-immo-accent-green'
+                : 'border-immo-border-default text-immo-text-muted hover:text-immo-text-secondary'
+            }`}
+          >
+            {compact ? 'Compact' : 'Detail'}
+          </button>
+        )}
+
         {/* View toggle */}
         <div className="ml-auto flex items-center gap-1 rounded-lg border border-immo-border-default">
           {([
@@ -362,6 +379,7 @@ export function PipelinePage() {
           onMoveClient={handleMoveClient}
           onViewClient={handleViewClient}
           onAddClient={() => {}}
+          compact={compact}
         />
       )}
 
@@ -389,6 +407,9 @@ export function PipelinePage() {
       <ClientFormModal isOpen={showClientForm} onClose={() => setShowClientForm(false)} />
 
       {/* Stage change confirmation dialog */}
+      {/* Client side panel */}
+      <ClientSidePanel clientId={sidePanelClientId} onClose={() => setSidePanelClientId(null)} />
+
       {pendingMove && (
         <StageChangeDialog
           isOpen

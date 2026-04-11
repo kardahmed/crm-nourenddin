@@ -69,6 +69,7 @@ export interface KanbanCardClient {
 interface KanbanCardProps {
   client: KanbanCardClient
   urgentDays: number
+  compact?: boolean
   isDragging?: boolean
   onDragStart: () => void
   onDragEnd: () => void
@@ -77,6 +78,7 @@ interface KanbanCardProps {
 export function KanbanCard({
   client,
   urgentDays,
+  compact = false,
   isDragging = false,
   onDragStart,
   onDragEnd,
@@ -157,29 +159,31 @@ export function KanbanCard({
         </span>
       </div>
 
-      {/* Row 2: Source badge */}
-      <div className="mb-2 flex flex-wrap gap-1.5">
-        <span className="inline-flex items-center gap-1 rounded bg-immo-bg-primary px-1.5 py-0.5 text-[10px] text-immo-text-secondary">
-          <SourceIcon className="h-3 w-3" />
-          {SOURCE_LABELS[client.source as ClientSource] ?? client.source}
-        </span>
-      </div>
-
-      {/* Row 3: Project + Agent */}
-      <div className="flex items-center gap-3 text-[10px] text-immo-text-muted">
-        {client.project_name && (
-          <span className="flex items-center gap-1 truncate">
-            <Building2 className="h-3 w-3 shrink-0" />
-            {client.project_name}
-          </span>
-        )}
-        {client.agent_name && (
-          <span className="flex items-center gap-1 truncate">
-            <UsersIcon className="h-3 w-3 shrink-0" />
-            {client.agent_name}
-          </span>
-        )}
-      </div>
+      {/* Row 2+3: Details (hidden in compact mode) */}
+      {!compact && (
+        <>
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded bg-immo-bg-primary px-1.5 py-0.5 text-[10px] text-immo-text-secondary">
+              <SourceIcon className="h-3 w-3" />
+              {SOURCE_LABELS[client.source as ClientSource] ?? client.source}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-[10px] text-immo-text-muted">
+            {client.project_name && (
+              <span className="flex items-center gap-1 truncate">
+                <Building2 className="h-3 w-3 shrink-0" />
+                {client.project_name}
+              </span>
+            )}
+            {client.agent_name && (
+              <span className="flex items-center gap-1 truncate">
+                <UsersIcon className="h-3 w-3 shrink-0" />
+                {client.agent_name}
+              </span>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

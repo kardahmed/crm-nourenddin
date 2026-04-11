@@ -37,7 +37,7 @@ export function MessagesPage() {
     mutationFn: async () => {
       const { error } = await supabase.from('platform_messages').insert({
         from_admin_id: userId,
-        to_tenant_id: targetTenant || null,
+        to_tenant_id: targetTenant && targetTenant.length > 0 ? targetTenant : null,
         subject, body,
       } as never)
       if (error) throw error

@@ -124,7 +124,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
           <div key={u.id} className="flex items-center gap-3 px-5 py-3 hover:bg-immo-bg-card-hover">
             {/* Avatar */}
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#7C3AED]/15 text-xs font-semibold text-[#7C3AED]">
-              {u.first_name[0]}{u.last_name[0]}
+              {u.first_name?.[0] ?? '?'}{u.last_name?.[0] ?? '?'}
             </div>
 
             {/* Info */}

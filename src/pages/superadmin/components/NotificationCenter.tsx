@@ -63,11 +63,11 @@ export function NotificationCenter() {
         })
       }
 
-      // 2. Late payments across all tenants
+      // 2. Late invoices across all tenants
       const { count: lateCount } = await supabase
-        .from('payment_schedules')
+        .from('invoices')
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'late')
+        .eq('status', 'overdue')
 
       if (lateCount && lateCount > 0) {
         notifs.unshift({

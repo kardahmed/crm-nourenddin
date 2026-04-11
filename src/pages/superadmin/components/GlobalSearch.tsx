@@ -69,16 +69,20 @@ export function GlobalSearch() {
         all.push({ type: 'tenant', id: t.id, title: t.name, subtitle: `${t.email ?? ''} · ${t.wilaya ?? ''}`, tenant_id: t.id, tenant_name: t.name })
       }
 
+      // Build tenant name lookup from already fetched tenants
+      const tenantNameMap = new Map<string, string>()
+      for (const t of tenants ?? []) tenantNameMap.set(t.id, t.name)
+
       // Search clients
       const { data: clients } = await supabase.from('clients').select('id, full_name, phone, tenant_id').ilike('full_name', s).limit(5)
       for (const c of (clients ?? []) as Array<{ id: string; full_name: string; phone: string | null; tenant_id: string }>) {
-        all.push({ type: 'client', id: c.id, title: c.full_name, subtitle: c.phone ?? '', tenant_id: c.tenant_id, tenant_name: '' })
+        all.push({ type: 'client', id: c.id, title: c.full_name, subtitle: c.phone ?? '', tenant_id: c.tenant_id, tenant_name: tenantNameMap.get(c.tenant_id) ?? '' })
       }
 
       // Search units
       const { data: units } = await supabase.from('units').select('id, code, type, tenant_id').ilike('code', s).limit(5)
       for (const u of (units ?? []) as Array<{ id: string; code: string; type: string; tenant_id: string }>) {
-        all.push({ type: 'unit', id: u.id, title: u.code, subtitle: u.type, tenant_id: u.tenant_id, tenant_name: '' })
+        all.push({ type: 'unit', id: u.id, title: u.code, subtitle: u.type, tenant_id: u.tenant_id, tenant_name: tenantNameMap.get(u.tenant_id) ?? '' })
       }
 
       return all

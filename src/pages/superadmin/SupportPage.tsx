@@ -61,9 +61,9 @@ export function SupportPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-immo-text-primary">Support ({tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length} ouverts)</h1>
 
-      <div className="flex gap-6">
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* Tickets list */}
-        <div className="w-[400px] shrink-0 space-y-2">
+        <div className="w-full shrink-0 space-y-2 lg:w-[400px]">
           {tickets.map(t => {
             const st = STATUS_MAP[t.status as string] ?? STATUS_MAP.open
             const user = t.users as { first_name: string; last_name: string } | null
@@ -91,12 +91,22 @@ export function SupportPage() {
                 <span className="text-sm font-semibold text-immo-text-primary">{(tickets.find(t => t.id === selectedTicket) as Record<string, unknown>)?.subject as string}</span>
               </div>
               <div className="mt-1 flex gap-2">
-                {['open', 'in_progress', 'resolved', 'closed'].map(s => (
-                  <button key={s} onClick={() => updateStatus.mutate({ id: selectedTicket, status: s })}
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${(tickets.find(t => t.id === selectedTicket) as Record<string, unknown>)?.status === s ? STATUS_MAP[s].type === 'green' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'bg-immo-accent-blue/10 text-immo-accent-blue' : 'text-immo-text-muted hover:bg-immo-bg-card-hover'}`}>
-                    {STATUS_MAP[s].label}
-                  </button>
-                ))}
+                {['open', 'in_progress', 'resolved', 'closed'].map(s => {
+                  const isActive = (tickets.find(t => t.id === selectedTicket) as Record<string, unknown>)?.status === s
+                  const colorMap: Record<string, string> = {
+                    green: 'bg-immo-accent-green/10 text-immo-accent-green',
+                    blue: 'bg-immo-accent-blue/10 text-immo-accent-blue',
+                    orange: 'bg-immo-status-orange/10 text-immo-status-orange',
+                    muted: 'bg-immo-bg-primary text-immo-text-secondary',
+                  }
+                  return (
+                    <button key={s} onClick={() => updateStatus.mutate({ id: selectedTicket, status: s })}
+                      disabled={updateStatus.isPending}
+                      className={`rounded-full px-2 py-0.5 text-[10px] font-medium disabled:opacity-50 ${isActive ? colorMap[STATUS_MAP[s].type] : 'text-immo-text-muted hover:bg-immo-bg-card-hover'}`}>
+                      {STATUS_MAP[s].label}
+                    </button>
+                  )
+                })}
               </div>
             </div>
 

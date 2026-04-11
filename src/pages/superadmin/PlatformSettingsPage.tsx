@@ -300,7 +300,8 @@ function AlertsSection() {
               {/* Delete */}
               <button
                 onClick={() => deleteAlert.mutate(alert.id)}
-                className="mt-1 rounded-lg p-1.5 text-immo-text-muted hover:bg-immo-status-red/10 hover:text-immo-status-red"
+                disabled={deleteAlert.isPending}
+                className="mt-1 rounded-lg p-1.5 text-immo-text-muted hover:bg-immo-status-red/10 hover:text-immo-status-red disabled:opacity-50"
               >
                 <Trash2 className="h-4 w-4" />
               </button>

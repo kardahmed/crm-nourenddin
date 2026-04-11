@@ -45,31 +45,38 @@ export function TenantsPage() {
       if (error) { handleSupabaseError(error); throw error }
       if (!rawTenants) return []
 
-      // Fetch counts for each tenant
-      const enriched: TenantRow[] = await Promise.all(
-        rawTenants.map(async (t: Record<string, unknown>) => {
-          const [agents, clients, projects, units] = await Promise.all([
-            supabase.from('users').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id as string).eq('role', 'agent'),
-            supabase.from('clients').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id as string),
-            supabase.from('projects').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id as string),
-            supabase.from('units').select('id', { count: 'exact', head: true }).eq('tenant_id', t.id as string),
-          ])
-          return {
-            id: t.id as string,
-            name: t.name as string,
-            email: t.email as string | null,
-            phone: t.phone as string | null,
-            wilaya: t.wilaya as string | null,
-            plan: (t.plan as string) ?? 'free',
-            created_at: t.created_at as string,
-            agents_count: agents.count ?? 0,
-            clients_count: clients.count ?? 0,
-            projects_count: projects.count ?? 0,
-            units_count: units.count ?? 0,
-          }
-        })
-      )
-      return enriched
+      // Fetch counts in bulk (4 queries total instead of 4 × N)
+      const [allAgents, allClients, allProjects, allUnits] = await Promise.all([
+        supabase.from('users').select('tenant_id').eq('role', 'agent'),
+        supabase.from('clients').select('tenant_id'),
+        supabase.from('projects').select('tenant_id'),
+        supabase.from('units').select('tenant_id'),
+      ])
+
+      // Build count maps
+      const countByTenant = (rows: Array<{ tenant_id: string }> | null) => {
+        const map = new Map<string, number>()
+        for (const r of rows ?? []) map.set(r.tenant_id, (map.get(r.tenant_id) ?? 0) + 1)
+        return map
+      }
+      const agentCounts = countByTenant((allAgents.data ?? []) as Array<{ tenant_id: string }>)
+      const clientCounts = countByTenant((allClients.data ?? []) as Array<{ tenant_id: string }>)
+      const projectCounts = countByTenant((allProjects.data ?? []) as Array<{ tenant_id: string }>)
+      const unitCounts = countByTenant((allUnits.data ?? []) as Array<{ tenant_id: string }>)
+
+      return rawTenants.map((t: Record<string, unknown>): TenantRow => ({
+        id: t.id as string,
+        name: t.name as string,
+        email: t.email as string | null,
+        phone: t.phone as string | null,
+        wilaya: t.wilaya as string | null,
+        plan: (t.plan as string) ?? 'free',
+        created_at: t.created_at as string,
+        agents_count: agentCounts.get(t.id as string) ?? 0,
+        clients_count: clientCounts.get(t.id as string) ?? 0,
+        projects_count: projectCounts.get(t.id as string) ?? 0,
+        units_count: unitCounts.get(t.id as string) ?? 0,
+      }))
     },
   })
 

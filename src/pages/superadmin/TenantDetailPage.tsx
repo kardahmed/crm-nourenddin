@@ -128,7 +128,7 @@ export function TenantDetailPage() {
             <h1 className="text-2xl font-bold text-immo-text-primary">{tenant.name as string}</h1>
             <PlanBadge plan={(tenant.plan as string) ?? 'free'} />
           </div>
-          <p className="text-sm text-immo-text-secondary">{tenant.email as string} · {tenant.wilaya as string ?? '-'}</p>
+          <p className="text-sm text-immo-text-secondary">{(tenant.email as string) ?? '-'} · {(tenant.wilaya as string) ?? '-'}</p>
         </div>
         <div className="flex gap-2">
           <Button

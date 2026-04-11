@@ -136,12 +136,16 @@ export function PerformancePage() {
   const inactiveAgents = useMemo(() => {
     const now = Date.now()
     return allAgents.filter(a => {
-      if (!a.last_activity) return true
-      return (now - new Date(a.last_activity).getTime()) > 7 * 86400000
-    }).map(a => ({
-      name: `${a.first_name} ${a.last_name}`,
-      days: a.last_activity ? Math.floor((Date.now() - new Date(a.last_activity).getTime()) / 86400000) : 999,
-    }))
+      const lastDate = a.last_activity ?? (a as Record<string, unknown>).created_at as string | null
+      if (!lastDate) return false
+      return (now - new Date(lastDate).getTime()) > 7 * 86400000
+    }).map(a => {
+      const lastDate = a.last_activity ?? (a as Record<string, unknown>).created_at as string | null
+      return {
+        name: `${a.first_name} ${a.last_name}`,
+        days: lastDate ? Math.floor((now - new Date(lastDate).getTime()) / 86400000) : 0,
+      }
+    })
   }, [allAgents])
 
   // Chart 1: Revenue over time

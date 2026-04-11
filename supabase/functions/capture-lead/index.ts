@@ -16,6 +16,27 @@ async function sha256(value: string): Promise<string> {
   return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
+// Build notes from message + custom answers
+function buildNotes(
+  message: string | undefined,
+  answers: Record<string, string> | undefined,
+  questions: Array<{ id: string; label: string }> | undefined
+): string | null {
+  const parts: string[] = []
+  if (message) parts.push(message)
+  if (answers && questions) {
+    const qMap = new Map((questions ?? []).map(q => [q.id, q.label]))
+    const answerLines = Object.entries(answers)
+      .filter(([, v]) => v && v.length > 0)
+      .map(([k, v]) => `${qMap.get(k) ?? k}: ${v}`)
+    if (answerLines.length > 0) {
+      parts.push('--- Reponses ---')
+      parts.push(...answerLines)
+    }
+  }
+  return parts.length > 0 ? parts.join('\n') : null
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -26,7 +47,7 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { slug, full_name, phone, email, budget, unit_type, message, source_utm, event_id } = body as {
+    const { slug, full_name, phone, email, budget, unit_type, message, source_utm, event_id, custom_answers } = body as {
       slug: string
       full_name: string
       phone: string
@@ -36,6 +57,7 @@ Deno.serve(async (req) => {
       message?: string
       source_utm?: string
       event_id?: string
+      custom_answers?: Record<string, string>
     }
 
     // Validate required fields
@@ -116,7 +138,7 @@ Deno.serve(async (req) => {
         source: clientSource,
         pipeline_stage: 'accueil',
         interest_level: 'medium',
-        notes: message || null,
+        notes: buildNotes(message, custom_answers, page.custom_questions),
       })
       .select('id')
       .single()
@@ -133,7 +155,7 @@ Deno.serve(async (req) => {
       agent_id: assignedAgentId,
       type: 'note',
       title: `Lead capture depuis landing page "${page.title}"`,
-      metadata: { landing_page_id: page.id, slug, source: clientSource },
+      metadata: { landing_page_id: page.id, slug, source: clientSource, custom_answers: custom_answers || null },
     })
 
     // 5. Create notification for the agent

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield } from 'lucide-react'
+import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette } from 'lucide-react'
 import {
   CompanySection,
   PipelineSection,
+  BrandingSection,
   ReservationsSection,
   TemplatesSection,
   NotificationsSection,
@@ -11,11 +12,12 @@ import {
   SecuritySection,
 } from './sections'
 
-type Section = 'company' | 'pipeline' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
+type Section = 'company' | 'pipeline' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
 
 const SECTION_ICONS: Record<Section, typeof Building2> = {
   company: Building2,
   pipeline: GitBranch,
+  branding: Palette,
   reservations: Bookmark,
   templates: FileText,
   notifications: Bell,
@@ -23,11 +25,12 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   security: Shield,
 }
 
-const SECTION_KEYS: Section[] = ['company', 'pipeline', 'reservations', 'templates', 'notifications', 'language', 'security']
+const SECTION_KEYS: Section[] = ['company', 'pipeline', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
   company: 'nav.settings',
   pipeline: 'nav.pipeline',
+  branding: 'common.language',
   reservations: 'tab.reservation',
   templates: 'tab.documents',
   notifications: 'nav.reports',
@@ -66,6 +69,7 @@ export function SettingsPage() {
       <div className="min-w-0 flex-1">
         {section === 'company' && <CompanySection />}
         {section === 'pipeline' && <PipelineSection />}
+        {section === 'branding' && <BrandingSection />}
         {section === 'reservations' && <ReservationsSection />}
         {section === 'templates' && <TemplatesSection />}
         {section === 'notifications' && <NotificationsSection />}

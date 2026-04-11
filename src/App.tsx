@@ -37,6 +37,7 @@ const BillingPage = lazy(() => import('@/pages/superadmin/BillingPage').then(m =
 const MessagesPage = lazy(() => import('@/pages/superadmin/MessagesPage').then(m => ({ default: m.MessagesPage })))
 const SupportPage = lazy(() => import('@/pages/superadmin/SupportPage').then(m => ({ default: m.SupportPage })))
 const ChangelogPage = lazy(() => import('@/pages/superadmin/ChangelogPage').then(m => ({ default: m.ChangelogPage })))
+const MonitoringPage = lazy(() => import('@/pages/superadmin/MonitoringPage').then(m => ({ default: m.MonitoringPage })))
 
 // Landing pages
 const PublicLandingPage = lazy(() => import('@/pages/landing/PublicLandingPage').then(m => ({ default: m.PublicLandingPage })))
@@ -63,6 +64,7 @@ function App() {
             <Route path="messages" element={<MessagesPage />} />
             <Route path="support" element={<SupportPage />} />
             <Route path="changelog" element={<ChangelogPage />} />
+            <Route path="monitoring" element={<MonitoringPage />} />
             <Route path="stats" element={<GlobalStatsPage />} />
             <Route path="settings" element={<PlatformSettingsPage />} />
           </Route>

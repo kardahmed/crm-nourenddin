@@ -8,6 +8,7 @@ import { KPICard, LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { useSuperAdminStore } from '@/store/superAdminStore'
 import { CreateTenantModal } from './components/CreateTenantModal'
+import { RealtimeDashboard } from './components/RealtimeDashboard'
 import { PlanBadge } from './components/PlanBadge'
 import { useTenantHealth } from './hooks/useTenantHealth'
 import type { HealthStatus } from './hooks/useTenantHealth'
@@ -97,6 +98,9 @@ export function TenantsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Realtime dashboard */}
+      <RealtimeDashboard />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

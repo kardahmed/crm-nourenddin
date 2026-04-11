@@ -379,7 +379,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
   })
 
   function startEdit(msg: MsgTpl) {
-    setEditId(msg.id); setEditBody(msg.body); setEditChannel(msg.channel); setEditMode(msg.mode)
+    setEditId(msg.id); setEditBody(msg.body.replace(/\\n/g, '\n')); setEditChannel(msg.channel); setEditMode(msg.mode)
   }
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-64" />
@@ -499,7 +499,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
                           {msg.mode === 'ai' && <span className="flex items-center gap-0.5 rounded-full bg-purple-100 px-1.5 py-0.5 text-[8px] font-semibold text-purple-600"><Sparkles className="h-2 w-2" /> IA</span>}
                         </div>
                         <p className="text-[11px] text-immo-text-muted line-clamp-2 font-mono whitespace-pre-line">
-                          {msg.body || (msg.mode === 'ai' ? 'Genere automatiquement par l\'IA' : 'Message vide')}
+                          {(msg.body || (msg.mode === 'ai' ? 'Genere automatiquement par l\'IA' : 'Message vide')).replace(/\\n/g, '\n')}
                         </p>
                         {msg.attached_file_types.length > 0 && (
                           <div className="flex gap-1 mt-1">

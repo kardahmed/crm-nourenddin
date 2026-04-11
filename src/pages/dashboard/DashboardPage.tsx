@@ -16,12 +16,18 @@ import type { HistoryType } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
 import { ar as arLocale } from 'date-fns/locale'
+import { AgentDashboard } from './AgentDashboard'
 
 export function DashboardPage() {
   const { t, i18n } = useTranslation()
   const { data, isLoading } = useDashboardStats()
   const { isAgent } = usePermissions()
   const dateLocale = i18n.language === 'ar' ? arLocale : frLocale
+
+  // Agent gets a dedicated dashboard
+  if (isAgent) {
+    return <AgentDashboard />
+  }
 
   if (isLoading || !data) {
     return <LoadingSpinner size="lg" className="h-96" />

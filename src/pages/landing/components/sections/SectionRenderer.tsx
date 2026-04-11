@@ -23,11 +23,10 @@ interface SectionRendererProps {
   accent: string
   /** Required for form section */
   slug?: string
-  formFields?: string[]
   tenantName?: string
 }
 
-export function SectionRenderer({ sections, accent, slug, formFields, tenantName }: SectionRendererProps) {
+export function SectionRenderer({ sections, accent, slug, tenantName }: SectionRendererProps) {
   const visible = sections.filter(s => s.is_visible).sort((a, b) => a.sort_order - b.sort_order)
 
   return (
@@ -51,7 +50,7 @@ export function SectionRenderer({ sections, accent, slug, formFields, tenantName
               title={section.title ?? undefined}
               accent={accent}
               slug={slug ?? ''}
-              fields={formFields ?? ['full_name', 'phone', 'email', 'budget', 'message']}
+              content={section.content as never}
               tenantName={tenantName}
             />
           )

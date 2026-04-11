@@ -228,7 +228,6 @@ export function PublicLandingPage() {
           sections={sections}
           accent={accent}
           slug={page.slug}
-          formFields={fields}
           tenantName={page.tenant?.name ?? undefined}
         />
       )}

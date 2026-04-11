@@ -271,9 +271,150 @@ function ContentEditor({ type, content, onUpdate }: { type: string; content: Rec
         </div>
       )
 
+    case 'form':
+      return <FormFieldsEditor content={content} onUpdate={onUpdate} />
+
     default:
       return <p className="text-xs text-immo-text-muted">Section non configurable</p>
   }
+}
+
+/* ═══ Form Fields Builder ═══ */
+
+interface FormFieldDef {
+  id: string
+  type: string
+  label: string
+  placeholder?: string
+  required?: boolean
+  options?: string[]
+  maps_to?: string
+}
+
+const FIELD_TYPES = [
+  { value: 'text', label: 'Texte' },
+  { value: 'tel', label: 'Telephone' },
+  { value: 'email', label: 'Email' },
+  { value: 'number', label: 'Nombre' },
+  { value: 'select', label: 'Liste deroulante' },
+  { value: 'textarea', label: 'Zone de texte' },
+  { value: 'checkbox', label: 'Case a cocher' },
+  { value: 'date', label: 'Date' },
+]
+
+const MAPS_TO = [
+  { value: '', label: 'Aucun (question custom)' },
+  { value: 'full_name', label: '→ Nom client' },
+  { value: 'phone', label: '→ Telephone client' },
+  { value: 'email', label: '→ Email client' },
+  { value: 'confirmed_budget', label: '→ Budget client' },
+  { value: 'unit_type', label: '→ Type de bien' },
+  { value: 'message', label: '→ Notes client' },
+]
+
+function FormFieldsEditor({ content, onUpdate }: { content: Record<string, unknown>; onUpdate: (c: Record<string, unknown>) => void }) {
+  const fields = ((content.fields ?? []) as FormFieldDef[])
+
+  function setFields(newFields: FormFieldDef[]) { onUpdate({ ...content, fields: newFields }) }
+
+  function addField() {
+    setFields([...fields, {
+      id: `field_${Date.now()}`,
+      type: 'text',
+      label: 'Nouvelle question',
+      placeholder: '',
+      required: false,
+      maps_to: '',
+    }])
+  }
+
+  function updateField(idx: number, patch: Partial<FormFieldDef>) {
+    const updated = [...fields]
+    updated[idx] = { ...updated[idx], ...patch }
+    setFields(updated)
+  }
+
+  function removeField(idx: number) {
+    setFields(fields.filter((_, i) => i !== idx))
+  }
+
+  function moveField(idx: number, dir: -1 | 1) {
+    const newIdx = idx + dir
+    if (newIdx < 0 || newIdx >= fields.length) return
+    const updated = [...fields]
+    ;[updated[idx], updated[newIdx]] = [updated[newIdx], updated[idx]]
+    setFields(updated)
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Form settings */}
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label className="text-[10px] text-immo-text-muted">Texte du bouton</Label><Input value={(content.submit_label as string) ?? ''} onChange={e => onUpdate({ ...content, submit_label: e.target.value })} placeholder="Envoyer ma demande" className={inputClass} /></div>
+        <div><Label className="text-[10px] text-immo-text-muted">Couleur du bouton</Label><Input type="color" value={(content.button_color as string) ?? '#0579DA'} onChange={e => onUpdate({ ...content, button_color: e.target.value })} className="h-8 w-full" /></div>
+      </div>
+      <div><Label className="text-[10px] text-immo-text-muted">Titre apres soumission</Label><Input value={(content.success_title as string) ?? ''} onChange={e => onUpdate({ ...content, success_title: e.target.value })} placeholder="Merci !" className={inputClass} /></div>
+      <div><Label className="text-[10px] text-immo-text-muted">Message apres soumission</Label><Input value={(content.success_message as string) ?? ''} onChange={e => onUpdate({ ...content, success_message: e.target.value })} placeholder="Un conseiller vous contactera..." className={inputClass} /></div>
+      <div><Label className="text-[10px] text-immo-text-muted">Texte legal</Label><Input value={(content.legal_text as string) ?? ''} onChange={e => onUpdate({ ...content, legal_text: e.target.value })} placeholder="En soumettant ce formulaire..." className={inputClass} /></div>
+
+      {/* Fields */}
+      <div className="border-t border-immo-border-default pt-3">
+        <div className="mb-2 flex items-center justify-between">
+          <Label className="text-[10px] font-semibold text-immo-text-primary">Champs du formulaire ({fields.length})</Label>
+          <button onClick={addField} className="rounded-md bg-immo-accent-green/10 px-2 py-1 text-[10px] font-medium text-immo-accent-green hover:bg-immo-accent-green/20">
+            + Ajouter un champ
+          </button>
+        </div>
+
+        <div className="space-y-2">
+          {fields.map((field, idx) => (
+            <div key={field.id} className="rounded-lg border border-immo-border-default bg-immo-bg-primary p-3">
+              <div className="flex items-center gap-2 mb-2">
+                <button onClick={() => moveField(idx, -1)} className="text-immo-text-muted hover:text-immo-text-primary text-[10px]">▲</button>
+                <button onClick={() => moveField(idx, 1)} className="text-immo-text-muted hover:text-immo-text-primary text-[10px]">▼</button>
+                <span className="flex-1 text-xs font-medium text-immo-text-primary">{field.label}</span>
+                <label className="flex items-center gap-1 text-[10px] text-immo-text-muted">
+                  <input type="checkbox" checked={field.required ?? false} onChange={e => updateField(idx, { required: e.target.checked })} className="h-3 w-3" />
+                  Obligatoire
+                </label>
+                <button onClick={() => removeField(idx)} className="text-immo-status-red text-[10px] hover:underline">Supprimer</button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[9px] text-immo-text-muted">Type</label>
+                  <select value={field.type} onChange={e => updateField(idx, { type: e.target.value })} className={`h-7 w-full rounded border px-2 text-[11px] ${inputClass}`}>
+                    {FIELD_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[9px] text-immo-text-muted">Label</label>
+                  <Input value={field.label} onChange={e => updateField(idx, { label: e.target.value })} className={`h-7 text-[11px] ${inputClass}`} />
+                </div>
+                <div>
+                  <label className="text-[9px] text-immo-text-muted">Mappe vers</label>
+                  <select value={field.maps_to ?? ''} onChange={e => updateField(idx, { maps_to: e.target.value || undefined })} className={`h-7 w-full rounded border px-2 text-[11px] ${inputClass}`}>
+                    {MAPS_TO.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              {field.type !== 'checkbox' && (
+                <div className="mt-2">
+                  <label className="text-[9px] text-immo-text-muted">Placeholder</label>
+                  <Input value={field.placeholder ?? ''} onChange={e => updateField(idx, { placeholder: e.target.value })} className={`h-7 text-[11px] ${inputClass}`} />
+                </div>
+              )}
+              {field.type === 'select' && (
+                <div className="mt-2">
+                  <label className="text-[9px] text-immo-text-muted">Options (separees par des virgules)</label>
+                  <Input value={(field.options ?? []).join(', ')} onChange={e => updateField(idx, { options: e.target.value.split(',').map(s => s.trim()).filter(Boolean) })} placeholder="Option 1, Option 2, Option 3" className={`h-7 text-[11px] ${inputClass}`} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
 }
 
 function getDefaultContent(type: string): Record<string, unknown> {
@@ -287,6 +428,17 @@ function getDefaultContent(type: string): Record<string, unknown> {
     case 'testimonials': return { items: [] }
     case 'faq': return { items: [] }
     case 'cta': return { text: '', button_label: 'Contactez-nous' }
+    case 'form': return {
+      fields: [
+        { id: 'full_name', type: 'text', label: 'Nom complet', placeholder: 'Votre nom', required: true, maps_to: 'full_name' },
+        { id: 'phone', type: 'tel', label: 'Telephone', placeholder: '0555 123 456', required: true, maps_to: 'phone' },
+        { id: 'email', type: 'email', label: 'Email', placeholder: 'email@exemple.com', maps_to: 'email' },
+      ],
+      submit_label: 'Envoyer ma demande',
+      success_title: '',
+      success_message: '',
+      legal_text: '',
+    }
     default: return {}
   }
 }

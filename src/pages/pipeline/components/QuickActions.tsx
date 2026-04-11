@@ -4,13 +4,16 @@ import {
   Mail, Bot, Calendar, UserCheck,
 } from 'lucide-react'
 import { CallLogModal } from './modals/CallLogModal'
+import { CallScriptModal } from './modals/CallScriptModal'
 import { MessageTemplateModal } from './modals/MessageTemplateModal'
+import type { PipelineStage } from '@/types'
 
 interface QuickActionsProps {
   clientId: string
   clientName: string
   clientPhone: string
   clientEmail?: string | null
+  clientStage?: PipelineStage
   tenantId: string
   agentId: string
   agentName?: string
@@ -22,11 +25,12 @@ interface QuickActionsProps {
 }
 
 export function QuickActions({
-  clientId, clientName, clientPhone, clientEmail,
+  clientId, clientName, clientPhone, clientEmail, clientStage,
   tenantId, agentId, agentName, projectName,
   onAction, onOpenVisit, onOpenAI, onOpenReassign,
 }: QuickActionsProps) {
   const [showCallLog, setShowCallLog] = useState(false)
+  const [showCallScript, setShowCallScript] = useState(false)
   const [showMessage, setShowMessage] = useState(false)
 
   const phone = clientPhone.replace(/[\s\-\(\)]/g, '').replace(/^0/, '213')
@@ -34,9 +38,9 @@ export function QuickActions({
   function handleAction(key: string) {
     switch (key) {
       case 'call':
-        // Open phone dialer + show call log modal
+        // Open guided call script modal
         window.open(`tel:${clientPhone}`, '_self')
-        setShowCallLog(true)
+        setShowCallScript(true)
         break
 
       case 'whatsapp_call':
@@ -108,7 +112,19 @@ export function QuickActions({
         ))}
       </div>
 
-      {/* Call log modal */}
+      {/* Call script modal (guided call) */}
+      <CallScriptModal
+        isOpen={showCallScript}
+        onClose={() => setShowCallScript(false)}
+        clientId={clientId}
+        clientName={clientName}
+        clientPhone={clientPhone}
+        clientStage={clientStage ?? 'accueil'}
+        tenantId={tenantId}
+        agentId={agentId}
+      />
+
+      {/* Simple call log modal (fallback) */}
       <CallLogModal
         isOpen={showCallLog}
         onClose={() => setShowCallLog(false)}

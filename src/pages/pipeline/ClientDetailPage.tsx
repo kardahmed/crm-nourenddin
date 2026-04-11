@@ -284,6 +284,7 @@ export function ClientDetailPage() {
         clientName={client.full_name}
         clientPhone={client.phone}
         clientEmail={client.email}
+        clientStage={client.pipeline_stage}
         tenantId={client.tenant_id}
         agentId={userId ?? ''}
         agentName={agentName ?? undefined}

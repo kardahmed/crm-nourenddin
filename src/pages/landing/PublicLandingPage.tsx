@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { MapPin, Phone, Mail, CheckCircle, Building2 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { SectionRenderer } from './components/sections/SectionRenderer'
+import type { SectionData } from './components/sections/SectionRenderer'
 
 interface PageData {
   id: string
@@ -22,6 +24,20 @@ interface PageData {
 export function PublicLandingPage() {
   const { slug } = useParams<{ slug: string }>()
   const [submitted, setSubmitted] = useState(false)
+
+  // Fetch sections
+  const { data: sections = [] } = useQuery({
+    queryKey: ['public-landing-sections', slug],
+    queryFn: async () => {
+      // Get page ID first
+      const { data: pg } = await supabase.from('landing_pages').select('id').eq('slug', slug!).eq('is_active', true).single()
+      if (!pg) return []
+      const pgId = (pg as unknown as { id: string }).id
+      const { data } = await supabase.from('landing_page_sections').select('*').eq('page_id', pgId).order('sort_order')
+      return (data ?? []) as SectionData[]
+    },
+    enabled: !!slug,
+  })
   const [loading, setLoading] = useState(false)
   const [form, setForm] = useState({ full_name: '', phone: '', email: '', budget: '', unit_type: '', message: '', website_url: '' })
 
@@ -206,9 +222,12 @@ export function PublicLandingPage() {
         </div>
       </div>
 
+      {/* Dynamic sections */}
+      {sections.length > 0 && <SectionRenderer sections={sections} accent={accent} />}
+
       {/* Form */}
       <div className="mx-auto -mt-4 max-w-lg px-4 pb-16">
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-[#E3E8EF] bg-white p-8 shadow-lg shadow-black/[0.03]">
+        <form id="landing-form" onSubmit={handleSubmit} className="rounded-2xl border border-[#E3E8EF] bg-white p-8 shadow-lg shadow-black/[0.03]">
           <h2 className="mb-6 text-center text-lg font-semibold text-[#0A2540]">Demander des informations</h2>
 
           {/* Honeypot */}

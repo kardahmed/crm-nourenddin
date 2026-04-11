@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import toast from 'react-hot-toast'
+import { SectionEditor } from './components/SectionEditor'
 
 const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary'
 const labelClass = 'text-[11px] font-medium text-immo-text-muted'
@@ -129,7 +130,7 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Modifier la page' : 'Nouvelle page de capture'} size="xl">
       <div className="max-h-[70vh] overflow-y-auto space-y-5 pr-2">
         {/* Section: Contenu */}
-        <section>
+        <div>
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-immo-accent-green">Contenu</h4>
           <div className="grid grid-cols-2 gap-3">
             <div><Label className={labelClass}>Titre *</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Decouvrez Residence El Feth" className={inputClass} /></div>
@@ -144,12 +145,20 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
             </div>
             <div><Label className={labelClass}>Couleur accent</Label><Input type="color" value={accentColor} onChange={e => setAccentColor(e.target.value)} className="h-9 w-full" /></div>
           </div>
-        </section>
+        </div>
+
+        {/* Section: Sections dynamiques (edit mode only) */}
+        {isEdit && editPage && (editPage as Record<string, string>).id && (
+          <>
+            <Separator className="bg-immo-border-default" />
+            <SectionEditor pageId={String(editPage!.id)} />
+          </>
+        )}
 
         <Separator className="bg-immo-border-default" />
 
         {/* Section: Distribution */}
-        <section>
+        <div>
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-immo-accent-green">Distribution des leads</h4>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -181,12 +190,12 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
               </select>
             </div>
           </div>
-        </section>
+        </div>
 
         <Separator className="bg-immo-border-default" />
 
         {/* Section: Tracking */}
-        <section>
+        <div>
           <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-immo-accent-green">Tracking & Conversions</h4>
           <p className="mb-3 text-[11px] text-immo-text-muted">Les pixels s'affichent sur la page. Les tokens API envoient les conversions cote serveur (CAPI).</p>
 
@@ -212,7 +221,7 @@ export function LandingPageEditor({ isOpen, onClose, editPage }: LandingPageEdit
             <div><Label className={labelClass}>Pixel ID</Label><Input value={tiktokPixelId} onChange={e => setTiktokPixelId(e.target.value)} placeholder="C1234567890" className={inputClass} /></div>
             <div><Label className={labelClass}>Access Token</Label><Input value={tiktokAccessToken} onChange={e => setTiktokAccessToken(e.target.value)} placeholder="xxxx" className={inputClass} /></div>
           </div>
-        </section>
+        </div>
       </div>
 
       {/* Actions */}

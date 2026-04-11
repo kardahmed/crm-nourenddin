@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  CheckCircle, Clock, Send, Phone, MessageCircle, Mail, AlertTriangle,
+  CheckCircle, Clock, Phone, MessageCircle, Mail, AlertTriangle,
   Zap, SkipForward, Calendar, Settings, FileText, Save, Plus, Trash2, Sparkles,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -100,22 +100,97 @@ export function TasksPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['all-tasks'] }),
   })
 
-  function executeTask(task: ClientTask) {
+  // Fetch agent + tenant info for variable replacement
+  const { data: agentInfo } = useQuery({
+    queryKey: ['task-agent-info', userId],
+    queryFn: async () => {
+      const [agentRes, tenantRes] = await Promise.all([
+        supabase.from('users').select('first_name, last_name, phone').eq('id', userId!).single(),
+        supabase.from('tenants').select('name, phone').eq('id', tenantId!).single(),
+      ])
+      return {
+        agent_nom: `${(agentRes.data as Record<string,string>)?.first_name ?? ''} ${(agentRes.data as Record<string,string>)?.last_name ?? ''}`.trim(),
+        agent_prenom: (agentRes.data as Record<string,string>)?.first_name ?? '',
+        agent_phone: (agentRes.data as Record<string,string>)?.phone ?? '',
+        agence: (tenantRes.data as Record<string,string>)?.name ?? '',
+      }
+    },
+    enabled: !!userId && !!tenantId,
+  })
+
+  // Fetch message templates
+  const { data: msgTemplates = [] } = useQuery({
+    queryKey: ['task-msg-templates', tenantId],
+    queryFn: async () => {
+      const { data } = await supabase.from('message_templates').select('*').eq('tenant_id', tenantId!)
+      return (data ?? []) as Array<{ stage: string; trigger_type: string; body: string; channel: string; attached_file_types: string[] }>
+    },
+    enabled: !!tenantId,
+  })
+
+  function replaceVariables(text: string, task: ClientTask): string {
+    const clientName = task.client?.full_name ?? ''
+    const parts = clientName.split(' ')
+    return text
+      .replace(/\\n/g, '\n')
+      .replace(/\{client_nom\}/g, clientName)
+      .replace(/\{client_prenom\}/g, parts[0] ?? '')
+      .replace(/\{client_phone\}/g, task.client?.phone ?? '')
+      .replace(/\{client_budget\}/g, '')
+      .replace(/\{agent_nom\}/g, agentInfo?.agent_nom ?? '')
+      .replace(/\{agent_prenom\}/g, agentInfo?.agent_prenom ?? '')
+      .replace(/\{agent_phone\}/g, agentInfo?.agent_phone ?? '')
+      .replace(/\{agence\}/g, agentInfo?.agence ?? '')
+      .replace(/\{projet\}/g, '')
+      .replace(/\{prix_min\}/g, '')
+      .replace(/\{date_visite\}/g, '')
+      .replace(/\{heure_visite\}/g, '')
+      .replace(/\{adresse_projet\}/g, '')
+      .replace(/\{lien_maps\}/g, '')
+  }
+
+  function getMessageForTask(task: ClientTask): string {
+    // Find matching message template
+    const tpl = msgTemplates.find(m => m.stage === task.stage)
+      ?? msgTemplates.find(m => m.channel === task.channel)
+    if (tpl?.body) return replaceVariables(tpl.body, task)
+    // Fallback
+    const name = task.client?.full_name?.split(' ')[0] ?? ''
+    return `Bonjour ${name},\n\nJe suis ${agentInfo?.agent_prenom ?? ''} de ${agentInfo?.agence ?? ''}.\n\n${task.title}\n\nCordialement,\n${agentInfo?.agent_prenom ?? ''}\n${agentInfo?.agent_phone ?? ''}`
+  }
+
+  async function executeTask(task: ClientTask) {
     const phone = task.client?.phone ?? ''
     const cleanPhone = phone.replace(/\s+/g, '').replace(/^0/, '213')
-    const name = task.client?.full_name?.split(' ')[0] ?? ''
+    const message = getMessageForTask(task)
 
     if (task.channel === 'whatsapp') {
-      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Bonjour ${name}`)}`, '_blank')
+      window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank')
       completeTask.mutate(task.id)
+      toast.success('WhatsApp ouvert avec le message')
     } else if (task.channel === 'sms') {
-      window.open(`sms:${phone}`, '_blank')
+      window.open(`sms:${phone}?body=${encodeURIComponent(message)}`, '_blank')
       completeTask.mutate(task.id)
+      toast.success('SMS ouvert avec le message')
     } else if (task.channel === 'call') {
       window.open(`tel:${phone}`, '_blank')
+      toast('Appel lance — marquez la tache quand termine')
+    } else if (task.channel === 'email') {
+      const subject = encodeURIComponent(task.title)
+      const body = encodeURIComponent(message)
+      window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
+      completeTask.mutate(task.id)
     } else {
       completeTask.mutate(task.id)
     }
+
+    // Log in history
+    await supabase.from('history').insert({
+      tenant_id: task.tenant_id, client_id: task.client_id, agent_id: userId,
+      type: task.channel === 'whatsapp' ? 'whatsapp_message' : task.channel === 'sms' ? 'sms' : task.channel === 'call' ? 'call' : 'note',
+      title: `Tache executee: ${task.title}`,
+    } as never)
+    await supabase.from('clients').update({ last_contact_at: new Date().toISOString() } as never).eq('id', task.client_id)
   }
 
   // Filter tasks
@@ -293,10 +368,34 @@ export function TasksPage() {
                 {/* Actions */}
                 {isPending && (
                   <div className="flex gap-1 shrink-0">
-                    {task.channel !== 'system' && (
-                      <button onClick={() => executeTask(task)} title="Executer"
-                        className="flex items-center gap-1 rounded-lg bg-immo-accent-green/10 px-2.5 py-1.5 text-[10px] font-semibold text-immo-accent-green hover:bg-immo-accent-green/20 transition-colors">
-                        <Send className="h-3 w-3" /> Executer
+                    {task.channel === 'whatsapp' && (
+                      <button onClick={() => executeTask(task)} title="Ouvrir WhatsApp avec message"
+                        className="flex items-center gap-1 rounded-lg bg-[#25D366]/10 px-2.5 py-1.5 text-[10px] font-semibold text-[#25D366] hover:bg-[#25D366]/20 transition-colors">
+                        <MessageCircle className="h-3 w-3" /> WhatsApp
+                      </button>
+                    )}
+                    {task.channel === 'sms' && (
+                      <button onClick={() => executeTask(task)} title="Ouvrir SMS avec message"
+                        className="flex items-center gap-1 rounded-lg bg-immo-status-orange/10 px-2.5 py-1.5 text-[10px] font-semibold text-immo-status-orange hover:bg-immo-status-orange/20 transition-colors">
+                        <Mail className="h-3 w-3" /> SMS
+                      </button>
+                    )}
+                    {task.channel === 'call' && (
+                      <button onClick={() => executeTask(task)} title="Lancer l'appel"
+                        className="flex items-center gap-1 rounded-lg bg-immo-accent-blue/10 px-2.5 py-1.5 text-[10px] font-semibold text-immo-accent-blue hover:bg-immo-accent-blue/20 transition-colors">
+                        <Phone className="h-3 w-3" /> Appeler
+                      </button>
+                    )}
+                    {task.channel === 'email' && (
+                      <button onClick={() => executeTask(task)} title="Ouvrir email"
+                        className="flex items-center gap-1 rounded-lg bg-immo-accent-blue/10 px-2.5 py-1.5 text-[10px] font-semibold text-immo-accent-blue hover:bg-immo-accent-blue/20 transition-colors">
+                        <Mail className="h-3 w-3" /> Email
+                      </button>
+                    )}
+                    {task.channel === 'system' && (
+                      <button onClick={() => completeTask.mutate(task.id)} title="Marquer fait"
+                        className="flex items-center gap-1 rounded-lg bg-immo-bg-card-hover px-2.5 py-1.5 text-[10px] font-semibold text-immo-text-muted hover:text-immo-accent-green transition-colors">
+                        <CheckCircle className="h-3 w-3" /> Fait
                       </button>
                     )}
                     <button onClick={() => skipTask.mutate(task.id)} title="Ignorer"

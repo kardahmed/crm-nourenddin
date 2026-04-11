@@ -42,15 +42,14 @@ export function useTenantHealth() {
       }
 
       const now = new Date()
-      const sevenDaysAgo = subDays(now, 7).toISOString()
       const twoDaysFromNow = subDays(now, -2).toISOString()
 
-      // Fetch latest activity per tenant
+      // Fetch latest activity per tenant (one per tenant, most recent)
       const { data: recentHistory } = await supabase
         .from('history')
         .select('tenant_id, created_at')
-        .gte('created_at', sevenDaysAgo)
         .order('created_at', { ascending: false })
+        .limit(500)
 
       // Group by tenant — latest activity
       const lastActivityMap = new Map<string, string>()

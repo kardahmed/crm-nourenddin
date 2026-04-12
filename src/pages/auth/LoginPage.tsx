@@ -44,8 +44,7 @@ export function LoginPage() {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F6F9FC]">
         <div className="flex flex-col items-center gap-4">
-          <img src="/logo-180.png" alt="IMMO PRO-X" className="h-12 w-12 animate-pulse" />
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#0579DA] border-t-transparent" />
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#0579DA] border-t-transparent" />
           <p className="text-xs text-[#8898AA]">Connexion en cours...</p>
         </div>
       </div>

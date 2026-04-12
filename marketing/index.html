@@ -301,9 +301,8 @@
     .mobile-feat .ck{color:var(--green);font-weight:700}
 
     /* ═══ TYPEWRITER ═══ */
-    .typewriter{overflow:hidden;border-right:3px solid var(--blue-l);white-space:nowrap;animation:typing 3s steps(30,end) forwards,blink .7s step-end infinite}
-    @keyframes typing{from{width:0}to{width:100%}}
-    @keyframes blink{from,to{border-color:transparent}50%{border-color:var(--blue-l)}}
+    .typewriter-cursor::after{content:'|';animation:blink .7s step-end infinite;color:var(--blue-l)}
+    @keyframes blink{from,to{opacity:1}50%{opacity:0}}
 
     /* ═══ PARALLAX ═══ */
     .parallax-wrap{overflow:hidden}
@@ -350,7 +349,7 @@
 <section class="hero">
   <div class="hero-grid"></div>
   <div class="ctn hero-c">
-    <h1 class="rv">L'infrastructure CRM<br>pour <span class="hl typewriter" style="display:inline-block">l'immobilier</span></h1>
+    <h1 class="rv">L'infrastructure CRM<br>pour <span class="hl" id="typewriter-text"></span><span class="typewriter-cursor"></span></h1>
     <p class="sub rv rv-1">Pipeline de vente, landing pages, tracking publicitaire et intelligence artificielle. La plateforme tout-en-un pour les promoteurs immobiliers.</p>
     <div class="hero-btn rv rv-2"><a href="http://localhost:5173/register" class="btn btn-p">Demarrer maintenant →</a><a href="#features" class="btn btn-g">Explorer les fonctionnalites</a></div>
     <p class="hero-note rv rv-2">Essai gratuit · Sans carte bancaire · Configuration en 2 minutes</p>
@@ -667,6 +666,13 @@ document.querySelectorAll('.stat-num[data-target]').forEach(el=>counterObs.obser
 
 // Parallax effect on scroll
 window.addEventListener('scroll',()=>{const s=window.scrollY;document.querySelectorAll('.parallax-slow').forEach(el=>{el.style.transform=`translateY(${s*0.03}px)`})},{passive:true});
+
+// Typewriter effect
+const words=['l\'immobilier','les promoteurs','la vente','l\'Algerie'];
+let wi=0,ci=0,deleting=false;
+const twEl=document.getElementById('typewriter-text');
+function typewrite(){if(!twEl)return;const w=words[wi];if(!deleting){twEl.textContent=w.slice(0,ci+1);ci++;if(ci===w.length){deleting=true;setTimeout(typewrite,2000);return}}else{twEl.textContent=w.slice(0,ci-1);ci--;if(ci===0){deleting=false;wi=(wi+1)%words.length;setTimeout(typewrite,500);return}}setTimeout(typewrite,deleting?50:100)}
+setTimeout(typewrite,1000);
 
 // Micro-animation on feature card hover
 document.querySelectorAll('.b-card').forEach(card=>{const ico=card.querySelector('.b-ico');if(ico){card.addEventListener('mouseenter',()=>{ico.style.transform='scale(1.15) rotate(5deg)';ico.style.transition='transform .3s'});card.addEventListener('mouseleave',()=>{ico.style.transform='scale(1) rotate(0)'})}});

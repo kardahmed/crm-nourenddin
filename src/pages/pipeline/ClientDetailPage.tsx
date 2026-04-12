@@ -51,6 +51,9 @@ import { PipelineTimeline } from './components/PipelineTimeline'
 import { QuickActions } from './components/QuickActions'
 import { ClientTabs } from './components/ClientTabs'
 import { ClientFormModal } from './components/ClientFormModal'
+import { PlanVisitModal } from './components/modals/PlanVisitModal'
+import { AISuggestionsModal } from './components/modals/AISuggestionsModal'
+import { ReassignModal } from './components/modals/ReassignModal'
 
 // Avatar color from name
 function nameToColor(name: string): string {
@@ -71,6 +74,9 @@ export function ClientDetailPage() {
   const [showInfo, setShowInfo] = useState(true)
   const [stageConfirm, setStageConfirm] = useState<PipelineStage | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showVisitModal, setShowVisitModal] = useState(false)
+  const [showAIModal, setShowAIModal] = useState(false)
+  const [showReassignModal, setShowReassignModal] = useState(false)
 
   // Fetch client
   const { data: rawClient, isLoading } = useQuery({
@@ -290,6 +296,9 @@ export function ClientDetailPage() {
         agentName={agentName ?? undefined}
         projectName={client.interested_projects?.[0] && projectMap ? projectMap.get(client.interested_projects[0]) ?? undefined : undefined}
         onAction={handleQuickAction}
+        onOpenVisit={() => setShowVisitModal(true)}
+        onOpenAI={() => setShowAIModal(true)}
+        onOpenReassign={() => setShowReassignModal(true)}
       />
 
       {/* Pipeline timeline */}
@@ -371,6 +380,31 @@ export function ClientDetailPage() {
         confirmLabel="Confirmer"
         loading={updateClientStage.isPending}
       />
+
+      {/* Plan visit modal */}
+      <PlanVisitModal
+        isOpen={showVisitModal}
+        onClose={() => setShowVisitModal(false)}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone, pipeline_stage: client.pipeline_stage, tenant_id: client.tenant_id }}
+      />
+
+      {/* AI suggestions modal */}
+      <AISuggestionsModal
+        isOpen={showAIModal}
+        onClose={() => setShowAIModal(false)}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone, confirmed_budget: client.confirmed_budget, desired_unit_types: client.desired_unit_types, interested_projects: client.interested_projects, interest_level: client.interest_level, pipeline_stage: client.pipeline_stage, tenant_id: client.tenant_id }}
+      />
+
+      {/* Reassign agent modal */}
+      {showReassignModal && (
+        <ReassignModal
+          isOpen={showReassignModal}
+          onClose={() => setShowReassignModal(false)}
+          clientId={client.id}
+          currentAgentId={client.agent_id}
+          tenantId={client.tenant_id}
+        />
+      )}
     </div>
   )
 }

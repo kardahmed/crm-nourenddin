@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  Sparkles, RotateCcw, ArrowUpDown, Check, Trophy, Award,
+  RotateCcw, ArrowUpDown, Check, Trophy, Award,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Modal, FilterDropdown } from '@/components/common'
@@ -38,7 +38,7 @@ interface AvailableUnit {
   project_name: string
 }
 
-type SortKey = 'ai' | 'price' | 'price_m2' | 'surface' | 'floor'
+type SortKey = 'score' | 'price' | 'price_m2' | 'surface' | 'floor'
 
 interface AISuggestionsModalProps {
   isOpen: boolean
@@ -53,22 +53,18 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [subtypeFilter, setSubtypeFilter] = useState('all')
-  const [sortKey, setSortKey] = useState<SortKey>('ai')
+  const [sortKey, setSortKey] = useState<SortKey>('score')
   const [showTop5, setShowTop5] = useState(false)
   const [selectedIds, setSelectedIds] = useState<string[]>([])
-  const [aiRanking, setAiRanking] = useState<Map<string, number>>(new Map())
-  const [aiLoading, setAiLoading] = useState(false)
-
   // Prefill filters from client profile
   useEffect(() => {
     if (client && isOpen) {
       setProjectFilter(client.interested_projects?.[0] ?? '')
       setTypeFilter(client.desired_unit_types?.[0] ?? '')
       setSubtypeFilter('all')
-      setSortKey('ai')
+      setSortKey('score')
       setShowTop5(false)
       setSelectedIds([])
-      setAiRanking(new Map())
     }
   }, [client, isOpen])
 
@@ -110,12 +106,55 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     })
   }, [rawUnits, projectFilter, typeFilter, subtypeFilter])
 
+  // Smart scoring: match units to client profile
+  function scoreUnit(u: AvailableUnit): number {
+    if (!client) return 0
+    let score = 0
+    const budget = client.confirmed_budget ?? 0
+
+    // Budget match (40 points max)
+    if (budget > 0 && u.price) {
+      const ratio = u.price / budget
+      if (ratio >= 0.8 && ratio <= 1.0) score += 40       // Within budget, great
+      else if (ratio >= 0.6 && ratio < 0.8) score += 30   // Under budget
+      else if (ratio > 1.0 && ratio <= 1.15) score += 25  // Slightly over, negotiable
+      else if (ratio > 1.15 && ratio <= 1.3) score += 10  // Over budget
+      // else 0 — way out of range
+    }
+
+    // Type match (25 points)
+    if (client.desired_unit_types?.includes(u.type)) score += 25
+
+    // Project match (20 points)
+    if (client.interested_projects?.includes(u.project_id)) score += 20
+
+    // Price/m2 efficiency bonus (10 points)
+    if (u.price && u.surface && u.surface > 0) {
+      const pm2 = u.price / u.surface
+      if (pm2 < 120000) score += 10       // Very good price/m2
+      else if (pm2 < 150000) score += 7
+      else if (pm2 < 180000) score += 4
+    }
+
+    // Floor preference (5 points) — higher floors generally preferred
+    if (u.floor && u.floor >= 3 && u.floor <= 8) score += 5
+    else if (u.floor && u.floor > 8) score += 3
+
+    return score
+  }
+
+  const scoreMap = useMemo(() => {
+    const map = new Map<string, number>()
+    filtered.forEach(u => map.set(u.id, scoreUnit(u)))
+    return map
+  }, [filtered, client])
+
   // Sort
   const sorted = useMemo(() => {
     const list = [...filtered]
 
-    if (sortKey === 'ai' && aiRanking.size > 0) {
-      list.sort((a, b) => (aiRanking.get(a.id) ?? 999) - (aiRanking.get(b.id) ?? 999))
+    if (sortKey === 'score') {
+      list.sort((a, b) => (scoreMap.get(b.id) ?? 0) - (scoreMap.get(a.id) ?? 0))
     } else if (sortKey === 'price') {
       list.sort((a, b) => (a.price ?? 0) - (b.price ?? 0))
     } else if (sortKey === 'price_m2') {
@@ -128,7 +167,7 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     }
 
     return showTop5 ? list.slice(0, 5) : list
-  }, [filtered, sortKey, aiRanking, showTop5])
+  }, [filtered, sortKey, scoreMap, showTop5])
 
   // Available subtypes
   const subtypes = useMemo(() => {
@@ -137,77 +176,12 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     return Array.from(set)
   }, [filtered])
 
-  // AI ranking call (via secure Edge Function)
-  async function requestAIRanking() {
-    if (!client || filtered.length === 0) return
-
-    setAiLoading(true)
-    try {
-      const clientProfile = {
-        budget: client.confirmed_budget,
-        desired_types: client.desired_unit_types,
-        interest_level: client.interest_level,
-      }
-
-      const unitsList = filtered.map(u => ({
-        id: u.id,
-        code: u.code,
-        type: u.type,
-        subtype: u.subtype,
-        surface: u.surface,
-        floor: u.floor,
-        price: u.price,
-        building: u.building,
-        project: u.project_name,
-        delivery_date: u.delivery_date,
-      }))
-
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('No active session')
-
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-      const response = await fetch(`${supabaseUrl}/functions/v1/ai-suggestions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ clientProfile, unitsList }),
-      })
-
-      if (!response.ok) {
-        throw new Error(`Edge Function error: ${response.status}`)
-      }
-
-      const { ranking } = await response.json() as { ranking: Array<{ unit_id: string; rank: number }> }
-      const map = new Map<string, number>()
-      ranking.forEach(r => map.set(r.unit_id, r.rank))
-      setAiRanking(map)
-      setSortKey('ai')
-    } catch (err) {
-      console.error('AI ranking error:', err)
-      // Fallback: budget proximity ranking
-      const map = new Map<string, number>()
-      const budget = client.confirmed_budget ?? 0
-      const byProximity = [...filtered].sort((a, b) => {
-        const distA = Math.abs((a.price ?? 0) - budget)
-        const distB = Math.abs((b.price ?? 0) - budget)
-        return distA - distB
-      })
-      byProximity.forEach((u, i) => map.set(u.id, i + 1))
-      setAiRanking(map)
-      setSortKey('ai')
-    } finally {
-      setAiLoading(false)
-    }
+  // Get rank from score
+  function getRank(unitId: string): number | null {
+    const sortedByScore = [...filtered].sort((a, b) => (scoreMap.get(b.id) ?? 0) - (scoreMap.get(a.id) ?? 0))
+    const idx = sortedByScore.findIndex(u => u.id === unitId)
+    return idx >= 0 ? idx + 1 : null
   }
-
-  // Auto-request AI on filter change
-  useEffect(() => {
-    if (isOpen && filtered.length > 0 && aiRanking.size === 0) {
-      requestAIRanking()
-    }
-  }, [isOpen, filtered.length])
 
   function toggleUnit(id: string) {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
@@ -217,7 +191,7 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     setProjectFilter(client?.interested_projects?.[0] ?? '')
     setTypeFilter(client?.desired_unit_types?.[0] ?? '')
     setSubtypeFilter('all')
-    setSortKey('ai')
+    setSortKey('score')
     setShowTop5(false)
   }
 
@@ -236,11 +210,11 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
   ]
 
   const SORT_BUTTONS: { key: SortKey; label: string }[] = [
-    { key: 'ai', label: 'Suggestion IA' },
+    { key: 'score', label: 'Meilleur match' },
     { key: 'price', label: 'Prix' },
     { key: 'price_m2', label: 'Prix/m²' },
     { key: 'surface', label: 'Surface' },
-    { key: 'floor', label: 'Étage' },
+    { key: 'floor', label: 'Etage' },
   ]
 
   if (!client) return null
@@ -263,16 +237,16 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
           {SORT_BUTTONS.map(s => (
             <button
               key={s.key}
-              onClick={() => { setSortKey(s.key); if (s.key === 'ai' && aiRanking.size === 0) requestAIRanking() }}
+              onClick={() => setSortKey(s.key)}
               className={`flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors ${
                 sortKey === s.key
-                  ? s.key === 'ai'
-                    ? 'border-purple-500/50 bg-purple-500/10 text-purple-400'
-                    : 'border-immo-accent-green/50 bg-immo-accent-green/10 text-immo-accent-green'
+                  ? s.key === 'score'
+                    ? 'border-immo-accent-green/50 bg-immo-accent-green/10 text-immo-accent-green'
+                    : 'border-immo-accent-blue/50 bg-immo-accent-blue/10 text-immo-accent-blue'
                   : 'border-immo-border-default text-immo-text-muted hover:border-immo-text-muted'
               }`}
             >
-              {s.key === 'ai' ? <Sparkles className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3" />}
+              {s.key === 'score' ? <Trophy className="h-3 w-3" /> : <ArrowUpDown className="h-3 w-3" />}
               {s.label}
             </button>
           ))}
@@ -291,11 +265,13 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
           </span>
         </div>
 
-        {/* Loading */}
-        {aiLoading && (
-          <div className="flex items-center gap-2 rounded-lg border border-purple-500/30 bg-purple-500/5 px-3 py-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-purple-400 border-t-transparent" />
-            <span className="text-xs text-purple-400">Analyse IA en cours...</span>
+        {/* Client match criteria */}
+        {client && (
+          <div className="flex flex-wrap items-center gap-2 rounded-lg border border-immo-border-default bg-immo-bg-primary px-3 py-2 text-[10px]">
+            <span className="font-semibold text-immo-text-muted">Criteres:</span>
+            {client.confirmed_budget && <span className="rounded-full bg-immo-accent-green/10 px-2 py-0.5 text-immo-accent-green">Budget: {formatPriceCompact(client.confirmed_budget)}</span>}
+            {client.desired_unit_types?.map(t => <span key={t} className="rounded-full bg-immo-accent-blue/10 px-2 py-0.5 text-immo-accent-blue">{UNIT_TYPE_LABELS[t as UnitType] ?? t}</span>)}
+            {client.interested_projects?.length ? <span className="rounded-full bg-purple-100 px-2 py-0.5 text-purple-600">{client.interested_projects.length} projet(s)</span> : null}
           </div>
         )}
 
@@ -305,7 +281,8 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
         ) : (
           <div className="grid max-h-[400px] grid-cols-3 gap-3 overflow-y-auto">
             {sorted.map(u => {
-              const rank = aiRanking.get(u.id)
+              const rank = getRank(u.id)
+              const score = scoreMap.get(u.id) ?? 0
               const selected = selectedIds.includes(u.id)
               const priceM2 = u.price && u.surface ? Math.round(u.price / u.surface) : null
 
@@ -335,17 +312,24 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
                     {u.subtype && <span className="text-[11px] text-immo-text-muted">{UNIT_SUBTYPE_LABELS[u.subtype] ?? u.subtype}</span>}
                   </div>
 
-                  {/* AI badges */}
+                  {/* Match badges */}
                   {rank === 1 && (
                     <div className="mb-2 flex items-center gap-1 rounded-full bg-immo-accent-green/10 px-2 py-0.5 text-[10px] font-semibold text-immo-accent-green">
-                      <Trophy className="h-3 w-3" /> Meilleur choix
+                      <Trophy className="h-3 w-3" /> Meilleur match
                     </div>
                   )}
                   {rank && rank >= 2 && rank <= 3 && (
-                    <div className="mb-2 flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold text-purple-400">
-                      <Award className="h-3 w-3" /> Premium
+                    <div className="mb-2 flex items-center gap-1 rounded-full bg-immo-accent-blue/10 px-2 py-0.5 text-[10px] font-semibold text-immo-accent-blue">
+                      <Award className="h-3 w-3" /> Top {rank}
                     </div>
                   )}
+                  {/* Score bar */}
+                  <div className="mb-2 flex items-center gap-1.5">
+                    <div className="h-1 flex-1 rounded-full bg-immo-border-default">
+                      <div className="h-full rounded-full bg-immo-accent-green transition-all" style={{ width: `${score}%` }} />
+                    </div>
+                    <span className="text-[9px] font-bold text-immo-text-muted">{score}%</span>
+                  </div>
 
                   {/* Details */}
                   <div className="mb-2 flex items-center gap-3 text-xs text-immo-text-muted">

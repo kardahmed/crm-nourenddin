@@ -53,44 +53,42 @@
     .counter .num span{color:var(--blue-l)}
     .counter .lab{font-size:12px;color:rgba(255,255,255,.4);margin-top:2px}
 
-    /* App mockup built in CSS */
+    /* App mockup built in CSS — LIGHT THEME */
     .app-mock{max-width:920px;margin:0 auto;perspective:1200px;position:relative}
-    .app-win{background:#0d1520;border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;transform:rotateX(3deg);transition:transform .5s;box-shadow:0 40px 100px rgba(0,0,0,.5)}
+    .app-win{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;transform:rotateX(3deg);transition:transform .5s;box-shadow:0 24px 80px rgba(10,37,64,.12)}
     .app-win:hover{transform:rotateX(0)}
-    .app-bar{height:34px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:5px;padding:0 12px}
+    .app-bar{height:34px;background:var(--light);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:5px;padding:0 12px}
     .app-d{width:8px;height:8px;border-radius:50%}.app-d.r{background:#FF5F57}.app-d.y{background:#FEBC2E}.app-d.g{background:#28C840}
-    .app-url{margin-left:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.05);border-radius:5px;padding:3px 12px;font-size:10px;color:rgba(255,255,255,.25)}
+    .app-url{margin-left:10px;background:#fff;border:1px solid var(--border);border-radius:5px;padding:3px 12px;font-size:10px;color:var(--muted)}
 
-    /* Simulated dashboard inside the mockup */
+    /* Simulated dashboard inside the mockup — LIGHT */
     .dash{display:flex;min-height:420px}
-    .dash-side{width:200px;background:rgba(255,255,255,.03);border-right:1px solid rgba(255,255,255,.06);padding:16px 12px;flex-shrink:0}
-    .dash-side .si{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:2px}
-    .dash-side .si.act{background:rgba(5,121,218,.15);color:var(--blue-l)}
+    .dash-side{width:200px;background:var(--white);border-right:1px solid var(--border);padding:16px 12px;flex-shrink:0}
+    .dash-side .si{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;font-size:11px;color:var(--muted);margin-bottom:2px}
+    .dash-side .si.act{background:rgba(5,121,218,.08);color:var(--blue);font-weight:600}
     .dash-side .si .dot{width:6px;height:6px;border-radius:3px;background:currentColor}
-    .dash-main{flex:1;padding:20px;overflow:hidden}
+    .dash-main{flex:1;padding:20px;overflow:hidden;background:var(--light)}
     .dash-topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
-    .dash-topbar h3{font-size:14px;font-weight:700;color:#fff}
-    .dash-topbar .search{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:6px 12px;font-size:10px;color:rgba(255,255,255,.3);width:180px}
+    .dash-topbar h3{font-size:14px;font-weight:700;color:var(--dark)}
+    .dash-topbar .search{background:#fff;border:1px solid var(--border);border-radius:8px;padding:6px 12px;font-size:10px;color:var(--muted);width:180px}
     /* KPI row */
     .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
-    .kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:14px}
-    .kpi .kv{font-size:20px;font-weight:800;color:#fff}.kpi .kl{font-size:9px;color:rgba(255,255,255,.35);margin-top:2px}
-    .kpi.green .kv{color:var(--green)}.kpi.blue .kv{color:var(--blue-l)}.kpi.cyan .kv{color:var(--cyan)}
+    .kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+    .kpi .kv{font-size:20px;font-weight:800;color:var(--dark)}.kpi .kl{font-size:9px;color:var(--muted);margin-top:2px}
+    .kpi.green .kv{color:var(--green)}.kpi.blue .kv{color:var(--blue)}.kpi.cyan .kv{color:var(--cyan)}
     /* Chart placeholder */
     .chart-area{display:flex;gap:12px}
-    .chart-box{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:14px}
-    .chart-box .ct{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:12px}
+    .chart-box{flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+    .chart-box .ct{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:12px}
     .chart-bars{display:flex;align-items:flex-end;gap:6px;height:100px}
     .chart-bars .bar{flex:1;border-radius:4px 4px 0 0;min-height:8px;transition:height .5s}
-    .chart-line{height:100px;position:relative}
-    .chart-line svg{width:100%;height:100%}
     /* Recent activity */
-    .activity{flex:1;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);border-radius:10px;padding:14px}
-    .activity .ct{font-size:10px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:10px}
-    .act-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+    .activity{flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+    .activity .ct{font-size:10px;font-weight:600;color:var(--muted);margin-bottom:10px}
+    .act-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
     .act-item .ai-dot{width:6px;height:6px;border-radius:50%}
-    .act-item .ai-txt{font-size:9px;color:rgba(255,255,255,.45);flex:1}
-    .act-item .ai-time{font-size:8px;color:rgba(255,255,255,.2)}
+    .act-item .ai-txt{font-size:9px;color:var(--gray);flex:1}
+    .act-item .ai-time{font-size:8px;color:var(--muted)}
 
     /* Floating badges */
     .fb{position:absolute;background:rgba(255,255,255,.07);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 14px;z-index:10;color:#fff}
@@ -147,18 +145,18 @@
     .sp-vis{border-radius:16px;overflow:hidden;box-shadow:0 20px 60px rgba(10,37,64,.1);border:1px solid var(--border);position:relative}
     .sp-vis img{width:100%;display:block;transition:transform 6s}
     .sp-vis:hover img{transform:scale(1.03)}
-    /* Mini app preview inside split */
-    .mini-app{background:#0d1520;border-radius:12px;overflow:hidden;border:1px solid rgba(255,255,255,.08)}
-    .mini-bar{height:28px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:4px;padding:0 10px}
+    /* Mini app preview inside split — LIGHT */
+    .mini-app{background:#fff;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 8px 30px rgba(10,37,64,.08)}
+    .mini-bar{height:28px;background:var(--light);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:4px;padding:0 10px}
     .mini-d{width:6px;height:6px;border-radius:50%}.mini-d.r{background:#FF5F57}.mini-d.y{background:#FEBC2E}.mini-d.g{background:#28C840}
-    .mini-body{padding:12px;min-height:260px}
+    .mini-body{padding:12px;min-height:260px;background:var(--light)}
     /* Pipeline preview */
     .pipe-cols{display:flex;gap:8px}
     .pipe-col{flex:1}
-    .pipe-head{font-size:8px;font-weight:700;color:rgba(255,255,255,.35);padding:4px 6px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-    .pipe-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:6px;padding:8px;margin-bottom:5px}
-    .pipe-card .pc-name{font-size:9px;font-weight:600;color:rgba(255,255,255,.7)}
-    .pipe-card .pc-sub{font-size:7px;color:rgba(255,255,255,.3);margin-top:2px}
+    .pipe-head{font-size:8px;font-weight:700;color:var(--muted);padding:4px 6px;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+    .pipe-card{background:#fff;border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:5px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+    .pipe-card .pc-name{font-size:9px;font-weight:600;color:var(--dark)}
+    .pipe-card .pc-sub{font-size:7px;color:var(--muted);margin-top:2px}
     .pipe-card .pc-badge{display:inline-block;font-size:7px;padding:2px 6px;border-radius:4px;margin-top:4px;font-weight:600}
     /* Landing preview */
     .lp-prev{background:#fff;border-radius:8px;overflow:hidden}
@@ -283,9 +281,9 @@
     /* ═══ MOBILE PREVIEW ═══ */
     .mobile-sec{padding:80px 0}
     .mobile-inner{display:flex;align-items:center;justify-content:center;gap:60px}
-    .phone-frame{width:280px;height:560px;border-radius:36px;border:8px solid var(--dark);background:var(--dark);overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(10,37,64,.2)}
-    .phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:24px;background:var(--dark);border-radius:0 0 16px 16px;z-index:2}
-    .phone-screen{width:100%;height:100%;background:#0d1520;overflow:hidden;padding-top:24px}
+    .phone-frame{width:280px;height:560px;border-radius:36px;border:8px solid #1a1a2e;background:#1a1a2e;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(10,37,64,.2)}
+    .phone-notch{position:absolute;top:0;left:50%;transform:translateX(-50%);width:120px;height:24px;background:#1a1a2e;border-radius:0 0 16px 16px;z-index:2}
+    .phone-screen{width:100%;height:100%;background:var(--light);overflow:hidden;padding-top:28px}
     .phone-screen .mini-dash{padding:12px;transform:scale(.95);transform-origin:top left}
     .mobile-txt{max-width:420px}
     .mobile-txt h2{font-size:clamp(24px,3vw,34px);font-weight:800;margin-bottom:12px}
@@ -363,7 +361,7 @@
         <div class="app-bar"><div class="app-d r"></div><div class="app-d y"></div><div class="app-d g"></div><div class="app-url">app.immoprox.com/dashboard</div></div>
         <div class="dash">
           <div class="dash-side">
-            <div style="font-size:13px;font-weight:800;color:#fff;padding:0 10px 12px;display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue-l)" stroke-width="2.5"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>IMMO PRO-X</div>
+            <div style="font-size:13px;font-weight:800;color:var(--dark);padding:0 10px 12px;display:flex;align-items:center;gap:6px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>IMMO PRO-X</div>
             <div class="si act"><div class="dot"></div>Tableau de bord</div>
             <div class="si"><div class="dot"></div>Pipeline</div>
             <div class="si"><div class="dot"></div>Projets</div>
@@ -385,11 +383,11 @@
               <div class="chart-box" style="flex:1.5">
                 <div class="ct">Ventes par mois</div>
                 <div class="chart-bars">
-                  <div class="bar" style="height:30%;background:rgba(5,121,218,.3)"></div>
-                  <div class="bar" style="height:45%;background:rgba(5,121,218,.4)"></div>
-                  <div class="bar" style="height:60%;background:rgba(5,121,218,.5)"></div>
-                  <div class="bar" style="height:40%;background:rgba(5,121,218,.4)"></div>
-                  <div class="bar" style="height:75%;background:rgba(5,121,218,.6)"></div>
+                  <div class="bar" style="height:30%;background:rgba(5,121,218,.2)"></div>
+                  <div class="bar" style="height:45%;background:rgba(5,121,218,.3)"></div>
+                  <div class="bar" style="height:60%;background:rgba(5,121,218,.4)"></div>
+                  <div class="bar" style="height:40%;background:rgba(5,121,218,.3)"></div>
+                  <div class="bar" style="height:75%;background:rgba(5,121,218,.5)"></div>
                   <div class="bar" style="height:90%;background:var(--blue)"></div>
                 </div>
               </div>
@@ -663,16 +661,16 @@
           <div class="phone-notch"></div>
           <div class="phone-screen">
             <div class="mini-dash">
-              <div style="font-size:11px;font-weight:800;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue-l)" stroke-width="2.5"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>IMMO PRO-X</div>
+              <div style="font-size:11px;font-weight:800;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2.5"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>IMMO PRO-X</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-                <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px"><div style="font-size:16px;font-weight:800;color:var(--blue-l)">12</div><div style="font-size:7px;color:rgba(255,255,255,.35)">Clients</div></div>
-                <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px"><div style="font-size:16px;font-weight:800;color:var(--green)">3</div><div style="font-size:7px;color:rgba(255,255,255,.35)">Ventes</div></div>
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:8px;padding:8px"><div style="font-size:16px;font-weight:800;color:var(--blue)">12</div><div style="font-size:7px;color:var(--muted)">Clients</div></div>
+                <div style="background:#fff;border:1px solid #E3E8EF;border-radius:8px;padding:8px"><div style="font-size:16px;font-weight:800;color:var(--green)">3</div><div style="font-size:7px;color:var(--muted)">Ventes</div></div>
               </div>
-              <div style="font-size:8px;font-weight:600;color:rgba(255,255,255,.4);margin-bottom:6px">TACHES DU JOUR</div>
-              <div style="background:rgba(255,255,255,.05);border-radius:6px;padding:6px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><div style="width:5px;height:5px;border-radius:50%;background:#25D366"></div><div style="font-size:7px;color:rgba(255,255,255,.5)">Envoyer catalogue — Karim B.</div></div>
-              <div style="background:rgba(255,255,255,.05);border-radius:6px;padding:6px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><div style="width:5px;height:5px;border-radius:50%;background:var(--blue-l)"></div><div style="font-size:7px;color:rgba(255,255,255,.5)">Rappeler Samira — Visite</div></div>
-              <div style="background:rgba(255,255,255,.05);border-radius:6px;padding:6px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div><div style="font-size:7px;color:rgba(255,255,255,.5)">Confirmer RDV notaire</div></div>
-              <div style="background:rgba(0,212,160,.1);border:1px solid rgba(0,212,160,.2);border-radius:6px;padding:8px;margin-top:8px;text-align:center"><div style="font-size:8px;font-weight:700;color:var(--green)">Appeler le prochain client</div></div>
+              <div style="font-size:8px;font-weight:600;color:var(--muted);margin-bottom:6px;letter-spacing:.5px">TACHES DU JOUR</div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:6px;padding:6px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><div style="width:5px;height:5px;border-radius:50%;background:#25D366"></div><div style="font-size:7px;color:var(--gray)">Envoyer catalogue — Karim B.</div></div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:6px;padding:6px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><div style="width:5px;height:5px;border-radius:50%;background:var(--blue)"></div><div style="font-size:7px;color:var(--gray)">Rappeler Samira — Visite</div></div>
+              <div style="background:#fff;border:1px solid #E3E8EF;border-radius:6px;padding:6px;margin-bottom:4px;display:flex;align-items:center;gap:6px"><div style="width:5px;height:5px;border-radius:50%;background:var(--green)"></div><div style="font-size:7px;color:var(--gray)">Confirmer RDV notaire</div></div>
+              <div style="background:rgba(5,121,218,.08);border:1px solid rgba(5,121,218,.15);border-radius:6px;padding:8px;margin-top:8px;text-align:center"><div style="font-size:8px;font-weight:700;color:var(--blue)">Appeler le prochain client</div></div>
             </div>
           </div>
         </div>

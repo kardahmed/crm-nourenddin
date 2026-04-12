@@ -48,9 +48,8 @@ const PublicLandingPage = lazy(() => import('@/pages/landing/PublicLandingPage')
 
 function PageLoader() {
   return (
-    <div className="flex h-screen flex-col items-center justify-center gap-4 bg-immo-bg-primary">
-      <img src="/logo-180.png" alt="IMMO PRO-X" className="h-14 w-14 animate-pulse" />
-      <div className="h-5 w-5 animate-spin rounded-full border-2 border-immo-accent-green border-t-transparent" />
+    <div className="flex h-screen items-center justify-center bg-immo-bg-primary">
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-immo-accent-green border-t-transparent" />
     </div>
   )
 }

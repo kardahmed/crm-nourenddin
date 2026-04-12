@@ -43,7 +43,7 @@ import { KanbanBoard } from './components/KanbanBoard'
 import { CardsView } from './components/CardsView'
 import { TableView } from './components/TableView'
 import { ClientFormModal } from './components/ClientFormModal'
-import { StageChangeDialog } from './components/StageChangeDialog'
+import { SmartStageDialog } from './components/SmartStageDialog'
 import { ClientSidePanel } from './components/ClientSidePanel'
 import { AdvancedFilters, EMPTY_FILTERS } from './components/AdvancedFilters'
 import type { AdvancedFilterValues } from './components/AdvancedFilters'
@@ -483,10 +483,11 @@ export function PipelinePage() {
       <ClientSidePanel clientId={sidePanelClientId} onClose={() => setSidePanelClientId(null)} />
 
       {pendingMove && (
-        <StageChangeDialog
+        <SmartStageDialog
           isOpen
           onClose={() => setPendingMove(null)}
           onConfirm={confirmMoveClient}
+          clientId={pendingMove.clientId}
           clientName={pendingMove.clientName}
           fromStage={pendingMove.fromStage}
           toStage={pendingMove.toStage}

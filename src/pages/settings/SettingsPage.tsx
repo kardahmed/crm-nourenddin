@@ -11,7 +11,7 @@ import {
   LanguageSection,
   SecuritySection,
 } from './sections'
-import { PlaybookSection } from './sections/PlaybookSection'
+// PlaybookSection moved to Super Admin
 import { TaskConfigSection } from './sections/TaskConfigSection'
 
 type Section = 'company' | 'pipeline' | 'playbook' | 'tasks' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
@@ -29,7 +29,7 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   security: Shield,
 }
 
-const SECTION_KEYS: Section[] = ['company', 'pipeline', 'playbook', 'tasks', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
+const SECTION_KEYS: Section[] = ['company', 'pipeline', 'tasks', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
   company: 'Agence',
@@ -75,7 +75,6 @@ export function SettingsPage() {
       <div className="min-w-0 flex-1">
         {section === 'company' && <CompanySection />}
         {section === 'pipeline' && <PipelineSection />}
-        {section === 'playbook' && <PlaybookSection />}
         {section === 'tasks' && <TaskConfigSection />}
         {section === 'branding' && <BrandingSection />}
         {section === 'reservations' && <ReservationsSection />}

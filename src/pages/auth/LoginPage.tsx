@@ -73,43 +73,60 @@ export function LoginPage() {
   return (
     <div className="flex min-h-screen animate-in fade-in duration-500">
       {/* Left — Branding panel */}
-      <div className="hidden w-[440px] shrink-0 flex-col justify-between bg-gradient-to-b from-[#0579DA] to-[#0456A0] p-10 text-white lg:flex">
-        <div>
+      <div className="hidden w-[480px] shrink-0 flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0A2540] via-[#0B3D6F] to-[#0579DA] p-10 text-white lg:flex" style={{position:'relative'}}>
+        {/* Grid overlay */}
+        <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px)',backgroundSize:'40px 40px',maskImage:'radial-gradient(ellipse 80% 80% at 50% 50%,black 30%,transparent 100%)'}} />
+        {/* Glow */}
+        <div style={{position:'absolute',top:'-100px',right:'-100px',width:'300px',height:'300px',borderRadius:'50%',background:'rgba(5,121,218,.3)',filter:'blur(80px)'}} />
+        <div style={{position:'absolute',bottom:'-80px',left:'-80px',width:'250px',height:'250px',borderRadius:'50%',background:'rgba(6,182,212,.15)',filter:'blur(60px)'}} />
+
+        <div style={{position:'relative',zIndex:1}}>
           <div className="flex items-center gap-3">
-            <img src="/logo-180.png" alt="IMMO PRO-X" className="h-11 w-11" />
+            <img src="/logo-180.png" alt="IMMO PRO-X" className="h-12 w-12" />
             <div>
-              <span className="text-xl font-bold">IMMO PRO-X</span>
-              <p className="text-[10px] text-white/50">v2.0</p>
+              <span className="text-2xl font-900 tracking-tight">IMMO PRO-X</span>
+              <p className="text-[10px] text-white/40">CRM Immobilier v2.0</p>
             </div>
           </div>
-          <p className="mt-6 text-sm leading-relaxed text-white/70">
-            La plateforme CRM tout-en-un concue pour les promoteurs immobiliers algeriens. Gerez vos projets, suivez vos clients et vendez plus efficacement.
+          <h2 className="mt-8 text-2xl font-800 leading-tight">
+            Vendez vos biens<br/>
+            <span style={{background:'linear-gradient(135deg,#3BA3FF,#06B6D4)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}>2x plus vite</span>
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-white/55">
+            Pipeline de vente, landing pages, tracking publicitaire et intelligence artificielle — tout dans un seul outil.
           </p>
         </div>
 
-        <div className="space-y-4">
+        <div style={{position:'relative',zIndex:1}} className="space-y-3">
           {FEATURES.map(f => (
-            <div key={f.text} className="flex items-center gap-3 text-sm text-white/80">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
-                <f.icon className="h-4 w-4 text-white/70" />
+            <div key={f.text} className="flex items-center gap-3 rounded-xl bg-white/[0.06] px-4 py-3 backdrop-blur-sm border border-white/[0.06]">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/10">
+                <f.icon className="h-4.5 w-4.5 text-white/80" />
               </div>
-              {f.text}
+              <span className="text-[13px] font-medium text-white/80">{f.text}</span>
             </div>
           ))}
         </div>
 
-        <div className="space-y-3">
+        <div style={{position:'relative',zIndex:1}} className="space-y-4">
+          {/* Stats */}
+          <div className="flex gap-6">
+            <div><div className="text-xl font-900 text-white">+50</div><div className="text-[9px] text-white/35">Promoteurs</div></div>
+            <div><div className="text-xl font-900 text-white">+15K</div><div className="text-[9px] text-white/35">Leads captures</div></div>
+            <div><div className="text-xl font-900 text-white">98%</div><div className="text-[9px] text-white/35">Satisfaction</div></div>
+          </div>
+          {/* Avatars */}
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {['YM', 'SB', 'NF', 'KA'].map(initials => (
-                <div key={initials} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#0579DA] bg-white/20 text-[9px] font-bold text-white">
+              {['YM', 'SB', 'NF', 'KA', 'MA'].map(initials => (
+                <div key={initials} className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-[#0B3D6F] bg-white/15 text-[8px] font-bold text-white backdrop-blur-sm">
                   {initials}
                 </div>
               ))}
             </div>
-            <span className="text-xs text-white/60">+50 promoteurs actifs</span>
+            <span className="text-[10px] text-white/40">Rejoint par +50 promoteurs algeriens</span>
           </div>
-          <p className="text-[10px] text-white/30">© 2026 IMMO PRO-X. Tous droits reserves.</p>
+          <p className="text-[9px] text-white/20">© 2026 IMMO PRO-X. Concu en Algerie.</p>
         </div>
       </div>
 

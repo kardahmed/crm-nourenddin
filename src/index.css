@@ -85,6 +85,29 @@
   --color-immo-status-red-bg: #FFF0F3;
 }
 
+/* ─── Dark Theme Override ─── */
+.dark {
+  --color-immo-bg-primary: #0d1117 !important;
+  --color-immo-bg-card: #161b22 !important;
+  --color-immo-bg-card-hover: #1c2128 !important;
+  --color-immo-bg-sidebar: #0d1117 !important;
+  --color-immo-text-primary: #e6edf3 !important;
+  --color-immo-text-secondary: #8b949e !important;
+  --color-immo-text-muted: #484f58 !important;
+  --color-immo-border-default: #21262d !important;
+  --color-immo-border-glow: #58a6ff !important;
+  --color-immo-accent-green: #3fb950 !important;
+  --color-immo-accent-green-dim: #2ea043 !important;
+  --color-immo-accent-green-bg: rgba(63,185,80,0.1) !important;
+  --color-immo-accent-blue: #58a6ff !important;
+  --color-immo-accent-blue-dim: #388bfd !important;
+  --color-immo-accent-blue-bg: rgba(88,166,255,0.1) !important;
+  --color-immo-status-orange: #d29922 !important;
+  --color-immo-status-orange-bg: rgba(210,153,34,0.1) !important;
+  --color-immo-status-red: #f85149 !important;
+  --color-immo-status-red-bg: rgba(248,81,73,0.1) !important;
+}
+
 /* ─── Shadcn CSS variables → Light Theme ─── */
 
 @layer base {

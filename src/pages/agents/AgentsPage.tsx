@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Users, UserCheck, UserX, Plus, Eye, Pencil, Ban,
+  Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -18,12 +18,10 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { USER_ROLE_LABELS } from '@/types'
+import type { UserRole } from '@/types'
 import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
 import { PlanLimitBanner } from '@/components/common/PlanLimitBanner'
 import { PermissionProfilesSection } from '@/pages/settings/sections/PermissionProfilesSection'
-import { Shield } from 'lucide-react'
-import type { UserRole } from '@/types'
-import { MoreHorizontal } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'

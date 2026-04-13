@@ -50,7 +50,7 @@ const NAV_KEYS: Record<string, string> = {
   '/agents': 'nav.agents',
   '/landing': 'nav.landing',
   '/reports': 'nav.reports',
-  '/marketing-roi': 'ROI Marketing',
+  '/marketing-roi': 'nav.marketing_roi',
   '/settings': 'nav.settings',
 }
 

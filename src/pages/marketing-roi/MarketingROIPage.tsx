@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { DollarSign, BarChart3, Megaphone } from 'lucide-react'
+import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
 import { ExpensesTab } from './tabs/ExpensesTab'
 import { AnalyticsTab } from './tabs/AnalyticsTab'
 import { CampaignsTab } from './tabs/CampaignsTab'
@@ -8,6 +9,18 @@ type Tab = 'expenses' | 'analytics' | 'campaigns'
 
 export function MarketingROIPage() {
   const [tab, setTab] = useState<Tab>('analytics')
+  const { hasFeature } = usePlanEnforcement()
+
+  // Enterprise only feature
+  if (!hasFeature('roi_marketing')) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <p className="text-lg font-bold text-immo-text-primary">Module ROI Marketing</p>
+        <p className="mt-2 text-sm text-immo-text-muted">Cette fonctionnalite est disponible avec le plan Enterprise.</p>
+        <a href="/settings" className="mt-4 rounded-lg bg-immo-accent-green px-4 py-2 text-sm font-semibold text-white">Voir les plans</a>
+      </div>
+    )
+  }
 
   const TABS: Array<{ key: Tab; label: string; icon: typeof DollarSign }> = [
     { key: 'analytics', label: 'Analytique ROI', icon: BarChart3 },

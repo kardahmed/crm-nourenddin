@@ -12,6 +12,7 @@ export const ar = {
     landing: 'صفحات الالتقاط',
     reports: 'التقارير',
     tasks: 'المهام',
+    marketing_roi: 'عائد التسويق',
     settings: 'الإعدادات',
   },
 

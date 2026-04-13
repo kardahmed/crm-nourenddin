@@ -12,6 +12,7 @@ export const fr = {
     landing: 'Pages capture',
     reports: 'Rapports',
     tasks: 'Tâches',
+    marketing_roi: 'ROI Marketing',
     settings: 'Paramètres',
   },
 

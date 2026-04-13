@@ -38,10 +38,8 @@ export function CampaignsTab() {
   const { data: kpis = new Map() } = useQuery({
     queryKey: ['campaign-kpis', tenantId],
     queryFn: async () => {
-      const [expensesRes, clientsRes, salesRes] = await Promise.all([
+      const [expensesRes] = await Promise.all([
         supabase.from('marketing_expenses').select('campaign_id, amount').eq('tenant_id', tenantId!).not('campaign_id', 'is', null),
-        supabase.from('clients').select('id, source, created_at').eq('tenant_id', tenantId!),
-        supabase.from('sales').select('id, client_id, final_price').eq('tenant_id', tenantId!).eq('status', 'active'),
       ])
       const expenses = (expensesRes.data ?? []) as Array<{ campaign_id: string; amount: number }>
 

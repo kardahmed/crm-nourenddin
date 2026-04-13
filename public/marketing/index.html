@@ -191,6 +191,8 @@
 
     /* ═══ PRICING ═══ */
     .pricing{padding:100px 0}
+    .billing-label{font-size:13px;font-weight:500;color:#8898AA;transition:color .3s}
+    .billing-label.billing-active{color:#0A2540;font-weight:700}
     .p-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
     .p-c{background:var(--white);border:2px solid var(--border);border-radius:16px;padding:28px 20px;transition:all .3s;position:relative}
     .p-c:hover{border-color:var(--blue)}
@@ -495,12 +497,49 @@
 <!-- PRICING -->
 <section class="pricing" id="pricing">
   <div class="ctn">
-    <div class="s-head"><div class="tag rv">Tarifs</div><h2 class="rv rv-1">Simple, transparent, sans surprises</h2><p class="rv rv-2">Commencez gratuitement. Evoluez sans engagement.</p></div>
+    <div class="s-head">
+      <div class="tag rv">Tarifs</div>
+      <h2 class="rv rv-1">Simple, transparent, sans surprises</h2>
+      <p class="rv rv-2">Commencez gratuitement. Evoluez sans engagement.</p>
+      <!-- Monthly / Yearly toggle -->
+      <div class="rv rv-2" style="display:flex;align-items:center;justify-content:center;gap:12px;margin-top:24px">
+        <span class="billing-label billing-active" id="label-monthly">Mensuel</span>
+        <button id="billing-toggle" onclick="toggleBilling()" style="position:relative;width:44px;height:24px;border-radius:12px;background:#E3E8EF;border:none;cursor:pointer;transition:background .3s">
+          <div id="billing-dot" style="position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:10px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:left .3s"></div>
+        </button>
+        <span class="billing-label" id="label-yearly">Annuel</span>
+        <span id="badge-save" style="display:none;background:rgba(0,212,160,.12);color:#00D4A0;padding:2px 10px;border-radius:999px;font-size:11px;font-weight:700">-17%</span>
+      </div>
+    </div>
     <div class="p-grid">
-      <div class="p-c rv"><div class="p-n">Free</div><div class="p-pr">0 DA</div><div class="p-d">Pour decouvrir</div><ul class="p-l"><li>2 agents</li><li>1 projet · 20 unites</li><li>50 clients</li><li class="off">IA</li><li class="off">Landing pages</li></ul><a href="/register" class="btn btn-o btn-sm" style="width:100%;border-radius:999px">Commencer</a></div>
-      <div class="p-c rv rv-1"><div class="p-n">Starter</div><div class="p-pr">9 900 DA <small>/mois</small></div><div class="p-d">Petites agences</div><ul class="p-l"><li>5 agents · 3 projets</li><li>100 unites · 300 clients</li><li>Suggestions IA</li><li>Export CSV & PDF</li><li class="off">Landing pages</li></ul><a href="/register" class="btn btn-o btn-sm" style="width:100%;border-radius:999px">Essai 14 jours</a></div>
-      <div class="p-c pop rv rv-2"><div class="p-n" style="color:var(--blue)">Pro</div><div class="p-pr">19 900 DA <small>/mois</small></div><div class="p-d">Promoteurs ambitieux</div><ul class="p-l"><li>15 agents · 10 projets</li><li>500 unites · 2 000 clients</li><li>IA complete</li><li>Landing pages illimitees</li><li>Scripts d'appel IA</li></ul><a href="/register" class="btn btn-p btn-sm" style="width:100%;border-radius:999px">Essai 14 jours →</a></div>
-      <div class="p-c rv rv-3"><div class="p-n">Enterprise</div><div class="p-pr">49 900 DA <small>/mois</small></div><div class="p-d">Grands groupes</div><ul class="p-l"><li>Illimite</li><li>IA personnalisee + API</li><li>Branding custom</li><li>Domaine custom</li><li>Support dedie</li></ul><a href="/register" class="btn btn-o btn-sm" style="width:100%;border-radius:999px">Nous contacter</a></div>
+      <div class="p-c rv">
+        <div class="p-n">Free</div>
+        <div class="p-pr"><span class="price-monthly">0 DA</span><span class="price-yearly" style="display:none">0 DA</span></div>
+        <div class="p-d">Pour decouvrir</div>
+        <ul class="p-l"><li>2 agents</li><li>1 projet · 20 unites</li><li>50 clients</li><li>Taches automatiques</li><li class="off">IA</li><li class="off">Landing pages</li></ul>
+        <a href="/register" class="btn btn-o btn-sm" style="width:100%;border-radius:999px">Commencer</a>
+      </div>
+      <div class="p-c rv rv-1">
+        <div class="p-n">Starter</div>
+        <div class="p-pr"><span class="price-monthly">9 900 DA <small>/mois</small></span><span class="price-yearly" style="display:none">99 000 DA <small>/an</small></span></div>
+        <div class="p-d">Petites agences</div>
+        <ul class="p-l"><li>5 agents · 3 projets</li><li>100 unites · 300 clients</li><li>Suggestions IA</li><li>Export CSV & PDF</li><li>WhatsApp Business</li><li class="off">Landing pages</li></ul>
+        <a href="/register" class="btn btn-o btn-sm" style="width:100%;border-radius:999px">Essai 14 jours</a>
+      </div>
+      <div class="p-c pop rv rv-2">
+        <div class="p-n" style="color:var(--blue)">Pro <span style="background:var(--blue);color:#fff;font-size:9px;padding:2px 8px;border-radius:999px;margin-left:6px">Populaire</span></div>
+        <div class="p-pr"><span class="price-monthly">19 900 DA <small>/mois</small></span><span class="price-yearly" style="display:none">199 000 DA <small>/an</small></span></div>
+        <div class="p-d">Promoteurs ambitieux</div>
+        <ul class="p-l"><li>15 agents · 10 projets</li><li>500 unites · 2 000 clients</li><li>IA complete + Scripts</li><li>Landing pages illimitees</li><li>WhatsApp Business</li><li>Generation PDF</li></ul>
+        <a href="/register" class="btn btn-p btn-sm" style="width:100%;border-radius:999px">Essai 14 jours →</a>
+      </div>
+      <div class="p-c rv rv-3">
+        <div class="p-n">Enterprise</div>
+        <div class="p-pr"><span class="price-monthly">Sur devis</span><span class="price-yearly" style="display:none">Sur devis</span></div>
+        <div class="p-d">Grands groupes</div>
+        <ul class="p-l"><li>Tout illimite</li><li>IA personnalisee + API</li><li>Branding & domaine custom</li><li>WhatsApp illimite</li><li>Support dedie</li></ul>
+        <a href="https://wa.me/213542766068?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20le%20plan%20Enterprise" target="_blank" class="btn btn-o btn-sm" style="width:100%;border-radius:999px">Nous contacter →</a>
+      </div>
     </div>
   </div>
 </section>
@@ -656,6 +695,19 @@
 // Scroll reveal
 const o=new IntersectionObserver(e=>{e.forEach(el=>{if(el.isIntersecting){el.target.classList.add('v');o.unobserve(el.target)}})},{threshold:.08,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.rv').forEach(el=>o.observe(el));
+
+// Billing toggle (monthly/yearly)
+let isYearly=false;
+function toggleBilling(){
+  isYearly=!isYearly;
+  document.getElementById('billing-dot').style.left=isYearly?'22px':'2px';
+  document.getElementById('billing-toggle').style.background=isYearly?'#0579DA':'#E3E8EF';
+  document.getElementById('badge-save').style.display=isYearly?'inline':'none';
+  document.getElementById('label-monthly').classList.toggle('billing-active',!isYearly);
+  document.getElementById('label-yearly').classList.toggle('billing-active',isYearly);
+  document.querySelectorAll('.price-monthly').forEach(el=>{el.style.display=isYearly?'none':'inline'});
+  document.querySelectorAll('.price-yearly').forEach(el=>{el.style.display=isYearly?'inline':'none'});
+}
 
 // Smooth scroll
 document.querySelectorAll('a[href^="#"]').forEach(a=>{a.addEventListener('click',e=>{e.preventDefault();const t=document.querySelector(a.getAttribute('href'));if(t)t.scrollIntoView({behavior:'smooth'})})});

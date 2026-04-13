@@ -50,7 +50,7 @@ export function CallScriptModal({
   const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
   const [result, setResult] = useState<'qualified' | 'callback' | 'not_interested'>('qualified')
-  const [clientQuestions, setClientQuestions] = useState<string[]>([])
+  const [clientQA, setClientQA] = useState<Array<{ question: string; answer: string; loading: boolean }>>([])
   const [newQuestion, setNewQuestion] = useState('')
   const [saving, setSaving] = useState(false)
   const [timer, setTimer] = useState(0)
@@ -216,7 +216,7 @@ export function CallScriptModal({
       await supabase.from('call_responses').insert({
         tenant_id: tenantId, client_id: clientId, agent_id: agentId,
         script_id: script?.script_id ?? null,
-        responses: { ...answers, _client_questions: clientQuestions },
+        responses: { ...answers, _client_qa: clientQA.map(q => ({ q: q.question, a: q.answer })) },
         duration_seconds: timer,
         result,
         ai_summary: notes || null,
@@ -241,7 +241,8 @@ export function CallScriptModal({
       }
 
       // Add notes + client questions
-      const fullNotes = [notes, clientQuestions.length > 0 ? `Questions client: ${clientQuestions.join(' | ')}` : ''].filter(Boolean).join('\n')
+      const qaText = clientQA.length > 0 ? clientQA.map(q => `Q: ${q.question} → R: ${q.answer}`).join(' | ') : ''
+      const fullNotes = [notes, qaText].filter(Boolean).join('\n')
       if (fullNotes) {
         const { data: currentClient } = await supabase.from('clients').select('notes').eq('id', clientId).single()
         const existingNotes = (currentClient as { notes: string | null } | null)?.notes ?? ''
@@ -421,47 +422,115 @@ export function CallScriptModal({
                 </div>
               )}
 
-              {/* Client questions (free-form) */}
+              {/* Client questions with AI-generated answers */}
               <div className="rounded-xl border border-immo-status-orange/20 bg-immo-status-orange/5 p-4">
                 <div className="mb-2 flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-immo-status-orange" />
                   <span className="text-xs font-semibold text-immo-status-orange">Questions du client</span>
+                  <Sparkles className="h-3 w-3 text-purple-400" />
                 </div>
-                {clientQuestions.length > 0 && (
-                  <ul className="mb-3 space-y-1.5">
-                    {clientQuestions.map((cq, i) => (
-                      <li key={i} className="flex items-start gap-2 rounded-lg bg-white/60 px-3 py-2 text-xs text-immo-text-primary">
-                        <span className="mt-0.5 shrink-0 text-immo-status-orange">•</span>
-                        <span>{cq}</span>
-                        <button onClick={() => setClientQuestions(prev => prev.filter((_, j) => j !== i))} className="ml-auto shrink-0 text-immo-text-muted hover:text-immo-status-red text-[10px]">✕</button>
-                      </li>
+                {clientQA.length > 0 && (
+                  <div className="mb-3 space-y-2">
+                    {clientQA.map((qa, i) => (
+                      <div key={i} className="rounded-lg bg-white/80 p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-xs font-medium text-immo-text-primary">
+                            <span className="text-immo-status-orange">Q:</span> {qa.question}
+                          </p>
+                          <button onClick={() => setClientQA(prev => prev.filter((_, j) => j !== i))} className="shrink-0 text-immo-text-muted hover:text-immo-status-red text-[10px]">✕</button>
+                        </div>
+                        {qa.loading ? (
+                          <div className="mt-2 flex items-center gap-2">
+                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-purple-400 border-t-transparent" />
+                            <span className="text-[10px] text-purple-400">IA genere la reponse...</span>
+                          </div>
+                        ) : (
+                          <div className="mt-2 flex items-start gap-1.5 rounded-md bg-purple-50 p-2">
+                            <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-purple-500" />
+                            <p className="text-xs leading-relaxed text-purple-700">{qa.answer}</p>
+                          </div>
+                        )}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 )}
                 <div className="flex gap-2">
                   <Input
                     value={newQuestion}
                     onChange={e => setNewQuestion(e.target.value)}
-                    placeholder="Le client a une question ? Notez-la ici..."
+                    placeholder="Le client pose une question ? Tapez-la ici..."
                     className="h-8 flex-1 border-immo-status-orange/30 bg-white text-xs"
-                    onKeyDown={e => {
+                    onKeyDown={async e => {
                       if (e.key === 'Enter' && newQuestion.trim()) {
-                        setClientQuestions(prev => [...prev, newQuestion.trim()])
+                        const q = newQuestion.trim()
                         setNewQuestion('')
+                        const idx = clientQA.length
+                        setClientQA(prev => [...prev, { question: q, answer: '', loading: true }])
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession()
+                          const { data: settings } = await supabase.from('platform_settings').select('anthropic_api_key').limit(1).single()
+                          const apiKey = (settings as unknown as { anthropic_api_key: string | null })?.anthropic_api_key
+                          if (apiKey && session) {
+                            const res = await fetch('https://api.anthropic.com/v1/messages', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                              body: JSON.stringify({
+                                model: 'claude-haiku-4-5-20251001',
+                                max_tokens: 300,
+                                messages: [{ role: 'user', content: `Tu es un commercial immobilier en Algerie. Un client en etape "${clientStage}" demande: "${q}". Donne une reponse courte, professionnelle et rassurante (2-3 phrases max). Ne donne jamais de prix exact.` }],
+                              }),
+                            })
+                            const data = await res.json()
+                            const answer = data.content?.[0]?.text ?? 'Reponse non disponible'
+                            setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer, loading: false } : item))
+                          } else {
+                            setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: 'Cle API non configuree. Repondez manuellement.', loading: false } : item))
+                          }
+                        } catch {
+                          setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: 'Erreur de generation. Repondez manuellement.', loading: false } : item))
+                        }
                       }
                     }}
                   />
                   <Button
                     size="sm"
                     disabled={!newQuestion.trim()}
-                    onClick={() => { setClientQuestions(prev => [...prev, newQuestion.trim()]); setNewQuestion('') }}
+                    onClick={async () => {
+                      const q = newQuestion.trim()
+                      if (!q) return
+                      setNewQuestion('')
+                      const idx = clientQA.length
+                      setClientQA(prev => [...prev, { question: q, answer: '', loading: true }])
+                      try {
+                        const { data: settings } = await supabase.from('platform_settings').select('anthropic_api_key').limit(1).single()
+                        const apiKey = (settings as unknown as { anthropic_api_key: string | null })?.anthropic_api_key
+                        if (apiKey) {
+                          const res = await fetch('https://api.anthropic.com/v1/messages', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+                            body: JSON.stringify({
+                              model: 'claude-haiku-4-5-20251001',
+                              max_tokens: 300,
+                              messages: [{ role: 'user', content: `Tu es un commercial immobilier en Algerie. Un client en etape "${clientStage}" demande: "${q}". Donne une reponse courte, professionnelle et rassurante (2-3 phrases max). Ne donne jamais de prix exact.` }],
+                            }),
+                          })
+                          const data = await res.json()
+                          const answer = data.content?.[0]?.text ?? 'Reponse non disponible'
+                          setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer, loading: false } : item))
+                        } else {
+                          setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: 'Cle API non configuree.', loading: false } : item))
+                        }
+                      } catch {
+                        setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: 'Erreur.', loading: false } : item))
+                      }
+                    }}
                     className="h-8 bg-immo-status-orange/80 text-[10px] text-white hover:bg-immo-status-orange"
                   >
-                    Ajouter
+                    Repondre
                   </Button>
                 </div>
-                {clientQuestions.length === 0 && (
-                  <p className="mt-2 text-[10px] italic text-immo-text-muted">Si le client pose des questions hors-script, notez-les ici pour y revenir plus tard.</p>
+                {clientQA.length === 0 && (
+                  <p className="mt-2 text-[10px] italic text-immo-text-muted">Tapez la question du client → l'IA genere instantanement une reponse que vous pouvez lire.</p>
                 )}
               </div>
 

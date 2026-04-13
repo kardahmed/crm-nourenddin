@@ -23,10 +23,10 @@ export function PipelineTimeline({ currentStage, onStageClick }: PipelineTimelin
       {/* Main progression - use relative positioning for the line */}
       <div className="relative flex items-center justify-between">
         {/* Background line connecting all circles */}
-        <div className="absolute left-[14px] right-[14px] top-[14px] h-0.5 bg-immo-border-default" />
+        <div className="absolute left-[14px] right-[14px] top-[14px] h-0.5 bg-immo-text-muted/20" />
         {/* Progress line */}
         {currentIdx > 0 && !isEndState && (
-          <div className="absolute left-[14px] top-[14px] h-0.5 bg-immo-accent-green" style={{ width: `${(currentIdx / (PROGRESSION_STAGES.length - 1)) * 100}%` }} />
+          <div className="absolute left-[14px] top-[14px] h-0.5 bg-immo-accent-green/70" style={{ width: `${(currentIdx / (PROGRESSION_STAGES.length - 1)) * 100}%` }} />
         )}
 
         {PROGRESSION_STAGES.map((stage, i) => {
@@ -42,7 +42,7 @@ export function PipelineTimeline({ currentStage, onStageClick }: PipelineTimelin
                   ? 'border-immo-accent-green bg-immo-accent-green text-white shadow-md shadow-immo-accent-green/25'
                   : isPast
                     ? 'border-immo-accent-green bg-immo-accent-green/15 text-immo-accent-green'
-                    : 'border-immo-border-default bg-immo-bg-card text-immo-text-muted hover:border-immo-text-muted'
+                    : 'border-immo-text-muted/30 bg-immo-bg-card-hover text-immo-text-muted hover:border-immo-text-muted'
               }`}>
                 {isPast ? <Check className="h-3.5 w-3.5" /> : i + 1}
               </div>

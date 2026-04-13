@@ -44,8 +44,6 @@ export function CampaignsTab() {
         supabase.from('sales').select('id, client_id, final_price').eq('tenant_id', tenantId!).eq('status', 'active'),
       ])
       const expenses = (expensesRes.data ?? []) as Array<{ campaign_id: string; amount: number }>
-      const clients = (clientsRes.data ?? []) as Array<{ id: string; source: string; created_at: string }>
-      const sales = (salesRes.data ?? []) as Array<{ id: string; client_id: string; final_price: number }>
 
       const map = new Map<string, { spent: number; leads: number; sales: number; revenue: number }>()
       for (const e of expenses) {

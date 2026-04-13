@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trash2, Receipt, Save, Upload } from 'lucide-react'
+import { Plus, Trash2, Receipt, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { KPICard, LoadingSpinner, Modal } from '@/components/common'

@@ -20,18 +20,28 @@ interface PlanRow {
   max_storage_mb: number
   max_ai_tokens_monthly: number
   price_monthly: number
+  price_yearly: number
   features: Record<string, boolean>
 }
 
 const FEATURE_LABELS: Record<string, { label: string; icon: typeof Cpu }> = {
+  // IA
   ai_suggestions: { label: 'Suggestions IA', icon: Zap },
   ai_scripts: { label: 'Scripts appel IA', icon: Cpu },
   ai_documents: { label: 'Documents IA', icon: Cpu },
   ai_custom: { label: 'IA personnalisee', icon: Cpu },
+  // Outils
   export_csv: { label: 'Export CSV', icon: HardDrive },
   pdf_generation: { label: 'Generation PDF', icon: HardDrive },
   custom_branding: { label: 'Branding custom', icon: HardDrive },
   api_access: { label: 'Acces API', icon: Zap },
+  // Modules (correspond aux toggles tenant)
+  landing_pages: { label: 'Pages de capture', icon: Building2 },
+  whatsapp: { label: 'WhatsApp Business', icon: Zap },
+  payment_tracking: { label: 'Suivi echeanciers', icon: DollarSign },
+  auto_tasks: { label: 'Taches automatiques', icon: Zap },
+  goals: { label: 'Objectifs de vente', icon: Briefcase },
+  charges: { label: 'Charges & frais', icon: DollarSign },
 }
 
 const ALL_FEATURES = Object.keys(FEATURE_LABELS)
@@ -125,6 +135,7 @@ export function PlansConfigPage() {
           max_storage_mb: p.max_storage_mb,
           max_ai_tokens_monthly: p.max_ai_tokens_monthly,
           price_monthly: p.price_monthly,
+          price_yearly: p.price_yearly,
           features: p.features,
         } as never).eq('plan', p.plan)
         if (error) { handleSupabaseError(error); throw error }
@@ -241,6 +252,12 @@ export function PlansConfigPage() {
                   <Input type="number" value={plan.price_monthly} onChange={e => updatePlan(idx, 'price_monthly', parseInt(e.target.value) || 0)}
                     className="mt-1 h-8 border-immo-border-default bg-immo-bg-primary text-sm text-immo-text-primary" />
                   <p className="mt-0.5 text-[10px] text-immo-text-muted">{formatPrice(plan.price_monthly)}</p>
+                </div>
+                <div>
+                  <Label className="text-[10px] font-medium text-immo-text-muted flex items-center gap-1"><DollarSign className="h-3 w-3" /> Prix annuel (DA)</Label>
+                  <Input type="number" value={plan.price_yearly} onChange={e => updatePlan(idx, 'price_yearly', parseInt(e.target.value) || 0)}
+                    className="mt-1 h-8 border-immo-border-default bg-immo-bg-primary text-sm text-immo-text-primary" />
+                  <p className="mt-0.5 text-[10px] text-immo-text-muted">{formatPrice(plan.price_yearly)}/an {plan.price_monthly > 0 ? `(${Math.round((1 - plan.price_yearly / (plan.price_monthly * 12)) * 100)}% economie)` : ''}</p>
                 </div>
 
                 {/* Limits */}

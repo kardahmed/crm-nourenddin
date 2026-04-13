@@ -8,19 +8,18 @@ import toast from 'react-hot-toast'
 
 // Map feature toggle key → plan_limits.features key (null = always available, no plan restriction)
 const FEATURES = [
-  { key: 'feature_payment_tracking', label: 'Suivi des echeanciers', desc: 'Gestion des paiements, echeanciers, relances de retard', icon: DollarSign, color: 'text-immo-accent-green', planFeature: null, minPlan: null },
-  { key: 'feature_charges', label: 'Charges & frais', desc: 'Frais notaire, agence, enregistrement par dossier', icon: Receipt, color: 'text-immo-status-orange', planFeature: null, minPlan: null },
-  { key: 'feature_documents', label: 'Generation de documents', desc: 'Contrats, echeanciers, bons de reservation en PDF', icon: FileText, color: 'text-immo-accent-blue', planFeature: 'pdf_generation', minPlan: 'starter' },
-  { key: 'feature_goals', label: 'Objectifs de vente', desc: 'Objectifs mensuels/trimestriels par agent', icon: Target, color: 'text-purple-500', planFeature: null, minPlan: null },
-  { key: 'feature_landing_pages', label: 'Pages de capture', desc: 'Landing pages pour vos campagnes publicitaires', icon: Globe, color: 'text-immo-accent-blue', planFeature: null, minPlan: 'pro' },
-  { key: 'feature_ai_scripts', label: 'Scripts d\'appel IA', desc: 'Generation de scripts personnalises par intelligence artificielle', icon: Sparkles, color: 'text-purple-500', planFeature: 'ai_scripts', minPlan: 'pro' },
-  { key: 'feature_whatsapp', label: 'WhatsApp Business', desc: 'Envoi automatique de messages WhatsApp aux clients', icon: MessageCircle, color: 'text-green-500', planFeature: null, minPlan: 'starter' },
-  { key: 'feature_auto_tasks', label: 'Taches automatiques', desc: 'Generation et suivi automatique des taches par etape', icon: Zap, color: 'text-immo-status-orange', planFeature: null, minPlan: null },
+  { key: 'feature_payment_tracking', label: 'Suivi des echeanciers', desc: 'Gestion des paiements, echeanciers, relances de retard', icon: DollarSign, color: 'text-immo-accent-green', planFeature: 'payment_tracking' },
+  { key: 'feature_charges', label: 'Charges & frais', desc: 'Frais notaire, agence, enregistrement par dossier', icon: Receipt, color: 'text-immo-status-orange', planFeature: 'charges' },
+  { key: 'feature_documents', label: 'Generation de documents', desc: 'Contrats, echeanciers, bons de reservation en PDF', icon: FileText, color: 'text-immo-accent-blue', planFeature: 'pdf_generation' },
+  { key: 'feature_goals', label: 'Objectifs de vente', desc: 'Objectifs mensuels/trimestriels par agent', icon: Target, color: 'text-purple-500', planFeature: 'goals' },
+  { key: 'feature_landing_pages', label: 'Pages de capture', desc: 'Landing pages pour vos campagnes publicitaires', icon: Globe, color: 'text-immo-accent-blue', planFeature: 'landing_pages' },
+  { key: 'feature_ai_scripts', label: 'Scripts d\'appel IA', desc: 'Generation de scripts personnalises par intelligence artificielle', icon: Sparkles, color: 'text-purple-500', planFeature: 'ai_scripts' },
+  { key: 'feature_whatsapp', label: 'WhatsApp Business', desc: 'Envoi automatique de messages WhatsApp aux clients', icon: MessageCircle, color: 'text-green-500', planFeature: 'whatsapp' },
+  { key: 'feature_auto_tasks', label: 'Taches automatiques', desc: 'Generation et suivi automatique des taches par etape', icon: Zap, color: 'text-immo-status-orange', planFeature: 'auto_tasks' },
 ] as const
 
 type FeatureKey = typeof FEATURES[number]['key']
 
-const PLAN_ORDER = ['free', 'starter', 'pro', 'enterprise']
 const PLAN_LABELS: Record<string, string> = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' }
 
 export function FeaturesSection() {
@@ -92,21 +91,11 @@ export function FeaturesSection() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-features'] }); toast.success('Fonctionnalites mises a jour') },
   })
 
-  // Check if a feature is allowed by the current plan
+  // Check if a feature is allowed by the current plan (reads from plan_limits.features configured by super admin)
   function isAllowedByPlan(feat: typeof FEATURES[number]): boolean {
-    // No plan restriction
-    if (!feat.minPlan && !feat.planFeature) return true
-    // Check min plan
-    if (feat.minPlan) {
-      const currentIdx = PLAN_ORDER.indexOf(tenantPlan ?? 'free')
-      const requiredIdx = PLAN_ORDER.indexOf(feat.minPlan)
-      if (currentIdx < requiredIdx) return false
-    }
-    // Check specific plan feature flag
-    if (feat.planFeature && planFeatures) {
-      if (!planFeatures[feat.planFeature]) return false
-    }
-    return true
+    if (!feat.planFeature) return true
+    if (!planFeatures) return true // Loading, show as allowed
+    return planFeatures[feat.planFeature] === true
   }
 
   function toggle(key: FeatureKey) {
@@ -147,9 +136,9 @@ export function FeaturesSection() {
                 <div>
                   <div className="flex items-center gap-2">
                     <p className={`text-sm font-medium ${isOn ? 'text-immo-text-primary' : 'text-immo-text-muted'}`}>{feat.label}</p>
-                    {!allowed && feat.minPlan && (
+                    {!allowed && (
                       <span className="rounded-full bg-immo-status-orange/10 px-2 py-0.5 text-[9px] font-bold text-immo-status-orange">
-                        Plan {PLAN_LABELS[feat.minPlan]} requis
+                        Non inclus dans votre plan
                       </span>
                     )}
                   </div>

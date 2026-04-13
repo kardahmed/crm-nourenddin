@@ -7,10 +7,10 @@ import toast from 'react-hot-toast'
 const WILAYAS = ['Adrar','Chlef','Laghouat','Oum El Bouaghi','Batna','Bejaia','Biskra','Bechar','Blida','Bouira','Tamanrasset','Tebessa','Tlemcen','Tiaret','Tizi Ouzou','Alger','Djelfa','Jijel','Setif','Saida','Skikda','Sidi Bel Abbes','Annaba','Guelma','Constantine','Medea','Mostaganem','M\'sila','Mascara','Ouargla','Oran','El Bayadh','Illizi','Bordj Bou Arreridj','Boumerdes','El Tarf','Tindouf','Tissemsilt','El Oued','Khenchela','Souk Ahras','Tipaza','Mila','Ain Defla','Naama','Ain Temouchent','Ghardaia','Relizane']
 
 const PLANS = [
-  { key: 'free', label: 'Free', price: '0', suffix: 'DA', desc: 'Pour decouvrir', features: ['2 agents', '1 projet', '20 unites', '50 clients'], color: '#8898AA' },
-  { key: 'starter', label: 'Starter', price: '9 900', suffix: 'DA/mois', desc: 'Petites agences', features: ['5 agents', '3 projets', '100 unites', 'Suggestions IA', 'Export CSV'], color: '#0579DA', popular: false },
-  { key: 'pro', label: 'Pro', price: '19 900', suffix: 'DA/mois', desc: 'Promoteurs ambitieux', features: ['15 agents', '10 projets', '500 unites', 'Scripts IA', 'Landing pages', 'PDF'], color: '#7C3AED', popular: true },
-  { key: 'enterprise', label: 'Enterprise', price: 'Sur devis', suffix: '', desc: 'Grands promoteurs', features: ['Agents illimites', 'Projets illimites', 'Unites illimitees', 'IA complete', 'Branding', 'API'], color: '#D4AF37', contact: true },
+  { key: 'free', label: 'Free', priceMonthly: '0', priceYearly: '0', suffix: 'DA', desc: 'Pour decouvrir', features: ['2 agents', '1 projet', '20 unites', '50 clients'], color: '#8898AA' },
+  { key: 'starter', label: 'Starter', priceMonthly: '9 900', priceYearly: '99 000', suffix: 'DA', desc: 'Petites agences', features: ['5 agents', '3 projets', '100 unites', 'Suggestions IA', 'Export CSV'], color: '#0579DA', popular: false },
+  { key: 'pro', label: 'Pro', priceMonthly: '19 900', priceYearly: '199 000', suffix: 'DA', desc: 'Promoteurs ambitieux', features: ['15 agents', '10 projets', '500 unites', 'Scripts IA', 'Landing pages', 'PDF'], color: '#7C3AED', popular: true },
+  { key: 'enterprise', label: 'Enterprise', priceMonthly: 'Sur devis', priceYearly: 'Sur devis', suffix: '', desc: 'Grands promoteurs', features: ['Agents illimites', 'Projets illimites', 'Unites illimitees', 'IA complete', 'Branding', 'API'], color: '#D4AF37', contact: true },
 ]
 
 const FEATURES = [
@@ -27,6 +27,7 @@ export function RegisterPage() {
   const navigate = useNavigate()
   const [step, setStep] = useState<Step>('plan')
   const [plan, setPlan] = useState('free')
+  const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
   const [loading, setLoading] = useState(false)
 
   const [form, setForm] = useState({
@@ -164,6 +165,17 @@ export function RegisterPage() {
                 <h1 className="text-xl font-bold text-[#0A2540]">Choisissez votre plan</h1>
                 <p className="mt-1 text-sm text-[#8898AA]">Changez a tout moment. Essai 14 jours gratuit sur les plans payants.</p>
 
+                {/* Monthly / Yearly toggle */}
+                <div className="mt-4 flex items-center justify-center gap-3">
+                  <span className={`text-xs font-medium ${billing === 'monthly' ? 'text-[#0A2540]' : 'text-[#8898AA]'}`}>Mensuel</span>
+                  <button onClick={() => setBilling(prev => prev === 'monthly' ? 'yearly' : 'monthly')}
+                    className={`relative h-6 w-11 rounded-full transition-all ${billing === 'yearly' ? 'bg-[#0579DA]' : 'bg-[#E3E8EF]'}`}>
+                    <div className="absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-all" style={{ left: billing === 'yearly' ? '22px' : '2px' }} />
+                  </button>
+                  <span className={`text-xs font-medium ${billing === 'yearly' ? 'text-[#0A2540]' : 'text-[#8898AA]'}`}>Annuel</span>
+                  {billing === 'yearly' && <span className="rounded-full bg-[#00D4A0]/10 px-2 py-0.5 text-[9px] font-bold text-[#00D4A0]">-17%</span>}
+                </div>
+
                 <div className="mt-5 space-y-3">
                   {PLANS.map(p => {
                     const isContact = 'contact' in p && p.contact
@@ -213,8 +225,8 @@ export function RegisterPage() {
                             {p.popular && <span className="rounded-full bg-[#7C3AED]/10 px-2 py-0.5 text-[9px] font-bold text-[#7C3AED]">Populaire</span>}
                           </div>
                           <div className="text-right">
-                            <span className="text-lg font-black text-[#0A2540]">{p.price}</span>
-                            <span className="ml-1 text-xs text-[#8898AA]">{p.suffix}</span>
+                            <span className="text-lg font-black text-[#0A2540]">{billing === 'yearly' ? p.priceYearly : p.priceMonthly}</span>
+                            <span className="ml-1 text-xs text-[#8898AA]">{p.suffix ? (billing === 'yearly' ? 'DA/an' : 'DA/mois') : ''}</span>
                           </div>
                         </div>
                         <p className="mt-0.5 text-xs text-[#8898AA]">{p.desc}</p>

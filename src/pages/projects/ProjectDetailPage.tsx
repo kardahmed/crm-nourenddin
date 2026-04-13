@@ -25,6 +25,7 @@ import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { formatPrice, formatPriceCompact } from '@/lib/constants'
 import { HISTORY_TYPE_LABELS } from '@/types'
+import { UnitComparator } from './components/UnitComparator'
 import type { Unit, HistoryType } from '@/types'
 import { format, formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
@@ -62,6 +63,8 @@ export function ProjectDetailPage() {
   const [editMode, setEditMode] = useState(false)
   const [editName, setEditName] = useState('')
   const [editLocation, setEditLocation] = useState('')
+  const [compareIds, setCompareIds] = useState<string[]>([])
+  const [showComparator, setShowComparator] = useState(false)
 
   // Fetch project with units
   const { data: project, isLoading } = useQuery({
@@ -315,9 +318,20 @@ export function ProjectDetailPage() {
 
       {/* Units table */}
       <div>
-        <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">
-          Biens du projet ({units.length})
-        </h3>
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-immo-text-primary">
+            Biens du projet ({units.length})
+          </h3>
+          {compareIds.length >= 2 && (
+            <Button
+              size="sm"
+              onClick={() => setShowComparator(true)}
+              className="bg-immo-accent-green text-white text-xs"
+            >
+              Comparer ({compareIds.length})
+            </Button>
+          )}
+        </div>
         {units.length === 0 ? (
           <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-12 text-center text-sm text-immo-text-muted">
             Aucune unité dans ce projet
@@ -328,6 +342,7 @@ export function ProjectDetailPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-immo-bg-card-hover">
+                    <th className="w-10 px-3 py-3" />
                     {['Code', 'Type', 'Bâtiment', 'Étage', 'Surface', 'Prix', 'Statut'].map((h) => (
                       <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">
                         {h}
@@ -338,8 +353,23 @@ export function ProjectDetailPage() {
                 <tbody className="divide-y divide-immo-border-default">
                   {units.map((u) => {
                     const ub = UNIT_STATUS_BADGE[u.status] ?? UNIT_STATUS_BADGE.available
+                    const isSelected = compareIds.includes(u.id)
                     return (
-                      <tr key={u.id} className="bg-immo-bg-card transition-colors hover:bg-immo-bg-card-hover">
+                      <tr key={u.id} className={`transition-colors ${isSelected ? 'bg-immo-accent-green/5' : 'bg-immo-bg-card hover:bg-immo-bg-card-hover'}`}>
+                        <td className="px-3 py-3">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              setCompareIds(prev =>
+                                prev.includes(u.id)
+                                  ? prev.filter(id => id !== u.id)
+                                  : [...prev, u.id]
+                              )
+                            }}
+                            className="h-4 w-4 rounded border-immo-border-default accent-immo-accent-green"
+                          />
+                        </td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm font-mono text-immo-text-primary">{u.code}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-immo-text-secondary">{u.type}{u.subtype ? ` ${u.subtype}` : ''}</td>
                         <td className="whitespace-nowrap px-4 py-3 text-sm text-immo-text-muted">{u.building ?? '-'}</td>
@@ -353,6 +383,17 @@ export function ProjectDetailPage() {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* Unit Comparator */}
+        {showComparator && compareIds.length >= 2 && (
+          <div className="mt-4">
+            <UnitComparator
+              units={units.filter(u => compareIds.includes(u.id))}
+              onRemove={(id) => setCompareIds(prev => prev.filter(x => x !== id))}
+              onClose={() => { setShowComparator(false); setCompareIds([]) }}
+            />
           </div>
         )}
       </div>

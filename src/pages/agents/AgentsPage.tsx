@@ -18,6 +18,8 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { USER_ROLE_LABELS } from '@/types'
+import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
+import { PlanLimitBanner } from '@/components/common/PlanLimitBanner'
 import type { UserRole } from '@/types'
 import { MoreHorizontal } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
@@ -50,6 +52,7 @@ export function AgentsPage() {
   const navigate = useNavigate()
   const { tenantId } = useAuthStore()
   const { canManageAgents } = usePermissions()
+  const { canAddAgent, usage, limits } = usePlanEnforcement()
   const qc = useQueryClient()
 
   const [search, setSearch] = useState('')
@@ -134,11 +137,21 @@ export function AgentsPage() {
         <KPICard label="Clients assignés" value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
 
+      {/* Plan limit banner */}
+      {!canAddAgent && (
+        <PlanLimitBanner type="agents" current={usage.agents} max={limits.max_agents} />
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center gap-3">
         <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-[260px]" />
         {canManageAgents && (
-          <Button onClick={() => setShowCreate(true)} className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
+          <Button
+            onClick={() => setShowCreate(true)}
+            disabled={!canAddAgent}
+            className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={!canAddAgent ? 'Limite atteinte — Passez au plan superieur' : undefined}
+          >
             <Plus className="mr-1.5 h-4 w-4" /> Ajouter un agent
           </Button>
         )}

@@ -41,7 +41,7 @@ const NAV_KEYS: Record<string, string> = {
   '/dashboard': 'nav.dashboard',
   '/projects': 'nav.projects',
   '/pipeline': 'nav.pipeline',
-  '/tasks': 'Taches',
+  '/tasks': 'nav.tasks',
   '/planning': 'nav.planning',
   '/dossiers': 'nav.dossiers',
   '/goals': 'nav.goals',

@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import { KPICard, FilterDropdown, LoadingSpinner, StatusBadge } from '@/components/common'
@@ -39,6 +40,7 @@ const STATUS_MAP: Record<string, { label: string; type: 'green' | 'orange' | 'bl
 const CHANNEL_ICONS: Record<string, typeof Phone> = { whatsapp: MessageCircle, sms: Mail, call: Phone, email: Mail, system: Zap }
 
 export function TasksPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { tenantId } = useAuthStore()
   const userId = useAuthStore(s => s.session?.user?.id)
@@ -167,9 +169,27 @@ export function TasksPage() {
     const message = getMessageForTask(task)
 
     if (task.channel === 'whatsapp') {
+      // Try API first, fallback to wa.me
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        if (session) {
+          const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-whatsapp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+            body: JSON.stringify({ to: cleanPhone, template_name: 'bienvenue_client', variables: [task.client?.full_name?.split(' ')[0] ?? '', agentInfo?.agent_prenom ?? '', agentInfo?.agence ?? ''], client_id: task.client_id }),
+          })
+          if (res.ok) {
+            const data = await res.json()
+            completeTask.mutate(task.id)
+            toast.success(`WhatsApp envoye automatiquement (${data.remaining} restants)`)
+            return
+          }
+        }
+      } catch { /* fallback */ }
+      // Fallback: open wa.me
       window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank')
       completeTask.mutate(task.id)
-      toast.success('WhatsApp ouvert avec le message')
+      toast.success(t('tasks_page.toast_whatsapp'))
     } else if (task.channel === 'sms') {
       window.open(`sms:${phone}?body=${encodeURIComponent(message)}`, '_blank')
       completeTask.mutate(task.id)
@@ -228,26 +248,26 @@ export function TasksPage() {
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 
   const TABS: Array<{ key: TabKey; label: string; count: number; icon: typeof Clock }> = [
-    { key: 'today', label: 'Aujourd\'hui', count: todayCount, icon: Calendar },
-    { key: 'overdue', label: 'En retard', count: overdueCount, icon: AlertTriangle },
-    { key: 'upcoming', label: 'A venir', count: upcomingCount, icon: Clock },
-    { key: 'completed', label: 'Terminees', count: completedCount, icon: CheckCircle },
-    { key: 'messages', label: 'Messages', count: 0, icon: FileText },
-    { key: 'config', label: 'Configuration', count: 0, icon: Settings },
+    { key: 'today', label: t('tasks_page.tab_today'), count: todayCount, icon: Calendar },
+    { key: 'overdue', label: t('tasks_page.tab_overdue'), count: overdueCount, icon: AlertTriangle },
+    { key: 'upcoming', label: t('tasks_page.tab_upcoming'), count: upcomingCount, icon: Clock },
+    { key: 'completed', label: t('tasks_page.tab_completed'), count: completedCount, icon: CheckCircle },
+    { key: 'messages', label: t('tasks_page.tab_messages'), count: 0, icon: FileText },
+    { key: 'config', label: t('tasks_page.tab_config'), count: 0, icon: Settings },
   ]
 
-  const agentOptions = [{ value: 'all', label: 'Tous les agents' }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
-  const stageOptions = [{ value: 'all', label: 'Toutes les etapes' }, ...Object.entries(PIPELINE_STAGES).map(([k, v]) => ({ value: k, label: v.label }))]
+  const agentOptions = [{ value: 'all', label: t('tasks_page.all_agents') }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
+  const stageOptions = [{ value: 'all', label: t('tasks_page.all_stages') }, ...Object.entries(PIPELINE_STAGES).map(([k, v]) => ({ value: k, label: v.label }))]
 
   return (
     <div className="space-y-5">
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KPICard label="A faire aujourd'hui" value={todayCount} accent={todayCount > 0 ? 'orange' : 'green'} icon={<Calendar className="h-4 w-4 text-immo-status-orange" />} />
-        <KPICard label="En retard" value={overdueCount} accent={overdueCount > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
-        <KPICard label="A venir" value={upcomingCount} accent="blue" icon={<Clock className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Terminees" value={completedCount} accent="green" icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Progression" value={`${progress}%`} accent="green" icon={<Zap className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('tasks_page.kpi_today')} value={todayCount} accent={todayCount > 0 ? 'orange' : 'green'} icon={<Calendar className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label={t('tasks_page.kpi_overdue')} value={overdueCount} accent={overdueCount > 0 ? 'red' : 'green'} icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
+        <KPICard label={t('tasks_page.kpi_upcoming')} value={upcomingCount} accent="blue" icon={<Clock className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('tasks_page.kpi_completed')} value={completedCount} accent="green" icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('tasks_page.kpi_progress')} value={`${progress}%`} accent="green" icon={<Zap className="h-4 w-4 text-immo-accent-green" />} />
       </div>
 
       {/* Tabs */}
@@ -286,10 +306,10 @@ export function TasksPage() {
             <div className="py-12 text-center">
               <CheckCircle className="mx-auto mb-3 h-10 w-10 text-immo-accent-green/30" />
               <p className="text-sm text-immo-text-muted">
-                {tab === 'today' ? 'Aucune tache pour aujourd\'hui' :
-                 tab === 'overdue' ? 'Aucune tache en retard' :
-                 tab === 'upcoming' ? 'Aucune tache programmee' :
-                 'Aucune tache terminee'}
+                {tab === 'today' ? t('tasks_page.empty_today') :
+                 tab === 'overdue' ? t('tasks_page.empty_overdue') :
+                 tab === 'upcoming' ? t('tasks_page.empty_upcoming') :
+                 t('tasks_page.empty_completed')}
               </p>
             </div>
           )}

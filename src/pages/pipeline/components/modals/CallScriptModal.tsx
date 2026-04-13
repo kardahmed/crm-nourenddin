@@ -19,6 +19,7 @@ interface ScriptCondition {
 interface ScriptQuestion {
   id: string
   question: string
+  intro?: string
   type: 'text' | 'number' | 'select' | 'radio' | 'checkbox' | 'date'
   options?: string[]
   maps_to?: string
@@ -49,6 +50,8 @@ export function CallScriptModal({
   const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set())
   const [notes, setNotes] = useState('')
   const [result, setResult] = useState<'qualified' | 'callback' | 'not_interested'>('qualified')
+  const [clientQuestions, setClientQuestions] = useState<string[]>([])
+  const [newQuestion, setNewQuestion] = useState('')
   const [saving, setSaving] = useState(false)
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined)
@@ -61,6 +64,31 @@ export function CallScriptModal({
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [isOpen])
+
+  // Fetch agent + tenant names for template variable replacement
+  const { data: contextNames } = useQuery({
+    queryKey: ['script-context', agentId, tenantId],
+    queryFn: async () => {
+      const [agentRes, tenantRes] = await Promise.all([
+        supabase.from('users').select('first_name, last_name').eq('id', agentId).single(),
+        supabase.from('tenants').select('name, phone').eq('id', tenantId).single(),
+      ])
+      return {
+        agentName: agentRes.data ? `${agentRes.data.first_name} ${agentRes.data.last_name}` : 'Agent',
+        agencyName: tenantRes.data?.name ?? 'Agence',
+        agencyPhone: tenantRes.data?.phone ?? '',
+      }
+    },
+    enabled: isOpen,
+    staleTime: 300_000,
+  })
+
+  const replaceVars = (text: string) => text
+    .replace(/\[nom\]/g, clientName)
+    .replace(/\[agent\]/g, contextNames?.agentName ?? 'Agent')
+    .replace(/\[agence\]/g, contextNames?.agencyName ?? 'Agence')
+    .replace(/\[localisation\]/g, 'notre projet')
+    .replace(/\[telephone\]/g, clientPhone)
 
   // Fetch script (AI or template)
   const { data: script, isLoading: loadingScript } = useQuery({
@@ -84,10 +112,10 @@ export function CallScriptModal({
         const d = data as any
         if (d) return {
           mode: 'template' as const,
-          intro: (d.intro_text ?? '').replace(/\[nom\]/g, clientName),
+          intro: replaceVars(d.intro_text ?? ''),
           questions: d.questions as ScriptQuestion[],
           talking_points: [] as string[],
-          outro: (d.outro_text ?? '').replace(/\[nom\]/g, clientName),
+          outro: replaceVars(d.outro_text ?? ''),
           suggested_action: null as string | null,
           script_id: d.id as string | null,
         }
@@ -95,7 +123,7 @@ export function CallScriptModal({
         return null
       }
 
-      return await response.json() as {
+      const result = await response.json() as {
         mode: 'ai' | 'template'
         intro: string
         questions: ScriptQuestion[]
@@ -104,6 +132,14 @@ export function CallScriptModal({
         suggested_action: string | null
         script_id: string | null
       }
+
+      // Replace any remaining placeholders in template mode
+      if (result.mode === 'template') {
+        result.intro = replaceVars(result.intro)
+        result.outro = replaceVars(result.outro)
+      }
+
+      return result
     },
     enabled: isOpen,
   })
@@ -155,9 +191,9 @@ export function CallScriptModal({
     if (!q.conditions?.length) return null
     const val = Array.isArray(answer) ? answer[0] : answer
     const match = q.conditions.find(c => c.if === val)
-    if (match) return match.then_say
+    if (match) return replaceVars(match.then_say)
     const fallback = q.conditions.find(c => c.if_default)
-    return fallback?.then_say ?? null
+    return fallback ? replaceVars(fallback.then_say) : null
   }
 
   function setAnswer(qId: string, value: string | string[]) {
@@ -180,7 +216,7 @@ export function CallScriptModal({
       await supabase.from('call_responses').insert({
         tenant_id: tenantId, client_id: clientId, agent_id: agentId,
         script_id: script?.script_id ?? null,
-        responses: answers,
+        responses: { ...answers, _client_questions: clientQuestions },
         duration_seconds: timer,
         result,
         ai_summary: notes || null,
@@ -204,11 +240,12 @@ export function CallScriptModal({
         }
       }
 
-      // Add notes
-      if (notes) {
+      // Add notes + client questions
+      const fullNotes = [notes, clientQuestions.length > 0 ? `Questions client: ${clientQuestions.join(' | ')}` : ''].filter(Boolean).join('\n')
+      if (fullNotes) {
         const { data: currentClient } = await supabase.from('clients').select('notes').eq('id', clientId).single()
         const existingNotes = (currentClient as { notes: string | null } | null)?.notes ?? ''
-        clientUpdate.notes = existingNotes ? `${existingNotes}\n\n[Appel ${new Date().toLocaleDateString('fr')}] ${notes}` : `[Appel ${new Date().toLocaleDateString('fr')}] ${notes}`
+        clientUpdate.notes = existingNotes ? `${existingNotes}\n\n[Appel ${new Date().toLocaleDateString('fr')}] ${fullNotes}` : `[Appel ${new Date().toLocaleDateString('fr')}] ${fullNotes}`
       }
 
       if (Object.keys(clientUpdate).length > 0) {
@@ -244,7 +281,7 @@ export function CallScriptModal({
   const formatTime = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-immo-bg-primary">
+    <div className="fixed inset-0 z-50 flex h-screen flex-col overflow-hidden bg-immo-bg-primary">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-immo-border-default bg-immo-bg-card px-6 py-3">
         <div className="flex items-center gap-4">
@@ -270,7 +307,7 @@ export function CallScriptModal({
       </div>
 
       {/* Body */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
         {/* Left: Script */}
         <div className="flex-[3] overflow-y-auto border-r border-immo-border-default p-6">
           {loadingScript ? (
@@ -295,6 +332,12 @@ export function CallScriptModal({
                   const answered = checkedQuestions.has(q.id)
                   return (
                     <div key={q.id} className={`rounded-xl border p-4 transition-all ${answered ? 'border-immo-accent-green/30 bg-immo-accent-green/5' : 'border-immo-border-default'}`}>
+                      {/* Transition phrase before question */}
+                      {q.intro && (
+                        <p className="mb-2 text-xs italic leading-relaxed text-immo-accent-blue">
+                          {replaceVars(q.intro)}
+                        </p>
+                      )}
                       <div className="mb-3 flex items-start gap-2">
                         <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${answered ? 'bg-immo-accent-green text-white' : 'bg-immo-bg-card-hover text-immo-text-muted'}`}>
                           {answered ? '✓' : i + 1}
@@ -378,6 +421,50 @@ export function CallScriptModal({
                 </div>
               )}
 
+              {/* Client questions (free-form) */}
+              <div className="rounded-xl border border-immo-status-orange/20 bg-immo-status-orange/5 p-4">
+                <div className="mb-2 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-immo-status-orange" />
+                  <span className="text-xs font-semibold text-immo-status-orange">Questions du client</span>
+                </div>
+                {clientQuestions.length > 0 && (
+                  <ul className="mb-3 space-y-1.5">
+                    {clientQuestions.map((cq, i) => (
+                      <li key={i} className="flex items-start gap-2 rounded-lg bg-white/60 px-3 py-2 text-xs text-immo-text-primary">
+                        <span className="mt-0.5 shrink-0 text-immo-status-orange">•</span>
+                        <span>{cq}</span>
+                        <button onClick={() => setClientQuestions(prev => prev.filter((_, j) => j !== i))} className="ml-auto shrink-0 text-immo-text-muted hover:text-immo-status-red text-[10px]">✕</button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    value={newQuestion}
+                    onChange={e => setNewQuestion(e.target.value)}
+                    placeholder="Le client a une question ? Notez-la ici..."
+                    className="h-8 flex-1 border-immo-status-orange/30 bg-white text-xs"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && newQuestion.trim()) {
+                        setClientQuestions(prev => [...prev, newQuestion.trim()])
+                        setNewQuestion('')
+                      }
+                    }}
+                  />
+                  <Button
+                    size="sm"
+                    disabled={!newQuestion.trim()}
+                    onClick={() => { setClientQuestions(prev => [...prev, newQuestion.trim()]); setNewQuestion('') }}
+                    className="h-8 bg-immo-status-orange/80 text-[10px] text-white hover:bg-immo-status-orange"
+                  >
+                    Ajouter
+                  </Button>
+                </div>
+                {clientQuestions.length === 0 && (
+                  <p className="mt-2 text-[10px] italic text-immo-text-muted">Si le client pose des questions hors-script, notez-les ici pour y revenir plus tard.</p>
+                )}
+              </div>
+
               {/* Outro */}
               {script.outro && (
                 <div className="rounded-xl border border-immo-border-default bg-immo-bg-card-hover p-4">
@@ -389,7 +476,8 @@ export function CallScriptModal({
         </div>
 
         {/* Right: Responses summary */}
-        <div className="flex w-[380px] shrink-0 flex-col overflow-y-auto bg-immo-bg-card p-6">
+        <div className="flex w-[380px] shrink-0 flex-col overflow-hidden bg-immo-bg-card">
+          <div className="min-h-0 flex-1 overflow-y-auto p-6">
           <h3 className="mb-4 text-sm font-bold text-immo-text-primary">Recapitulatif</h3>
 
           {/* Answers summary */}
@@ -497,15 +585,17 @@ export function CallScriptModal({
             </div>
           )}
 
-          {/* Save button */}
-          <div className="mt-auto">
+          </div>{/* end scrollable area */}
+
+          {/* Save button — sticky bottom */}
+          <div className="shrink-0 border-t border-immo-border-default bg-immo-bg-card p-4">
             <Button onClick={handleSave} disabled={saving} className="w-full bg-immo-accent-green font-semibold text-white hover:bg-immo-accent-green/90">
               {saving ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> :
                 <><CheckCircle className="mr-1.5 h-4 w-4" /> Sauvegarder et fermer</>
               }
             </Button>
           </div>
-        </div>
+        </div>{/* end right panel */}
       </div>
     </div>
   )

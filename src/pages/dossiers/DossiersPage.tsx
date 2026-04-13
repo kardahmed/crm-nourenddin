@@ -8,7 +8,9 @@ import {
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
+import { PaymentSchedulePanel } from './components/PaymentSchedulePanel'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
   KPICard, SearchInput, FilterDropdown, LoadingSpinner,
@@ -40,17 +42,19 @@ interface DossierRow {
 
 type TabKey = 'reservations' | 'sales' | 'upcoming' | 'late' | 'cancelled'
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: 'reservations', label: 'Réservations' },
-  { key: 'sales', label: 'Ventes' },
-  { key: 'upcoming', label: 'À venir' },
-  { key: 'late', label: 'En retard' },
-  { key: 'cancelled', label: 'Annulées' },
-]
+const TAB_KEYS: TabKey[] = ['reservations', 'sales', 'upcoming', 'late', 'cancelled']
+const TAB_I18N: Record<TabKey, string> = {
+  reservations: 'dossiers_extra.tab_reservations',
+  sales: 'dossiers_extra.tab_sales',
+  upcoming: 'dossiers_extra.tab_upcoming',
+  late: 'dossiers_extra.tab_overdue',
+  cancelled: 'dossiers_extra.tab_cancelled',
+}
 
 /* ═══ Component ═══ */
 
 export function DossiersPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { tenantId, session } = useAuthStore()
   const userId = session?.user?.id
@@ -59,6 +63,7 @@ export function DossiersPage() {
   const [search, setSearch] = useState('')
   const [projectFilter, setProjectFilter] = useState('all')
   const [activeTab, setActiveTab] = useState<TabKey>('sales')
+  const [selectedDossier, setSelectedDossier] = useState<{ saleId: string; clientName: string; totalPrice: number } | null>(null)
 
   // Fetch all data in parallel
   const { data, isLoading } = useQuery({
@@ -268,12 +273,12 @@ export function DossiersPage() {
     <div className="space-y-5">
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-        <KPICard label="Ventes totales" value={kpi.totalSales} accent="blue" icon={<FileText className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="CA total" value={formatPriceCompact(kpi.totalCA)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Encaissé" value={formatPriceCompact(kpi.collected)} accent="green" icon={<CreditCard className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Total dû" value={formatPriceCompact(kpi.totalDue)} accent="orange" icon={<Clock className="h-4 w-4 text-immo-status-orange" />} />
-        <KPICard label="En retard" value={formatPriceCompact(kpi.totalLate)} accent="red" icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
-        <KPICard label="Dossiers en retard" value={kpi.lateDossiers} accent="red" icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
+        <KPICard label={t('dossiers_extra.kpi_total_sales')} value={kpi.totalSales} accent="blue" icon={<FileText className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('dossiers_extra.kpi_total_revenue')} value={formatPriceCompact(kpi.totalCA)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('dossiers_extra.kpi_collected')} value={formatPriceCompact(kpi.collected)} accent="green" icon={<CreditCard className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('dossiers_extra.kpi_total_due')} value={formatPriceCompact(kpi.totalDue)} accent="orange" icon={<Clock className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label={t('dossiers_extra.kpi_overdue')} value={formatPriceCompact(kpi.totalLate)} accent="red" icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
+        <KPICard label={t('dossiers_extra.kpi_overdue_files')} value={kpi.lateDossiers} accent="red" icon={<AlertTriangle className="h-4 w-4 text-immo-status-red" />} />
       </div>
 
       {/* Filters */}
@@ -287,21 +292,21 @@ export function DossiersPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 border-b border-immo-border-default">
-        {TABS.map((tab) => (
+        {TAB_KEYS.map((tabKey) => (
           <button
-            key={tab.key}
-            onClick={() => setActiveTab(tab.key)}
+            key={tabKey}
+            onClick={() => setActiveTab(tabKey)}
             className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-xs transition-colors ${
-              activeTab === tab.key
+              activeTab === tabKey
                 ? 'border-immo-accent-green font-medium text-immo-accent-green'
                 : 'border-transparent text-immo-text-muted hover:text-immo-text-secondary'
             }`}
           >
-            {tab.label}
+            {t(TAB_I18N[tabKey])}
             <span className={`rounded-full px-1.5 py-0.5 text-[10px] ${
-              activeTab === tab.key ? 'bg-immo-accent-green/10' : 'bg-immo-bg-card-hover'
+              activeTab === tabKey ? 'bg-immo-accent-green/10' : 'bg-immo-bg-card-hover'
             }`}>
-              {tabCounts[tab.key]}
+              {tabCounts[tabKey]}
             </span>
           </button>
         ))}
@@ -327,7 +332,7 @@ export function DossiersPage() {
                   return (
                     <tr
                       key={`${d.client_id}-${d.sale_id ?? d.reservation_id ?? i}`}
-                      onClick={() => navigate(`/pipeline/clients/${d.client_id}?from=dossiers`)}
+                      onClick={() => d.sale_id ? setSelectedDossier({ saleId: d.sale_id, clientName: d.client_name, totalPrice: d.total_price }) : navigate(`/pipeline/clients/${d.client_id}?from=dossiers`)}
                       className={`cursor-pointer transition-colors ${hasLate ? 'bg-immo-status-red-bg/30' : 'bg-immo-bg-card'} hover:bg-immo-bg-card-hover`}
                     >
                       <td className="whitespace-nowrap px-4 py-3">
@@ -383,6 +388,17 @@ export function DossiersPage() {
           <div className="border-t border-immo-border-default bg-immo-bg-card-hover px-4 py-2 text-xs text-immo-text-muted">
             {filtered.length} dossier(s)
           </div>
+        </div>
+      )}
+
+      {/* Payment Schedule Panel */}
+      {selectedDossier && (
+        <div className="mt-6">
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-immo-text-primary">Echeancier — {selectedDossier.clientName}</h3>
+            <button onClick={() => setSelectedDossier(null)} className="text-xs text-immo-text-muted hover:text-immo-text-primary">Fermer ✕</button>
+          </div>
+          <PaymentSchedulePanel saleId={selectedDossier.saleId} totalPrice={selectedDossier.totalPrice} clientName={selectedDossier.clientName} />
         </div>
       )}
     </div>

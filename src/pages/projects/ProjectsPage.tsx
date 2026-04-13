@@ -28,6 +28,8 @@ import type { Column } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import type { Unit } from '@/types'
 import { formatPrice } from '@/lib/constants'
+import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
+import { PlanLimitBanner } from '@/components/common/PlanLimitBanner'
 import { format } from 'date-fns'
 import { ProjectCard } from './components/ProjectCard'
 import { CreateProjectModal } from './components/CreateProjectModal'
@@ -47,17 +49,22 @@ interface ProjectWithCounts {
   available: number
 }
 
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'Tous' },
-  { value: 'active', label: 'Actif' },
-  { value: 'inactive', label: 'Inactif' },
-  { value: 'archived', label: 'Archivé' },
+const STATUS_OPTIONS_KEYS = [
+  { value: 'all', key: 'projects_extra.status_all' },
+  { value: 'active', key: 'projects_extra.status_active' },
+  { value: 'inactive', key: 'projects_extra.status_inactive' },
+  { value: 'archived', key: 'projects_extra.status_archived' },
 ]
 
-const STATUS_MAP: Record<string, { label: string; type: 'green' | 'muted' | 'red' }> = {
-  active: { label: 'Actif', type: 'green' },
-  inactive: { label: 'Inactif', type: 'muted' },
-  archived: { label: 'Archivé', type: 'red' },
+const STATUS_MAP_TYPE: Record<string, 'green' | 'muted' | 'red'> = {
+  active: 'green',
+  inactive: 'muted',
+  archived: 'red',
+}
+const STATUS_LABEL_KEYS: Record<string, string> = {
+  active: 'projects_extra.status_active',
+  inactive: 'projects_extra.status_inactive',
+  archived: 'projects_extra.status_archived',
 }
 
 export function ProjectsPage() {
@@ -67,6 +74,7 @@ export function ProjectsPage() {
   const { units: rawUnits, isLoading: loadingUnits } = useUnits()
   const units = rawUnits as unknown as Unit[]
   const { canManageProjects } = usePermissions()
+  const { canAddProject, usage, limits } = usePlanEnforcement()
 
   const [activeTab, setActiveTab] = useState<'projects' | 'units'>('projects')
   const [search, setSearch] = useState('')
@@ -145,8 +153,9 @@ export function ProjectsPage() {
       key: 'status',
       header: 'Statut',
       render: (p) => {
-        const st = STATUS_MAP[p.status] ?? STATUS_MAP.inactive
-        return <StatusBadge label={st.label} type={st.type} />
+        const stType = STATUS_MAP_TYPE[p.status] ?? 'muted'
+        const stKey = STATUS_LABEL_KEYS[p.status] ?? STATUS_LABEL_KEYS.inactive
+        return <StatusBadge label={t(stKey)} type={stType} />
       },
       className: 'w-[110px]',
     },
@@ -275,8 +284,8 @@ export function ProjectsPage() {
             className="w-[260px]"
           />
           <FilterDropdown
-            label="Statut"
-            options={STATUS_OPTIONS}
+            label={t('projects_extra.filter_status')}
+            options={STATUS_OPTIONS_KEYS.map(o => ({ value: o.value, label: t(o.key) }))}
             value={statusFilter}
             onChange={setStatusFilter}
           />
@@ -300,12 +309,19 @@ export function ProjectsPage() {
         {canManageProjects && (
           <Button
             onClick={() => setShowCreate(true)}
-            className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+            disabled={!canAddProject}
+            className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+            title={!canAddProject ? 'Limite atteinte — Passez au plan superieur' : undefined}
           >
             <Plus className="mr-1.5 h-4 w-4" /> Nouveau projet
           </Button>
         )}
       </div>
+
+      {/* Plan limit banner */}
+      {!canAddProject && (
+        <PlanLimitBanner type="projects" current={usage.projects} max={limits.max_projects} />
+      )}
 
       {/* Content */}
       {filtered.length === 0 ? (
@@ -313,7 +329,7 @@ export function ProjectsPage() {
           icon={<Package className="h-10 w-10" />}
           title="Aucun projet"
           description="Créez votre premier projet immobilier pour commencer"
-          action={canManageProjects ? { label: 'Nouveau projet', onClick: () => setShowCreate(true) } : undefined}
+          action={canManageProjects && canAddProject ? { label: 'Nouveau projet', onClick: () => setShowCreate(true) } : undefined}
         />
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

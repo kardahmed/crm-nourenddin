@@ -1,10 +1,37 @@
 import { Navigate, Outlet } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/hooks/useAuth'
 import { useSuperAdminStore } from '@/store/superAdminStore'
+import { useAuthStore } from '@/store/authStore'
+import { supabase } from '@/lib/supabase'
+import { SuspendedPage } from '@/components/common/SuspendedPage'
+import { TrialExpiredPage } from '@/components/common/TrialExpiredPage'
 
 export function ProtectedRoute() {
   const { isAuthenticated, isLoading, role } = useAuth()
   const { inspectedTenantId } = useSuperAdminStore()
+  const tenantId = useAuthStore(s => s.tenantId)
+
+  // Check tenant suspension + trial status
+  const { data: tenantStatus } = useQuery({
+    queryKey: ['tenant-status', tenantId],
+    queryFn: async () => {
+      if (!tenantId) return null
+      const { data } = await supabase
+        .from('tenants')
+        .select('suspended_at, trial_ends_at, plan')
+        .eq('id', tenantId)
+        .single()
+      if (!data) return null
+      const t = data as unknown as { suspended_at: string | null; trial_ends_at: string | null; plan: string }
+      return {
+        isSuspended: !!t.suspended_at,
+        isTrialExpired: t.plan === 'free' && !!t.trial_ends_at && new Date(t.trial_ends_at) < new Date(),
+      }
+    },
+    enabled: !!tenantId && role !== 'super_admin',
+    staleTime: 60_000,
+  })
 
   // Wait until session check AND profile fetch are complete
   if (isLoading) {
@@ -31,6 +58,16 @@ export function ProtectedRoute() {
   // Super admin without inspection mode → redirect to /admin
   if (role === 'super_admin' && !inspectedTenantId) {
     return <Navigate to="/admin" replace />
+  }
+
+  // Tenant suspended → show suspended page
+  if (tenantStatus?.isSuspended) {
+    return <SuspendedPage />
+  }
+
+  // Trial expired → show upgrade page
+  if (tenantStatus?.isTrialExpired) {
+    return <TrialExpiredPage />
   }
 
   return <Outlet />

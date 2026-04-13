@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowRight, ArrowLeft, Check, BarChart3, Globe, Zap, Shield, Users, Star } from 'lucide-react'
+import { ArrowRight, ArrowLeft, Check, BarChart3, Globe, Zap, Shield, Users, Star, MessageCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import toast from 'react-hot-toast'
 
@@ -10,6 +10,7 @@ const PLANS = [
   { key: 'free', label: 'Free', price: '0', suffix: 'DA', desc: 'Pour decouvrir', features: ['2 agents', '1 projet', '20 unites', '50 clients'], color: '#8898AA' },
   { key: 'starter', label: 'Starter', price: '9 900', suffix: 'DA/mois', desc: 'Petites agences', features: ['5 agents', '3 projets', '100 unites', 'Suggestions IA', 'Export CSV'], color: '#0579DA', popular: false },
   { key: 'pro', label: 'Pro', price: '19 900', suffix: 'DA/mois', desc: 'Promoteurs ambitieux', features: ['15 agents', '10 projets', '500 unites', 'Scripts IA', 'Landing pages', 'PDF'], color: '#7C3AED', popular: true },
+  { key: 'enterprise', label: 'Enterprise', price: 'Sur devis', suffix: '', desc: 'Grands promoteurs', features: ['Agents illimites', 'Projets illimites', 'Unites illimitees', 'IA complete', 'Branding', 'API'], color: '#D4AF37', contact: true },
 ]
 
 const FEATURES = [
@@ -164,7 +165,38 @@ export function RegisterPage() {
                 <p className="mt-1 text-sm text-[#8898AA]">Changez a tout moment. Essai 14 jours gratuit sur les plans payants.</p>
 
                 <div className="mt-5 space-y-3">
-                  {PLANS.map(p => (
+                  {PLANS.map(p => {
+                    const isContact = 'contact' in p && p.contact
+                    if (isContact) {
+                      return (
+                        <a key={p.key} href="https://wa.me/213542766068?text=Bonjour%2C%20je%20suis%20int%C3%A9ress%C3%A9%20par%20le%20plan%20Enterprise%20IMMO%20PRO-X" target="_blank" rel="noopener noreferrer"
+                          className="flex w-full items-start gap-4 rounded-xl border-2 border-[#D4AF37]/30 bg-[#D4AF37]/[0.03] p-4 text-left transition-all hover:border-[#D4AF37]/60 hover:shadow-sm">
+                          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 border-[#D4AF37] bg-[#D4AF37]">
+                            <MessageCircle className="h-3 w-3 text-white" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-[#0A2540]">{p.label}</span>
+                                <span className="rounded-full bg-[#D4AF37]/10 px-2 py-0.5 text-[9px] font-bold text-[#D4AF37]">Sur mesure</span>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-bold text-[#D4AF37]">Nous contacter</span>
+                              </div>
+                            </div>
+                            <p className="mt-0.5 text-xs text-[#8898AA]">{p.desc}</p>
+                            <div className="mt-2 flex flex-wrap gap-1.5">
+                              {p.features.map(f => (
+                                <span key={f} className="flex items-center gap-1 rounded-md bg-[#D4AF37]/5 px-2 py-0.5 text-[10px] text-[#425466]">
+                                  <Check className="h-2.5 w-2.5 text-[#D4AF37]" />{f}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </a>
+                      )
+                    }
+                    return (
                     <button key={p.key} onClick={() => setPlan(p.key)}
                       className={`flex w-full items-start gap-4 rounded-xl border-2 p-4 text-left transition-all ${
                         plan === p.key ? 'border-[#0579DA] bg-[#0579DA]/[0.03] shadow-sm' : 'border-[#E3E8EF] hover:border-[#0579DA]/30'
@@ -195,7 +227,8 @@ export function RegisterPage() {
                         </div>
                       </div>
                     </button>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 <button onClick={() => setStep('info')}

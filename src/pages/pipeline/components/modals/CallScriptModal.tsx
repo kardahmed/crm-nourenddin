@@ -67,7 +67,7 @@ export function CallScriptModal({
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/answer-question`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName }),
+        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName, agent_id: agentId, tenant_id: tenantId }),
       })
 
       const data = await res.json()
@@ -600,7 +600,8 @@ export function CallScriptModal({
             </div>
           </div>
 
-          {/* Propose visit */}
+          {/* Mini availability calendar */}
+          <AvailabilityMini agentId={agentId} tenantId={tenantId} />
           <div className="mb-4">
             {!showVisitForm ? (
               <Button onClick={() => setShowVisitForm(true)} className="w-full border border-immo-accent-blue/30 bg-immo-accent-blue/5 text-xs font-semibold text-immo-accent-blue hover:bg-immo-accent-blue/10">
@@ -720,6 +721,86 @@ export function CallScriptModal({
           </div>
         </div>{/* end right panel */}
       </div>
+    </div>
+  )
+}
+
+// Mini availability calendar component
+function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: string }) {
+  const { data: slots } = useQuery({
+    queryKey: ['agent-availability', agentId],
+    queryFn: async () => {
+      const now = new Date()
+      const nextWeek = new Date(now.getTime() + 7 * 86400000)
+      const { data } = await supabase
+        .from('visits')
+        .select('scheduled_at')
+        .eq('agent_id', agentId)
+        .eq('tenant_id', tenantId)
+        .gte('scheduled_at', now.toISOString())
+        .lte('scheduled_at', nextWeek.toISOString())
+        .in('status', ['planned', 'confirmed'])
+        .order('scheduled_at')
+      return (data ?? []) as Array<{ scheduled_at: string }>
+    },
+    staleTime: 60_000,
+  })
+
+  // Build next 5 working days (Dim-Jeu in Algeria)
+  const days: Array<{ date: Date; label: string; shortDay: string; slots: string[]; occupiedSlots: string[] }> = []
+  const HOURS = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00']
+  const DAY_NAMES = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam']
+
+  let d = new Date()
+  d.setHours(0, 0, 0, 0)
+  let count = 0
+  while (count < 5) {
+    d = new Date(d.getTime() + 86400000)
+    const dow = d.getDay()
+    if (dow === 5 || dow === 6) continue // Ven/Sam = fermé
+    const dateStr = d.toISOString().split('T')[0]
+    const occupied = (slots ?? [])
+      .filter(s => s.scheduled_at.startsWith(dateStr))
+      .map(s => { const h = new Date(s.scheduled_at); return `${h.getHours().toString().padStart(2, '0')}:00` })
+    days.push({
+      date: new Date(d),
+      label: `${d.getDate()}/${d.getMonth() + 1}`,
+      shortDay: DAY_NAMES[dow],
+      slots: HOURS,
+      occupiedSlots: occupied,
+    })
+    count++
+  }
+
+  return (
+    <div className="mb-4 rounded-lg border border-immo-accent-blue/20 bg-immo-accent-blue/5 p-3">
+      <p className="text-[10px] font-semibold text-immo-accent-blue mb-2">Disponibilites cette semaine</p>
+      <div className="flex gap-1">
+        {days.map(day => (
+          <div key={day.label} className="flex-1 text-center">
+            <p className="text-[8px] font-bold text-immo-text-muted">{day.shortDay}</p>
+            <p className="text-[9px] text-immo-text-secondary mb-1">{day.label}</p>
+            <div className="space-y-0.5">
+              {day.slots.map(slot => {
+                const isOccupied = day.occupiedSlots.includes(slot)
+                return (
+                  <div
+                    key={slot}
+                    className={`rounded px-0.5 py-0.5 text-[7px] font-medium ${
+                      isOccupied
+                        ? 'bg-immo-status-red/10 text-immo-status-red line-through'
+                        : 'bg-immo-accent-green/10 text-immo-accent-green'
+                    }`}
+                  >
+                    {slot}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="mt-1.5 text-[8px] text-immo-text-muted text-center">Vert = libre | Rouge = occupe</p>
     </div>
   )
 }

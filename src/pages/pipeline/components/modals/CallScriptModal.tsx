@@ -56,61 +56,24 @@ export function CallScriptModal({
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined)
 
-  // AI answer for client questions
+  // AI answer for client questions (via Edge Function to avoid CORS)
   async function handleClientQuestion(question: string) {
     const idx = clientQA.length
     setClientQA(prev => [...prev, { question, answer: '', loading: true }])
     try {
-      const { data: settings } = await supabase.from('platform_settings').select('anthropic_api_key').limit(1).single()
-      const apiKey = (settings as unknown as { anthropic_api_key: string | null })?.anthropic_api_key
-      if (!apiKey) {
-        setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: 'Cle API non configuree. Repondez manuellement.', loading: false } : item))
-        return
-      }
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('No session')
 
-      const prompt = `Tu es un agent commercial immobilier experimente en Algerie. Tu es en appel telephonique avec un client.
-
-CONTEXTE:
-- Etape du client: "${clientStage}"
-- Nom du client: "${clientName}"
-
-LE CLIENT DEMANDE: "${question}"
-
-REGLES STRICTES DU MARCHE IMMOBILIER ALGERIEN:
-1. PRIX: JAMAIS donner un prix exact ni une fourchette precise. Les promoteurs algeriens ne veulent pas que les prix circulent par telephone. Si le client demande le prix:
-   - Repondre que les prix dependent de plusieurs criteres (etage, exposition, surface, standing)
-   - Dire que chaque bien a un prix specifique qui se discute sur place
-   - Inviter a la visite pour decouvrir les options et discuter des conditions
-   - Mettre en avant les facilites de paiement comme argument pour venir
-
-2. FOURCHETTE DE PRIX: Si le client insiste pour une fourchette:
-   - Ne pas ceder. Dire: "Les prix varient selon le type de bien et les options choisies. Le mieux c'est qu'on se voie pour que je vous presente tout en detail avec les simulations personnalisees."
-   - Proposer d'envoyer une brochure generale par WhatsApp (sans prix)
-   - Rappeler que les conditions de paiement sont souples et negociables sur place
-
-3. DISPONIBILITE: Si le client demande quels biens sont disponibles:
-   - Repondre de maniere positive ("nous avons encore de belles opportunites")
-   - Ne pas donner de chiffres exacts (ne pas dire "il reste 5 F3")
-   - Creer un sentiment d'urgence ("les meilleurs lots partent vite")
-
-4. DELAIS DE LIVRAISON: Repondre de maniere generale, inviter a venir voir l'avancement
-
-5. QUALITE / FINITIONS: Valoriser, inviter a constater sur place
-
-6. COMPARAISON AVEC CONCURRENTS: Ne jamais critiquer, valoriser ses propres atouts
-
-7. TON: Professionnel mais chaleureux. Utiliser "vous" mais rester accessible. Style algerien (pas trop formel, pas trop familier).
-
-REPONSE: 2-3 phrases maximum que l'agent peut lire directement au telephone. Naturel et conversationnel.`
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/answer-question`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 250, messages: [{ role: 'user', content: prompt }] }),
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName }),
       })
+
       const data = await res.json()
-      const answer = data.content?.[0]?.text ?? 'Reponse non disponible'
-      setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer, loading: false } : item))
+      if (!res.ok) throw new Error(data.error ?? 'Erreur')
+
+      setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: data.answer, loading: false } : item))
     } catch {
       setClientQA(prev => prev.map((item, j) => j === idx ? { ...item, answer: 'Erreur de generation. Repondez manuellement.', loading: false } : item))
     }

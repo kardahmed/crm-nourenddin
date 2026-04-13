@@ -12,6 +12,7 @@ export function useAuth() {
     isLoading,
     setSession,
     setUserProfile,
+    setPermissionProfile,
     setLoading,
     reset,
   } = useAuthStore()
@@ -69,6 +70,22 @@ export function useAuth() {
         }
 
         setUserProfile(profile)
+
+        // Load permission profile for agents
+        const profileId = (profile as unknown as { permission_profile_id: string | null }).permission_profile_id
+        if (profile.role === 'agent' && profileId) {
+          const { data: permProfile } = await supabase
+            .from('permission_profiles')
+            .select('*')
+            .eq('id', profileId)
+            .single()
+          if (!cancelled && permProfile) {
+            setPermissionProfile(permProfile as unknown as import('@/types/permissions').PermissionProfile)
+          }
+        } else {
+          setPermissionProfile(null)
+        }
+
         setLoading(false)
       } catch (err) {
         console.error('[Auth] Profile exception:', err)

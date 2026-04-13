@@ -19,6 +19,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useAuth } from '@/hooks/useAuth'
 import { useBranding } from '@/hooks/useBranding'
 import { getVisibleNavItems } from '@/lib/navigation'
+import { usePermissions } from '@/hooks/usePermissions'
 import { Separator } from '@/components/ui/separator'
 
 const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -58,7 +59,8 @@ export function Sidebar() {
   const { signOut } = useAuth()
   const { userProfile, role } = useAuthStore()
   const { logoUrl, appName } = useBranding()
-  const navItems = getVisibleNavItems(role)
+  const { can } = usePermissions()
+  const navItems = getVisibleNavItems(role, can)
 
   return (
     <aside className="flex h-screen w-[220px] shrink-0 flex-col border-r border-immo-border-default bg-immo-bg-sidebar rtl:border-l rtl:border-r-0">

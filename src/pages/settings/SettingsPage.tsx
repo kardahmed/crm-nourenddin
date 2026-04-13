@@ -15,8 +15,9 @@ import {
 import { TaskConfigSection } from './sections/TaskConfigSection'
 import { WhatsAppSection } from './sections/WhatsAppSection'
 import { VisitScheduleSection } from './sections/VisitScheduleSection'
+import { PermissionProfilesSection } from './sections/PermissionProfilesSection'
 
-type Section = 'company' | 'pipeline' | 'playbook' | 'tasks' | 'visits' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
+type Section = 'company' | 'pipeline' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
 
 const SECTION_ICONS: Record<Section, typeof Building2> = {
   company: Building2,
@@ -24,6 +25,7 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   playbook: Sparkles,
   tasks: Bell,
   visits: Calendar,
+  profiles: Shield,
   whatsapp: MessageCircle,
   branding: Palette,
   reservations: Bookmark,
@@ -33,7 +35,7 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   security: Shield,
 }
 
-const SECTION_KEYS: Section[] = ['company', 'pipeline', 'tasks', 'visits', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
+const SECTION_KEYS: Section[] = ['company', 'pipeline', 'tasks', 'visits', 'profiles', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
   company: 'Agence',
@@ -41,6 +43,7 @@ const SECTION_LABELS: Record<Section, string> = {
   playbook: 'Playbook IA',
   tasks: 'Taches auto',
   visits: 'Visites',
+  profiles: 'Permissions',
   whatsapp: 'WhatsApp',
   branding: 'Personnalisation',
   reservations: 'Reservations',
@@ -83,6 +86,7 @@ export function SettingsPage() {
         {section === 'pipeline' && <PipelineSection />}
         {section === 'tasks' && <TaskConfigSection />}
         {section === 'visits' && <VisitScheduleSection />}
+        {section === 'profiles' && <PermissionProfilesSection />}
         {section === 'whatsapp' && <WhatsAppSection />}
         {section === 'branding' && <BrandingSection />}
         {section === 'reservations' && <ReservationsSection />}

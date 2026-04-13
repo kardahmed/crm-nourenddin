@@ -327,7 +327,7 @@ export function RegisterPage() {
                       <span className="text-xs font-semibold text-[#8898AA]">PLAN CHOISI</span>
                       <span className="rounded-full px-2.5 py-0.5 text-xs font-bold" style={{backgroundColor: selectedPlan.color + '15', color: selectedPlan.color}}>{selectedPlan.label}</span>
                     </div>
-                    <div className="text-2xl font-black text-[#0A2540]">{selectedPlan.price} <span className="text-sm font-medium text-[#8898AA]">{selectedPlan.suffix}</span></div>
+                    <div className="text-2xl font-black text-[#0A2540]">{billing === 'yearly' ? selectedPlan.priceYearly : selectedPlan.priceMonthly} <span className="text-sm font-medium text-[#8898AA]">{selectedPlan.suffix ? (billing === 'yearly' ? 'DA/an' : 'DA/mois') : ''}</span></div>
                     {plan !== 'free' && <p className="mt-1 text-[11px] text-[#00D4A0] font-medium">14 jours d'essai gratuit inclus</p>}
                   </div>
 

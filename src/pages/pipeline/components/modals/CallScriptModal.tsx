@@ -440,9 +440,17 @@ export function CallScriptModal({
                           <button onClick={() => setClientQA(prev => prev.filter((_, j) => j !== i))} className="shrink-0 text-immo-text-muted hover:text-immo-status-red text-[10px]">✕</button>
                         </div>
                         {qa.loading ? (
-                          <div className="mt-2 flex items-center gap-2">
-                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-purple-400 border-t-transparent" />
-                            <span className="text-[10px] text-purple-400">IA genere la reponse...</span>
+                          <div className="mt-2 space-y-2">
+                            <div className="rounded-md bg-immo-accent-blue/5 border border-immo-accent-blue/20 p-2">
+                              <p className="text-[10px] font-semibold text-immo-accent-blue mb-1">Dites au client :</p>
+                              <p className="text-xs italic leading-relaxed text-immo-accent-blue">
+                                {['C\'est une tres bonne question. Laissez-moi verifier ca pour vous...', 'Excellente question. Je consulte les details pour vous donner une reponse precise...', 'Bonne question ! Attendez un instant, je verifie les informations...'][i % 3]}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 animate-spin rounded-full border-2 border-purple-400 border-t-transparent" />
+                              <span className="text-[10px] text-purple-400">Reponse en cours de generation...</span>
+                            </div>
                           </div>
                         ) : (
                           <div className="mt-2 flex items-start gap-1.5 rounded-md bg-purple-50 p-2">

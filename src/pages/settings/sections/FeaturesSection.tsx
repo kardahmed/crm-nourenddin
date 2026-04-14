@@ -88,7 +88,7 @@ export function FeaturesSection() {
     mutationFn: async () => {
       await supabase.from('tenant_settings').update(features as never).eq('tenant_id', tenantId!)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-features'] }); toast.success('Fonctionnalites mises a jour') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-features'] }); toast.success('Fonctionnalités mises à jour') },
   })
 
   // Check if a feature is allowed by the current plan (reads from plan_limits.features configured by super admin)

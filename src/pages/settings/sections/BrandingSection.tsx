@@ -72,7 +72,7 @@ export function BrandingSection() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tenant-settings-branding'] })
       qc.invalidateQueries({ queryKey: ['tenant-branding'] })
-      toast.success('Branding sauvegarde — rechargez la page pour voir les changements')
+      toast.success('Branding sauvegardé — rechargez la page pour voir les changements')
     },
   })
 

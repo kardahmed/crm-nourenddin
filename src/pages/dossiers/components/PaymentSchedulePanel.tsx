@@ -71,7 +71,7 @@ export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) 
       const { error } = await supabase.from('payment_schedules').update({ status: 'paid', paid_at: new Date().toISOString() } as never).eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['payment-schedules', saleId] }); toast.success('Paiement marque comme paye') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['payment-schedules', saleId] }); toast.success('Paiement marqué comme payé') },
   })
 
   const addSchedule = useMutation({
@@ -91,7 +91,7 @@ export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) 
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['payment-schedules', saleId] })
       setShowAddPayment(false); setPayAmount(''); setPayDate(''); setPayLabel('')
-      toast.success('Echeance ajoutee')
+      toast.success('Échéance ajoutée')
     },
   })
 

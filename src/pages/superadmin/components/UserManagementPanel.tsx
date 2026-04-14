@@ -79,7 +79,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
       await callManageUser('update_role', { tenant_id: tenantId, user_id: userId, new_role: newRole })
     },
-    onSuccess: () => { invalidate(); toast.success('Role mis a jour') },
+    onSuccess: () => { invalidate(); toast.success('Rôle mis à jour') },
     onError: (err: Error) => toast.error(err.message),
   })
 
@@ -88,7 +88,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     mutationFn: async ({ userId, newStatus }: { userId: string; newStatus: string }) => {
       await callManageUser('toggle_status', { tenant_id: tenantId, user_id: userId, new_status: newStatus })
     },
-    onSuccess: () => { invalidate(); toast.success('Statut mis a jour'); setConfirmAction(null) },
+    onSuccess: () => { invalidate(); toast.success('Statut mis à jour'); setConfirmAction(null) },
     onError: (err: Error) => toast.error(err.message),
   })
 
@@ -106,7 +106,7 @@ export function UserManagementPanel({ tenantId }: { tenantId: string }) {
     mutationFn: async (userId: string) => {
       await callManageUser('delete_user', { tenant_id: tenantId, user_id: userId })
     },
-    onSuccess: () => { invalidate(); toast.success('Utilisateur supprime'); setConfirmAction(null) },
+    onSuccess: () => { invalidate(); toast.success('Utilisateur supprimé'); setConfirmAction(null) },
     onError: (err: Error) => toast.error(err.message),
   })
 

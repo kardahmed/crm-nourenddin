@@ -123,7 +123,7 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
       await supabase.from('history').insert({ tenant_id: task.tenant_id, client_id: task.client_id, agent_id: userId, type: task.channel === 'whatsapp' ? 'whatsapp_message' : task.channel === 'sms' ? 'sms' : 'call', title: `Tache executee: ${task.title}` } as never)
       await supabase.from('clients').update({ last_contact_at: new Date().toISOString() } as never).eq('id', task.client_id)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tache marquee comme executee'); onClose() },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche marquée comme exécutée'); onClose() },
   })
 
   const rejectTask = useMutation({
@@ -131,7 +131,7 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
       const { error } = await supabase.from('client_tasks').update({ status: 'skipped' } as never).eq('id', task.id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tache rejetee'); onClose() },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche rejetée'); onClose() },
   })
 
   function openWhatsApp() {
@@ -149,14 +149,14 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
 
   function copyMessage() {
     navigator.clipboard.writeText(message)
-    toast.success('Message copie')
+    toast.success('Message copié')
   }
 
   async function generateWithAI() {
     setGeneratingAI(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { toast.error('Session expiree'); return }
+      if (!session) { toast.error('Session expirée'); return }
 
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-call-script`, {
         method: 'POST',
@@ -169,11 +169,11 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
         const intro = data.intro ?? ''
         const outro = data.outro ?? ''
         setMessage(`${intro}\n\n${outro}`)
-        toast.success('Message genere par IA')
+        toast.success('Message généré par IA')
       } else {
-        toast.error('Erreur generation IA')
+        toast.error('Erreur génération IA')
       }
-    } catch { toast.error('Erreur generation IA') }
+    } catch { toast.error('Erreur génération IA') }
     finally { setGeneratingAI(false) }
   }
 

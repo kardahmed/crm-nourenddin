@@ -30,7 +30,7 @@ export function ChangelogPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['changelogs'] })
-      toast.success('Release note publiee')
+      toast.success('Release note publiée')
       setShowAdd(false); setVersion(''); setTitle(''); setBody('')
     },
   })

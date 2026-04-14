@@ -145,7 +145,7 @@ export function PlansConfigPage() {
       qc.invalidateQueries({ queryKey: ['plan-limits'] })
       qc.invalidateQueries({ queryKey: ['plan-limits-config'] })
       setDirty(false)
-      toast.success('Plans mis a jour')
+      toast.success('Plans mis à jour')
     },
   })
 
@@ -169,7 +169,7 @@ export function PlansConfigPage() {
       qc.invalidateQueries({ queryKey: ['plan-limits-config'] })
       setShowAddPlan(false)
       setNewPlanName('')
-      toast.success('Plan ajoute')
+      toast.success('Plan ajouté')
     },
   })
 
@@ -183,7 +183,7 @@ export function PlansConfigPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['plan-limits-config'] })
-      toast.success('Plan supprime')
+      toast.success('Plan supprimé')
     },
     onError: (e) => toast.error((e as Error).message),
   })

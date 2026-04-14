@@ -202,7 +202,7 @@ export function CallScriptModal({
       }
     },
     onSuccess: () => {
-      toast.success('Visite planifiee !')
+      toast.success('Visite planifiée !')
       setShowVisitForm(false)
       qc.invalidateQueries({ queryKey: ['client-visits'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
@@ -316,7 +316,7 @@ export function CallScriptModal({
         metadata: { duration: timer, result, answers_count: answeredCount, mode: script?.mode },
       } as never)
 
-      toast.success('Appel enregistre et fiche client mise a jour')
+      toast.success('Appel enregistré et fiche client mise à jour')
       qc.invalidateQueries({ queryKey: ['client-detail'] })
       qc.invalidateQueries({ queryKey: ['client-history'] })
       qc.invalidateQueries({ queryKey: ['clients'] })

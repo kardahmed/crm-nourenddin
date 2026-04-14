@@ -53,7 +53,7 @@ export function PermissionProfilesSection() {
     mutationFn: async (id: string) => {
       await supabase.from('permission_profiles').delete().eq('id', id)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['permission-profiles'] }); toast.success('Profil supprime') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['permission-profiles'] }); toast.success('Profil supprimé') },
   })
 
   return (

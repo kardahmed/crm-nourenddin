@@ -70,7 +70,7 @@ export function SectionEditor({ pageId }: { pageId: string }) {
       } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-sections'] }); setShowAdd(false); toast.success('Section ajoutee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-sections'] }); setShowAdd(false); toast.success('Section ajoutée') },
   })
 
   const updateSection = useMutation({
@@ -86,7 +86,7 @@ export function SectionEditor({ pageId }: { pageId: string }) {
       const { error } = await supabase.from('landing_page_sections').delete().eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-sections'] }); toast.success('Section supprimee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-sections'] }); toast.success('Section supprimée') },
   })
 
   function moveSection(id: string, dir: -1 | 1) {

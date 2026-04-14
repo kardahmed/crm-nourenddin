@@ -57,7 +57,7 @@ export function MessageTemplateModal({ isOpen, onClose, clientName, clientPhone,
   function handleCopy() {
     navigator.clipboard.writeText(message)
     setCopied(true)
-    toast.success('Message copie')
+    toast.success('Message copié')
     setTimeout(() => setCopied(false), 2000)
   }
 

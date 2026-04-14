@@ -38,14 +38,14 @@ export function SupportPage() {
       await supabase.from('ticket_messages').insert({ ticket_id: selectedTicket, sender_id: userId, body: reply } as never)
       await supabase.from('support_tickets').update({ updated_at: new Date().toISOString() } as never).eq('id', selectedTicket!)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ticket-messages'] }); setReply(''); toast.success('Reponse envoyee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['ticket-messages'] }); setReply(''); toast.success('Réponse envoyée') },
   })
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       await supabase.from('support_tickets').update({ status, updated_at: new Date().toISOString() } as never).eq('id', id)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['super-admin-tickets'] }); toast.success('Statut mis a jour') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['super-admin-tickets'] }); toast.success('Statut mis à jour') },
   })
 
   const STATUS_MAP: Record<string, { label: string; type: 'green' | 'orange' | 'blue' | 'muted' }> = {

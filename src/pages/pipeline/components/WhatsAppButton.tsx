@@ -52,7 +52,7 @@ export function WhatsAppButton({ clientId, clientName, phone, tenantId, message,
 
     window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`, '_blank')
     logMessage.mutate()
-    toast.success('WhatsApp ouvert — message enregistre')
+    toast.success('WhatsApp ouvert — message enregistré')
   }
 
   if (size === 'md') {

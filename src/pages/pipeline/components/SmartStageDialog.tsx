@@ -96,7 +96,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
           // Go back to accueil instead
           finalNote = 'Visite annulee par le client'
         } else if (confirmAction === 'report') {
-          if (!visitDate || !visitTime) { toast.error('Nouveau creneau requis'); return }
+          if (!visitDate || !visitTime) { toast.error('Nouveau créneau requis'); return }
           createVisit.mutate()
           finalNote = `Visite reportee au ${visitDate} a ${visitTime}`
         } else {
@@ -122,7 +122,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
         break
 
       case 'reason':
-        if (!reason) { toast.error('Selectionnez une raison'); return }
+        if (!reason) { toast.error('Sélectionnez une raison'); return }
         finalNote = `${toStage === 'perdue' ? 'Client perdu' : 'Relancement'}: ${reason}${reminderDays ? '. Rappel dans ' + reminderDays + 'j' : ''}`
         if (reminderDays) {
           supabase.from('client_tasks').insert({

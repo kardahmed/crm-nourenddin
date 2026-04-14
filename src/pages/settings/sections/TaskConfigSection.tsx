@@ -96,7 +96,7 @@ export function TaskConfigSection() {
       const { error } = await supabase.from('message_templates').update({ body: editBody, updated_at: new Date().toISOString() } as never).eq('id', editMsg.id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['message-templates'] }); setEditMsg(null); toast.success('Message sauvegarde') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['message-templates'] }); setEditMsg(null); toast.success('Message sauvegardé') },
   })
 
   function toggleStage(stage: string) {

@@ -87,7 +87,7 @@ export function PlaybookAdminPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['admin-playbooks'] })
       setEditId(null)
-      toast.success('Playbook sauvegarde pour tous les tenants')
+      toast.success('Playbook sauvegardé pour tous les tenants')
     },
   })
 
@@ -106,7 +106,7 @@ export function PlaybookAdminPage() {
       } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-playbooks'] }); toast.success('Playbook cree') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['admin-playbooks'] }); toast.success('Playbook créé') },
   })
 
   function addObjection() {

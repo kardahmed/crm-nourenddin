@@ -74,7 +74,7 @@ export function VisitScheduleSection() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tenant-visit-settings'] })
-      toast.success('Parametres de visite enregistres')
+      toast.success('Paramètres de visite enregistrés')
     },
     onError: () => toast.error('Erreur lors de la sauvegarde'),
   })

@@ -287,7 +287,7 @@ function CustomDomainPanel({ tenantId, customDomain, setCustomDomain, domainDirt
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['super-admin-tenant', tenantId] })
       setDomainDirty(false)
-      toast.success('Domaine enregistre')
+      toast.success('Domaine enregistré')
     },
   })
 
@@ -348,7 +348,7 @@ function ExportPanel({ tenantId, tenantName }: { tenantId: string; tenantName: s
       if (!res.ok) throw new Error('Export failed')
       const data = await res.json()
       setDownloadUrl(data.download_url)
-      toast.success('Export genere')
+      toast.success('Export généré')
     } catch {
       toast.error('Erreur lors de l\'export')
     } finally {

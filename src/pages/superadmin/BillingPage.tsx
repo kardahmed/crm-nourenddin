@@ -25,7 +25,7 @@ export function BillingPage() {
       const { error } = await supabase.from('invoices').update({ status: 'paid', paid_at: new Date().toISOString() } as never).eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['super-admin-invoices'] }); toast.success('Facture marquee comme payee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['super-admin-invoices'] }); toast.success('Facture marquée comme payée') },
   })
 
   const markOverdue = useMutation({
@@ -33,7 +33,7 @@ export function BillingPage() {
       const { error } = await supabase.from('invoices').update({ status: 'overdue' } as never).eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['super-admin-invoices'] }); toast.success('Facture marquee en retard') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['super-admin-invoices'] }); toast.success('Facture marquée en retard') },
   })
 
   const totalRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + ((i.amount as number) ?? 0), 0)

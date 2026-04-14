@@ -55,7 +55,7 @@ export function LandingPagesManager() {
       const { error } = await supabase.from('landing_pages').update({ is_active: active } as never).eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-pages'] }); toast.success('Statut mis a jour') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-pages'] }); toast.success('Statut mis à jour') },
   })
 
   const deletePage = useMutation({
@@ -63,7 +63,7 @@ export function LandingPagesManager() {
       const { error } = await supabase.from('landing_pages').delete().eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-pages'] }); toast.success('Page supprimee'); setDeleteId(null) },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['landing-pages'] }); toast.success('Page supprimée'); setDeleteId(null) },
   })
 
   // KPIs
@@ -85,7 +85,7 @@ export function LandingPagesManager() {
       accent_color: template.accent, is_active: true, default_source: 'facebook_ads',
     } as never).select('id').single()
 
-    if (error || !newPage) { toast.error('Erreur creation'); return }
+    if (error || !newPage) { toast.error('Erreur création'); return }
     const pageId = (newPage as { id: string }).id
 
     // Create sections

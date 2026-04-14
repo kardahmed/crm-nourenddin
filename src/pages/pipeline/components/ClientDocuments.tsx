@@ -76,7 +76,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
         toast.error('Erreur lors de l\'upload')
       }
     } else {
-      toast.success('Document uploade')
+      toast.success('Document uploadé')
       qc.invalidateQueries({ queryKey: ['client-documents', clientId] })
 
       // If CIN uploaded, mark cin_verified
@@ -96,7 +96,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
       const { error } = await supabase.storage.from('client-documents').remove([path])
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-documents', clientId] }); toast.success('Document supprime') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-documents', clientId] }); toast.success('Document supprimé') },
   })
 
   function formatSize(bytes: number) {

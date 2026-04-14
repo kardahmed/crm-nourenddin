@@ -67,7 +67,7 @@ export function WhatsAppPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['wa-config'] })
-      toast.success('Configuration WhatsApp sauvegardee')
+      toast.success('Configuration WhatsApp sauvegardée')
       setEditToken('')
     },
   })
@@ -84,7 +84,7 @@ export function WhatsAppPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['wa-accounts'] })
-      toast.success('Mis a jour')
+      toast.success('Mis à jour')
     },
   })
 

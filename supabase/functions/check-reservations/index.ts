@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendEmailInternal } from '../_shared/send-email-internal.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -18,10 +19,10 @@ Deno.serve(async (req) => {
   })
 
   try {
-    // 1. Find expired reservations
+    // 1. Find expired reservations with client/unit details for email
     const { data: expired, error: fetchErr } = await supabase
       .from('reservations')
-      .select('id, tenant_id, client_id, unit_id')
+      .select('id, tenant_id, client_id, unit_id, agent_id, clients(full_name), units(code)')
       .eq('status', 'active')
       .lt('expires_at', new Date().toISOString())
 
@@ -38,10 +39,25 @@ Deno.serve(async (req) => {
 
     console.log(`Found ${expired.length} expired reservation(s)`)
 
+    // Fetch agent emails for notifications
+    const agentIds = [...new Set(expired.map(r => r.agent_id).filter(Boolean))] as string[]
+    const { data: agentUsers } = agentIds.length > 0
+      ? await supabase.from('users').select('id, email').in('id', agentIds)
+      : { data: [] }
+
+    const agentEmailMap = new Map<string, string>()
+    for (const u of agentUsers ?? []) {
+      if (u.email) agentEmailMap.set(u.id, u.email)
+    }
+
     let processed = 0
+    let emailsSent = 0
     const errors: string[] = []
 
     for (const reservation of expired) {
+      const client = (reservation as Record<string, unknown>).clients as { full_name: string } | null
+      const unit = (reservation as Record<string, unknown>).units as { code: string } | null
+
       try {
         // a. Expire the reservation
         const { error: expireErr } = await supabase
@@ -67,8 +83,8 @@ Deno.serve(async (req) => {
             client_id: reservation.client_id,
             agent_id: null,
             type: 'stage_change',
-            title: 'Réservation expirée — client passé en relancement',
-            description: `Réservation ${reservation.id} expirée automatiquement`,
+            title: 'Reservation expiree — client passe en relancement',
+            description: `Reservation ${reservation.id} expiree automatiquement`,
             metadata: {
               reservation_id: reservation.id,
               unit_id: reservation.unit_id,
@@ -85,9 +101,28 @@ Deno.serve(async (req) => {
           .from('clients')
           .update({ pipeline_stage: 'relancement' })
           .eq('id', reservation.client_id)
-          .eq('pipeline_stage', 'reservation') // Only if still in reservation stage
+          .eq('pipeline_stage', 'reservation')
 
         if (clientErr) throw new Error(`Client ${reservation.client_id}: ${clientErr.message}`)
+
+        // e. Send email notification to the agent
+        if (reservation.agent_id) {
+          const agentEmail = agentEmailMap.get(reservation.agent_id)
+          if (agentEmail) {
+            const result = await sendEmailInternal({
+              to: agentEmail,
+              template: 'reservation_expired',
+              template_data: {
+                client_name: client?.full_name ?? '-',
+                unit_code: unit?.code ?? '-',
+                reservation_id: reservation.id,
+              },
+              tenant_id: reservation.tenant_id,
+              client_id: reservation.client_id,
+            })
+            if (result.sent) emailsSent++
+          }
+        }
 
         processed++
       } catch (err) {
@@ -101,6 +136,7 @@ Deno.serve(async (req) => {
       message: `Processed ${processed}/${expired.length} expired reservations`,
       processed,
       total: expired.length,
+      emails_sent: emailsSent,
       errors: errors.length > 0 ? errors : undefined,
     }
 

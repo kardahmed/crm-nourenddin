@@ -44,7 +44,7 @@ export function CallLogModal({ isOpen, onClose, clientId, clientName, tenantId, 
 
       if (error) { handleSupabaseError(error); throw error }
 
-      toast.success('Appel enregistre')
+      toast.success('Appel enregistré')
       setDuration('5'); setNotes(''); setResult('interested')
       onSuccess?.()
       onClose()

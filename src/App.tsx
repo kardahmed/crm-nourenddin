@@ -42,6 +42,7 @@ const MonitoringPage = lazy(() => import('@/pages/superadmin/MonitoringPage').th
 const PlansConfigPage = lazy(() => import('@/pages/superadmin/PlansConfigPage').then(m => ({ default: m.PlansConfigPage })))
 const PlaybookAdminPage = lazy(() => import('@/pages/superadmin/PlaybookAdminPage').then(m => ({ default: m.PlaybookAdminPage })))
 const WhatsAppPage = lazy(() => import('@/pages/superadmin/WhatsAppPage').then(m => ({ default: m.WhatsAppPage })))
+const EmailsPage = lazy(() => import('@/pages/superadmin/EmailsPage').then(m => ({ default: m.EmailsPage })))
 
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const MarketingROIPage = lazy(() => import('@/pages/marketing-roi/MarketingROIPage').then(m => ({ default: m.MarketingROIPage })))
@@ -84,6 +85,7 @@ function App() {
             <Route path="logs" element={<AuditLogsPage />} />
             <Route path="plans" element={<PlansConfigPage />} />
             <Route path="playbook" element={<PlaybookAdminPage />} />
+            <Route path="emails" element={<EmailsPage />} />
             <Route path="whatsapp" element={<WhatsAppPage />} />
             <Route path="billing" element={<BillingPage />} />
             <Route path="messages" element={<MessagesPage />} />

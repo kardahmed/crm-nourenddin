@@ -60,7 +60,7 @@ export function PlatformSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['platform-settings'] })
-      toast.success('Parametres enregistres')
+      toast.success('Paramètres enregistrés')
     },
   })
 
@@ -188,7 +188,7 @@ function AlertsSection() {
       } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['platform-alerts'] }); toast.success('Alerte ajoutee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['platform-alerts'] }); toast.success('Alerte ajoutée') },
   })
 
   const updateAlert = useMutation({
@@ -205,7 +205,7 @@ function AlertsSection() {
       const { error } = await supabase.from('platform_alerts').delete().eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['platform-alerts'] }); toast.success('Alerte supprimee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['platform-alerts'] }); toast.success('Alerte supprimée') },
   })
 
   return (

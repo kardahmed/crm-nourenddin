@@ -636,6 +636,50 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          template: string | null
+          recipient: string
+          subject: string
+          status: string
+          provider: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          template?: string | null
+          recipient: string
+          subject: string
+          status?: string
+          provider?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          template?: string | null
+          recipient?: string
+          subject?: string
+          status?: string
+          provider?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       history: {
         Row: {
           agent_id: string | null

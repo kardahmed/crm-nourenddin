@@ -64,7 +64,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage,
       const { data: templates } = await supabase.from('task_templates').select('*')
         .eq('tenant_id', tenantId).eq('stage', clientStage).eq('is_active', true).order('sort_order')
 
-      if (!templates || templates.length === 0) { toast.error('Aucun template actif pour cette etape'); return }
+      if (!templates || templates.length === 0) { toast.error('Aucun template actif pour cette étape'); return }
 
       const newTasks = (templates as TaskTemplate[]).map(t => ({
         tenant_id: tenantId,
@@ -82,7 +82,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage,
       const { error } = await supabase.from('client_tasks').insert(newTasks as never)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }); toast.success('Taches generees') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }); toast.success('Tâches générées') },
   })
 
   const completeTask = useMutation({
@@ -92,7 +92,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage,
       } as never).eq('id', taskId)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }); toast.success('Tache terminee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }); toast.success('Tâche terminée') },
   })
 
   const skipTask = useMutation({

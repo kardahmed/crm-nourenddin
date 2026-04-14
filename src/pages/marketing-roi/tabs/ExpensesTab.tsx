@@ -82,7 +82,7 @@ export function ExpensesTab() {
 
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => { await supabase.from('marketing_expenses').delete().eq('id', id) },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success('Depense supprimee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success('Dépense supprimée') },
   })
 
   const filtered = catFilter === 'all' ? expenses : expenses.filter(e => e.category === catFilter)
@@ -227,7 +227,7 @@ function AddExpenseModal({ tenantId, projects, campaigns, onClose, onSaved }: {
     } as never)
     setSaving(false)
     if (error) { toast.error('Erreur'); return }
-    toast.success('Depense ajoutee')
+    toast.success('Dépense ajoutée')
     onSaved()
   }
 

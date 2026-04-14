@@ -66,7 +66,7 @@ export function RegisterPage() {
       } as never)
       await supabase.from('tenant_settings').insert({ tenant_id: tenantId } as never)
 
-      toast.success('Compte cree avec succes !')
+      toast.success('Compte créé avec succès !')
       navigate('/login')
     } catch (err) {
       toast.error((err as Error).message ?? 'Erreur lors de l\'inscription')

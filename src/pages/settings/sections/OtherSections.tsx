@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw, Eye, Lock } from 'lucide-react'
+import { RotateCcw, Eye, Lock, Bell, Mail } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
@@ -136,19 +136,24 @@ export function NotificationsSection() {
   })
 
   const NOTIFS = [
-    { key: 'notif_agent_inactive', label: 'Agent inactif' },
-    { key: 'notif_payment_late', label: t('status.late') },
-    { key: 'notif_reservation_expired', label: t('status.expired') },
-    { key: 'notif_new_client', label: t('kpi.new_clients') },
-    { key: 'notif_new_sale', label: t('kpi.sales') },
-    { key: 'notif_goal_achieved', label: t('nav.goals') },
+    { key: 'notif_agent_inactive', label: 'Agent inactif', emailKey: 'email_agent_inactive' },
+    { key: 'notif_payment_late', label: t('status.late'), emailKey: 'email_payment_late' },
+    { key: 'notif_payment_due', label: "Rappel echeance", emailKey: 'email_payment_due' },
+    { key: 'notif_reservation_expired', label: t('status.expired'), emailKey: 'email_reservation_expired' },
+    { key: 'notif_reservation_expiry', label: "Reservation bientot expiree", emailKey: 'email_reservation_expiry' },
+    { key: 'notif_new_client', label: t('kpi.new_clients'), emailKey: 'email_new_client' },
+    { key: 'notif_new_sale', label: t('kpi.sales'), emailKey: 'email_new_sale' },
+    { key: 'notif_goal_achieved', label: t('nav.goals'), emailKey: 'email_goal_achieved' },
   ]
 
   const [toggles, setToggles] = useState<Record<string, boolean>>({})
   useEffect(() => {
     if (settings) {
       const tg: Record<string, boolean> = {}
-      NOTIFS.forEach(n => { tg[n.key] = settings[n.key] !== false })
+      NOTIFS.forEach(n => {
+        tg[n.key] = settings[n.key] !== false
+        tg[n.emailKey] = settings[n.emailKey] !== false
+      })
       setToggles(tg)
     }
   }, [settings])
@@ -167,17 +172,47 @@ export function NotificationsSection() {
   return (
     <div className="space-y-5">
       <SectionHeader title="Notifications" subtitle={t('nav.settings')} />
-      <div className="space-y-3">
+
+      {/* Column headers */}
+      <div className="flex items-center gap-2 px-4 pb-1">
+        <div className="flex-1" />
+        <div className="flex items-center gap-1 w-16 justify-center text-[10px] font-medium text-immo-text-muted uppercase tracking-wider">
+          <Bell className="h-3 w-3" /> App
+        </div>
+        <div className="flex items-center gap-1 w-16 justify-center text-[10px] font-medium text-immo-text-muted uppercase tracking-wider">
+          <Mail className="h-3 w-3" /> Email
+        </div>
+      </div>
+
+      <div className="space-y-2">
         {NOTIFS.map(n => (
-          <div key={n.key} className="flex items-center justify-between rounded-lg border border-immo-border-default bg-immo-bg-primary px-4 py-3">
-            <p className="text-sm text-immo-text-primary">{n.label}</p>
-            <button onClick={() => setToggles(tg => ({ ...tg, [n.key]: !tg[n.key] }))}
-              className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${toggles[n.key] ? 'bg-immo-accent-green' : 'bg-immo-border-default'}`}>
-              <div className={`h-4 w-4 rounded-full bg-white transition-transform ${toggles[n.key] ? 'translate-x-4' : 'translate-x-0'}`} />
-            </button>
+          <div key={n.key} className="flex items-center gap-2 rounded-lg border border-immo-border-default bg-immo-bg-primary px-4 py-3">
+            <p className="flex-1 text-sm text-immo-text-primary">{n.label}</p>
+
+            {/* In-app toggle */}
+            <div className="w-16 flex justify-center">
+              <button onClick={() => setToggles(tg => ({ ...tg, [n.key]: !tg[n.key] }))}
+                className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${toggles[n.key] ? 'bg-immo-accent-green' : 'bg-immo-border-default'}`}>
+                <div className={`h-4 w-4 rounded-full bg-white transition-transform ${toggles[n.key] ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
+
+            {/* Email toggle */}
+            <div className="w-16 flex justify-center">
+              <button onClick={() => setToggles(tg => ({ ...tg, [n.emailKey]: !tg[n.emailKey] }))}
+                className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${toggles[n.emailKey] ? 'bg-[#0579DA]' : 'bg-immo-border-default'}`}>
+                <div className={`h-4 w-4 rounded-full bg-white transition-transform ${toggles[n.emailKey] ? 'translate-x-4' : 'translate-x-0'}`} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
+
+      <p className="text-xs text-immo-text-muted">
+        <Bell className="inline h-3 w-3 mr-1" />App = notification dans l'application &nbsp;|&nbsp;
+        <Mail className="inline h-3 w-3 mr-1" />Email = email envoye a l'agent ou admin
+      </p>
+
       <SaveButton onClick={() => save.mutate()} loading={save.isPending} />
     </div>
   )
@@ -192,7 +227,7 @@ export function LanguageSection() {
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
     if (tenantId) await supabase.from('tenant_settings').update({ language: lang } as never).eq('tenant_id', tenantId)
-    toast.success(lang === 'fr' ? 'Langue changee' : 'تم تغيير اللغة')
+    toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 
   return (

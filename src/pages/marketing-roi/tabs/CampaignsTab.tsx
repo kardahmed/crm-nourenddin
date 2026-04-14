@@ -73,12 +73,12 @@ export function CampaignsTab() {
       await supabase.from('marketing_expenses').delete().eq('campaign_id', id)
       await supabase.from('marketing_campaigns').delete().eq('id', id)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-campaigns'] }); qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); toast.success('Campagne supprimee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-campaigns'] }); qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); toast.success('Campagne supprimée') },
   })
 
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => { await supabase.from('marketing_expenses').delete().eq('id', id) },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success('Depense supprimee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success('Dépense supprimée') },
   })
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
@@ -276,7 +276,7 @@ function CreateCampaignModal({ tenantId, onClose, onSaved }: { tenantId: string;
     } as never)
     setSaving(false)
     if (error) { toast.error('Erreur'); return }
-    toast.success('Campagne creee')
+    toast.success('Campagne créée')
     onSaved()
   }
 
@@ -349,7 +349,7 @@ function AddExpenseToCampaignModal({ tenantId, campaignId, onClose, onSaved }: {
     } as never)
     setSaving(false)
     if (error) { toast.error('Erreur'); return }
-    toast.success('Depense ajoutee a la campagne')
+    toast.success('Dépense ajoutée à la campagne')
     onSaved()
   }
 

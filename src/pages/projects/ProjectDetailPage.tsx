@@ -181,7 +181,7 @@ export function ProjectDetailPage() {
                   <Button size="sm" onClick={async () => {
                     await updateProject.mutateAsync({ id: project.id, name: editName, location: editLocation })
                     setEditMode(false)
-                    toast.success('Projet mis a jour')
+                    toast.success('Projet mis à jour')
                   }} className="bg-immo-accent-green text-white text-xs">Enregistrer</Button>
                   <Button size="sm" variant="ghost" onClick={() => setEditMode(false)} className="text-xs text-immo-text-secondary">Annuler</Button>
                 </div>

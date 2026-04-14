@@ -48,7 +48,7 @@ export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenan
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['client-detail'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
-      toast.success('Client reassigne')
+      toast.success('Client réassigné')
       onClose()
     },
   })

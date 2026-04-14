@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendEmailInternal } from '../_shared/send-email-internal.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -19,7 +20,6 @@ Deno.serve(async (req) => {
 
   try {
     // 1. Atomically mark overdue payments as late and return them
-    // Use a single UPDATE with WHERE to avoid race conditions (fetch-then-update)
     const { data: updated, error: updateErr } = await supabase
       .from('payment_schedules')
       .update({ status: 'late' })
@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
     console.log(`Marked ${updated.length} overdue payment(s) as late`)
 
-    // 2. Check tenant notification preferences and send alerts
+    // 2. Check tenant notification preferences
     const tenantIds = [...new Set(updated.map((p: { tenant_id: string }) => p.tenant_id))]
 
     const { data: settings } = await supabase
@@ -57,7 +57,21 @@ Deno.serve(async (req) => {
         .map((s: { tenant_id: string }) => s.tenant_id)
     )
 
-    // Group overdue by tenant for notification
+    // 3. Get admin emails per tenant for email notifications
+    const { data: adminUsers } = await supabase
+      .from('users')
+      .select('id, email, tenant_id')
+      .in('tenant_id', tenantIds)
+      .eq('role', 'admin')
+
+    const adminEmailByTenant = new Map<string, string>()
+    for (const u of adminUsers ?? []) {
+      if (u.email && !adminEmailByTenant.has(u.tenant_id)) {
+        adminEmailByTenant.set(u.tenant_id, u.email)
+      }
+    }
+
+    // 4. Group overdue by tenant and send emails
     const byTenant = new Map<string, Array<{
       client_name: string
       client_phone: string
@@ -65,6 +79,7 @@ Deno.serve(async (req) => {
       amount: number
       due_date: string
       installment: number
+      client_id: string | null
     }>>()
 
     for (const payment of updated) {
@@ -85,31 +100,51 @@ Deno.serve(async (req) => {
         amount: payment.amount,
         due_date: payment.due_date,
         installment: payment.installment_number,
+        client_id: sale?.client_id ?? null,
       })
     }
 
-    // Log notifications (replace with email/webhook in production)
+    // 5. Send email notifications per tenant
+    let emailsSent = 0
     const notifications: Array<{ tenant_id: string; count: number; details: string[] }> = []
 
     for (const [tenantId, payments] of byTenant) {
+      const adminEmail = adminEmailByTenant.get(tenantId)
       const details = payments.map(
         (p) => `${p.client_name} — ${p.unit_code} — Echeance #${p.installment} — ${p.amount} DA — Du le ${p.due_date}`
       )
 
-      notifications.push({
-        tenant_id: tenantId,
-        count: payments.length,
-        details,
-      })
+      notifications.push({ tenant_id: tenantId, count: payments.length, details })
 
-      console.log(`[Tenant ${tenantId}] ${payments.length} paiement(s) en retard:`)
-      details.forEach((d) => console.log(`  - ${d}`))
+      // Send an email per overdue payment
+      if (adminEmail) {
+        for (const p of payments) {
+          const result = await sendEmailInternal({
+            to: adminEmail,
+            template: 'payment_overdue',
+            template_data: {
+              client_name: p.client_name,
+              client_phone: p.client_phone,
+              unit_code: p.unit_code,
+              installment_number: p.installment,
+              amount: p.amount,
+              due_date: p.due_date,
+            },
+            tenant_id: tenantId,
+            client_id: p.client_id ?? undefined,
+          })
+          if (result.sent) emailsSent++
+        }
+      }
+
+      console.log(`[Tenant ${tenantId}] ${payments.length} paiement(s) en retard`)
     }
 
     const result = {
       message: `Marked ${updated.length} payment(s) as late`,
       updated: updated.length,
       notifications_sent: notifications.length,
+      emails_sent: emailsSent,
       notifications,
     }
 

@@ -93,7 +93,7 @@ export function TasksPage() {
       const { error } = await supabase.from('client_tasks').update({ status: 'completed', completed_at: new Date().toISOString(), executed_at: new Date().toISOString() } as never).eq('id', taskId)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tache terminee') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche terminée') },
   })
 
   const skipTask = useMutation({
@@ -484,7 +484,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
       } as never).eq('id', editId)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); setEditId(null); toast.success('Message sauvegarde') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); setEditId(null); toast.success('Message sauvegardé') },
   })
 
   const addMutation = useMutation({
@@ -496,7 +496,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
       } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success('Template ajoute') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success('Template ajouté') },
   })
 
   const deleteMutation = useMutation({
@@ -504,7 +504,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
       const { error } = await supabase.from('message_templates').delete().eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success('Supprime') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success('Supprimé') },
   })
 
   function startEdit(msg: MsgTpl) {

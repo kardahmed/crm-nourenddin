@@ -90,7 +90,7 @@ export function PlaybookSection() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sale-playbook'] })
-      toast.success('Playbook sauvegarde')
+      toast.success('Playbook sauvegardé')
     },
   })
 

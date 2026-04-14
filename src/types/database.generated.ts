@@ -636,6 +636,151 @@ export type Database = {
           },
         ]
       }
+      email_campaign_recipients: {
+        Row: {
+          id: string
+          campaign_id: string
+          client_id: string | null
+          email: string
+          full_name: string | null
+          status: string
+          sent_at: string | null
+          opened_at: string | null
+          clicked_at: string | null
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          client_id?: string | null
+          email: string
+          full_name?: string | null
+          status?: string
+          sent_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+        }
+        Update: {
+          id?: string
+          campaign_id?: string
+          client_id?: string | null
+          email?: string
+          full_name?: string | null
+          status?: string
+          sent_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaign_recipients_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_campaigns: {
+        Row: {
+          id: string
+          tenant_id: string
+          template_id: string | null
+          name: string
+          subject: string
+          status: string
+          segment_rules: Json
+          scheduled_at: string | null
+          sent_at: string | null
+          total_recipients: number
+          total_sent: number
+          total_opened: number
+          total_clicked: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          template_id?: string | null
+          name: string
+          subject: string
+          status?: string
+          segment_rules?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          total_recipients?: number
+          total_sent?: number
+          total_opened?: number
+          total_clicked?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          template_id?: string | null
+          name?: string
+          subject?: string
+          status?: string
+          segment_rules?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          total_recipients?: number
+          total_sent?: number
+          total_opened?: number
+          total_clicked?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_campaigns_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_campaigns_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "email_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_events: {
+        Row: {
+          id: string
+          campaign_id: string | null
+          recipient_id: string | null
+          event_type: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id?: string | null
+          recipient_id?: string | null
+          event_type: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          campaign_id?: string | null
+          recipient_id?: string | null
+          event_type?: string
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "email_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_logs: {
         Row: {
           id: string
@@ -673,6 +818,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "email_logs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          id: string
+          tenant_id: string
+          name: string
+          subject: string
+          blocks: Json
+          html_cache: string | null
+          thumbnail_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id: string
+          name: string
+          subject?: string
+          blocks?: Json
+          html_cache?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          name?: string
+          subject?: string
+          blocks?: Json
+          html_cache?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_templates_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

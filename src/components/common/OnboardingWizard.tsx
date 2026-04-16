@@ -1,8 +1,7 @@
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { CheckCircle, Building2, Users, UserPlus, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { useState } from 'react'
 
 interface OnboardingStep {
@@ -13,44 +12,41 @@ interface OnboardingStep {
   action: () => void
 }
 
+const DISMISS_KEY = 'crm.onboarding.dismissed'
+
 export function OnboardingWizard() {
-  
   const navigate = useNavigate()
-  const [dismissed, setDismissed] = useState(false)
+  // Persist dismissal across reloads so the wizard does not pop back up
+  // after the admin closed it.
+  const [dismissed, setDismissed] = useState<boolean>(() => {
+    try { return localStorage.getItem(DISMISS_KEY) === '1' } catch { return false }
+  })
 
   const { data } = useQuery({
     queryKey: ['onboarding-status'],
     queryFn: async () => {
-      
-      const [projects, agents, clients, tenant] = await Promise.all([
+      const [projects, agents, clients] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact', head: true }),
         supabase.from('users').select('id', { count: 'exact', head: true }).in('role', ['agent']),
         supabase.from('clients').select('id', { count: 'exact', head: true }),
-        Promise.resolve({ data: null, error: null }),
       ])
       return {
         hasProject: (projects.count ?? 0) > 0,
         hasAgent: (agents.count ?? 0) > 0,
         hasClient: (clients.count ?? 0) > 0,
-        completed: (tenant.data as { onboarding_completed: boolean } | null)?.onboarding_completed ?? false,
       }
     },
-    enabled: true,
     staleTime: 60_000,
   })
 
-  const markComplete = useMutation({
-    mutationFn: async () => {
-      await Promise.resolve({ error: null })
-    },
-  })
-
-  if (!data || data.completed || dismissed) return null
-  if (data.hasProject && data.hasAgent && data.hasClient) {
-    // Auto-complete
-    if (!data.completed) markComplete.mutate()
-    return null
+  function dismiss() {
+    try { localStorage.setItem(DISMISS_KEY, '1') } catch { /* ignore */ }
+    setDismissed(true)
   }
+
+  if (!data || dismissed) return null
+  // Hide when onboarding is already complete (no mutation — just don't render)
+  if (data.hasProject && data.hasAgent && data.hasClient) return null
 
   const steps: OnboardingStep[] = [
     { key: 'project', label: 'Creer votre 1er projet', icon: Building2, done: data.hasProject, action: () => navigate('/projects') },
@@ -72,7 +68,7 @@ export function OnboardingWizard() {
           <div className="h-2 w-24 rounded-full bg-immo-border-default">
             <div className="h-full rounded-full bg-immo-accent-green transition-all" style={{ width: `${pct}%` }} />
           </div>
-          <button onClick={() => setDismissed(true)} className="text-immo-text-muted hover:text-immo-text-primary">
+          <button onClick={dismiss} className="text-immo-text-muted hover:text-immo-text-primary">
             <X className="h-4 w-4" />
           </button>
         </div>

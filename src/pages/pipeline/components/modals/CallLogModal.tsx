@@ -33,7 +33,7 @@ export function CallLogModal({ isOpen, onClose, clientId, clientName, tenantId, 
     setLoading(true)
     try {
       const { error } = await supabase.from('history').insert({
-        tenant_id: tenantId,
+
         client_id: clientId,
         agent_id: agentId,
         type: 'call',

@@ -54,15 +54,15 @@ export function PlanVisitModal({
   const [notes, setNotes] = useState(prefillNotes)
 
   const userId = useAuthStore((s) => s.session?.user?.id)
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
   const [selectedClientId, setSelectedClientId] = useState('')
 
   // Fetch clients list when no client is provided (planning page use case)
   const { data: clientsList = [] } = useQuery({
-    queryKey: ['clients-for-visit', tenantId],
+    queryKey: ['clients-for-visit'],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage, tenant_id').eq('tenant_id', tenantId!).order('full_name')
+      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage, tenant_id').order('full_name')
       return (data ?? []) as ClientInfo[]
     },
     enabled: !client && !!tenantId,

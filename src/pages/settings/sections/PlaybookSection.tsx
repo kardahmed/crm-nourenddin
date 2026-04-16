@@ -33,20 +33,20 @@ const OBJECTION_TRIGGERS = [
 ]
 
 export function PlaybookSection() {
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
 
   const { data: playbook, isLoading } = useQuery({
-    queryKey: ['sale-playbook-edit', tenantId],
+    queryKey: ['sale-playbook-edit'],
     queryFn: async () => {
-      const { data } = await supabase.from('sale_playbooks').select('*').eq('tenant_id', tenantId!).eq('is_active', true).limit(1).maybeSingle()
+      const { data } = await supabase.from('sale_playbooks').select('*').eq('is_active', true).limit(1).maybeSingle()
       return data as {
         id: string; methodology: string; objective: string; tone: string;
         closing_phrases: string[]; objection_rules: ObjectionRule[];
         custom_instructions: string
       } | null
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const [methodology, setMethodology] = useState('custom')
@@ -71,7 +71,7 @@ export function PlaybookSection() {
   const save = useMutation({
     mutationFn: async () => {
       const payload = {
-        tenant_id: tenantId,
+
         name: 'Playbook principal',
         methodology, objective, tone,
         closing_phrases: closingPhrases,

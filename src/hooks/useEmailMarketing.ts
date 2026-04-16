@@ -154,7 +154,7 @@ export function useSaveCampaign() {
       } else {
         const { data, error } = await supabase.from('email_campaigns' as never)
           .insert({
-            tenant_id: tenantId,
+    
             name: campaign.name,
             subject: campaign.subject,
             template_id: campaign.template_id,
@@ -175,14 +175,13 @@ export function useSaveCampaign() {
 // ─── Segment Preview ────────────────────────────────────────────────────────
 
 export function useSegmentCount(rules: SegmentRules) {
-  const tenantId = useTenant()
   return useQuery({
-    queryKey: ['segment-count', tenantId, rules],
+    queryKey: ['segment-count', rules],
     queryFn: async () => {
       let query = supabase
         .from('clients')
         .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
+        
         .not('email', 'is', null)
 
       if (rules.pipeline_stages?.length) query = query.in('pipeline_stage', rules.pipeline_stages as never)
@@ -193,7 +192,7 @@ export function useSegmentCount(rules: SegmentRules) {
       if (error) throw error
       return count ?? 0
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 }
 
@@ -238,19 +237,18 @@ export function useSendCampaign() {
 // ─── Projects list (for segment builder) ────────────────────────────────────
 
 export function useProjectsList() {
-  const tenantId = useTenant()
   return useQuery({
-    queryKey: ['projects-list', tenantId],
+    queryKey: ['projects-list'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
         .select('id, name')
-        .eq('tenant_id', tenantId)
+        
         .eq('status', 'active')
         .order('name')
       if (error) throw error
       return data ?? []
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 }

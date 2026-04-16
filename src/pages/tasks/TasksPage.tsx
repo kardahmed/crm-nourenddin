@@ -42,7 +42,7 @@ const CHANNEL_ICONS: Record<string, typeof Phone> = { whatsapp: MessageCircle, s
 export function TasksPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const userId = useAuthStore(s => s.session?.user?.id)
   const { isAgent } = usePermissions()
   const qc = useQueryClient()
@@ -54,11 +54,11 @@ export function TasksPage() {
 
   // Fetch all tasks with client + agent relations
   const { data: allTasks = [], isLoading } = useQuery({
-    queryKey: ['all-tasks', tenantId],
+    queryKey: ['all-tasks'],
     queryFn: async () => {
       let query = supabase.from('client_tasks')
         .select('*, clients(full_name, phone, pipeline_stage), users!client_tasks_agent_id_fkey(first_name, last_name)')
-        .eq('tenant_id', tenantId!)
+        
         .order('created_at', { ascending: false })
         .limit(500)
 
@@ -74,18 +74,18 @@ export function TasksPage() {
         agent: t.users as ClientTask['agent'],
       })) as ClientTask[]
     },
-    enabled: !!tenantId,
+    enabled: true,
     refetchInterval: 60_000,
   })
 
   // Agents for filter
   const { data: agents = [] } = useQuery({
-    queryKey: ['task-agents', tenantId],
+    queryKey: ['task-agents'],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
-    enabled: !!tenantId && !isAgent,
+    enabled: !isAgent,
   })
 
   const completeTask = useMutation({
@@ -124,12 +124,12 @@ export function TasksPage() {
 
   // Fetch message templates
   const { data: msgTemplates = [] } = useQuery({
-    queryKey: ['task-msg-templates', tenantId],
+    queryKey: ['task-msg-templates'],
     queryFn: async () => {
-      const { data } = await supabase.from('message_templates').select('*').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('message_templates').select('*')
       return (data ?? []) as Array<{ stage: string; trigger_type: string; body: string; channel: string; attached_file_types: string[] }>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   function replaceVariables(text: string, task: ClientTask): string {
@@ -469,9 +469,9 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
   const [editMode, setEditMode] = useState('template')
 
   const { data: messages = [], isLoading } = useQuery({
-    queryKey: ['all-message-templates', tenantId],
+    queryKey: ['all-message-templates'],
     queryFn: async () => {
-      const { data } = await supabase.from('message_templates').select('*').eq('tenant_id', tenantId).order('sort_order')
+      const { data } = await supabase.from('message_templates').select('*').order('sort_order')
       return (data ?? []) as MsgTpl[]
     },
   })
@@ -490,7 +490,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
   const addMutation = useMutation({
     mutationFn: async ({ stage, trigger }: { stage: string; trigger: string }) => {
       const { error } = await supabase.from('message_templates').insert({
-        tenant_id: tenantId, stage, trigger_type: trigger, channel: 'whatsapp',
+ stage, trigger_type: trigger, channel: 'whatsapp',
         body: `Bonjour {client_prenom},\n\n[Votre message ici]\n\nCordialement,\n{agent_prenom}`,
         mode: 'template', variables_used: ['{client_prenom}', '{agent_prenom}'],
       } as never)

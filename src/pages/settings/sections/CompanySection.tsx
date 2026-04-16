@@ -12,17 +12,17 @@ import { SectionHeader, Field, SaveButton, inputClass } from './shared'
 
 export function CompanySection() {
   const { t } = useTranslation()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
 
   const { data: tenant, isLoading } = useQuery({
-    queryKey: ['tenant', tenantId],
+    queryKey: ['tenant'],
     queryFn: async () => {
       const { data, error } = await supabase.from('tenants').select('*').eq('id', tenantId!).single()
       if (error) { handleSupabaseError(error); throw error }
       return data as Record<string, unknown>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const [form, setForm] = useState<Record<string, string>>({})

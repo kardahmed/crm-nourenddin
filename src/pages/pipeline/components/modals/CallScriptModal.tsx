@@ -67,7 +67,7 @@ export function CallScriptModal({
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/answer-question`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName, agent_id: agentId, tenant_id: tenantId }),
+        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName, agent_id: agentId,  }),
       })
 
       const data = await res.json()
@@ -129,7 +129,7 @@ export function CallScriptModal({
       if (!response.ok) {
         // Fallback: load default script from DB
         const { data } = await supabase.from('call_scripts')
-          .select('*').eq('tenant_id', tenantId).eq('pipeline_stage', clientStage).eq('is_active', true).maybeSingle()
+          .select('*').eq('pipeline_stage', clientStage).eq('is_active', true).maybeSingle()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const d = data as any
@@ -169,9 +169,9 @@ export function CallScriptModal({
 
   // Fetch playbook for objection handling
   const { data: playbook } = useQuery({
-    queryKey: ['sale-playbook', tenantId],
+    queryKey: ['sale-playbook'],
     queryFn: async () => {
-      const { data } = await supabase.from('sale_playbooks').select('*').eq('tenant_id', tenantId).eq('is_active', true).limit(1).maybeSingle()
+      const { data } = await supabase.from('sale_playbooks').select('*').eq('is_active', true).limit(1).maybeSingle()
       return data as { objective: string; tone: string; closing_phrases: string[]; objection_rules: ObjectionRule[]; custom_instructions: string } | null
     },
     enabled: isOpen && !!tenantId,
@@ -187,13 +187,13 @@ export function CallScriptModal({
     mutationFn: async () => {
       if (!visitDate || !visitTime) return
       const { error } = await supabase.from('visits').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         scheduled_at: `${visitDate}T${visitTime}:00`,
         visit_type: 'on_site', status: 'planned',
       } as never)
       if (error) { handleSupabaseError(error); throw error }
       await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         type: 'visit_planned', title: `Visite planifiee depuis appel — ${visitDate} ${visitTime}`,
       } as never)
       // Move to visite_a_gerer if in accueil
@@ -267,7 +267,7 @@ export function CallScriptModal({
     try {
       // 1. Save call response
       await supabase.from('call_responses').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         script_id: script?.script_id ?? null,
         responses: { ...answers, _client_qa: clientQA.map(q => ({ q: q.question, a: q.answer })) },
         duration_seconds: timer,
@@ -310,7 +310,7 @@ export function CallScriptModal({
       const answeredCount = Object.keys(answers).length
       const totalQuestions = script?.questions?.length ?? 0
       await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         type: 'call',
         title: `Appel guide ${Math.floor(timer / 60)}min — ${result === 'qualified' ? 'Qualifie' : result === 'callback' ? 'A rappeler' : 'Pas interesse'} (${answeredCount}/${totalQuestions} questions)`,
         metadata: { duration: timer, result, answers_count: answeredCount, mode: script?.mode },
@@ -729,9 +729,9 @@ export function CallScriptModal({
 function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: string }) {
   // Load tenant visit settings
   const { data: visitSettings } = useQuery({
-    queryKey: ['tenant-visit-settings', tenantId],
+    queryKey: ['tenant-visit-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('work_days, visit_slots, visit_duration_minutes').eq('tenant_id', tenantId).single()
+      const { data } = await supabase.from('tenant_settings').select('work_days, visit_slots, visit_duration_minutes').single()
       return data as { work_days: number[] | null; visit_slots: string[] | null; visit_duration_minutes: number | null } | null
     },
     staleTime: 300_000,
@@ -747,7 +747,7 @@ function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: st
         .from('visits')
         .select('scheduled_at')
         .eq('agent_id', agentId)
-        .eq('tenant_id', tenantId)
+        
         .gte('scheduled_at', now.toISOString())
         .lte('scheduled_at', nextWeek.toISOString())
         .in('status', ['planned', 'confirmed'])

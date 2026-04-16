@@ -20,25 +20,25 @@ interface Profile {
 }
 
 export function PermissionProfilesSection() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
   const [editProfile, setEditProfile] = useState<Profile | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
   const { data: profiles = [] } = useQuery({
-    queryKey: ['permission-profiles', tenantId],
+    queryKey: ['permission-profiles'],
     queryFn: async () => {
-      const { data } = await supabase.from('permission_profiles').select('*').eq('tenant_id', tenantId!).order('created_at')
+      const { data } = await supabase.from('permission_profiles').select('*').order('created_at')
       return (data ?? []) as Profile[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // Count agents per profile
   const { data: agentCounts = {} } = useQuery({
-    queryKey: ['agent-profile-counts', tenantId],
+    queryKey: ['agent-profile-counts'],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('*').eq('tenant_id', tenantId!).eq('role', 'agent')
+      const { data } = await supabase.from('users').select('*').eq('role', 'agent')
       const counts: Record<string, number> = {}
       for (const u of data ?? []) {
         const pid = (u as unknown as { permission_profile_id: string | null }).permission_profile_id
@@ -46,7 +46,7 @@ export function PermissionProfilesSection() {
       }
       return counts
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const deleteProfile = useMutation({
@@ -180,7 +180,7 @@ function ProfileEditor({ profile, tenantId, onClose, onSaved }: {
         } as never).eq('id', profile.id)
       } else {
         await supabase.from('permission_profiles').insert({
-          tenant_id: tenantId,
+  
           name: name.trim(),
           description: description.trim() || null,
           permissions,

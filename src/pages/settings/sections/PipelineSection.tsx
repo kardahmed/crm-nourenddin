@@ -12,16 +12,16 @@ import { SectionHeader, Field, SaveButton, inputClass } from './shared'
 
 export function PipelineSection() {
   const { t } = useTranslation()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
-    queryKey: ['tenant-settings', tenantId],
+    queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId!).single()
+      const { data } = await supabase.from('tenant_settings').select('*').single()
       return data as Record<string, unknown> | null
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const [urgentDays, setUrgentDays] = useState('7')
@@ -37,9 +37,9 @@ export function PipelineSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update({ urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never).eq('tenant_id', tenantId!)
+        await supabase.from('tenant_settings').update({ urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
       } else {
-        await supabase.from('tenant_settings').insert({ tenant_id: tenantId, urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
+        await supabase.from('tenant_settings').insert({  urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-settings'] }); toast.success(t('success.saved')) },

@@ -36,29 +36,29 @@ interface CampaignExpense {
 }
 
 export function CampaignsTab() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showAddExpense, setShowAddExpense] = useState<string | null>(null)
 
   const { data: campaigns = [], isLoading } = useQuery({
-    queryKey: ['marketing-campaigns', tenantId],
+    queryKey: ['marketing-campaigns'],
     queryFn: async () => {
-      const { data } = await supabase.from('marketing_campaigns').select('*, projects(name)').eq('tenant_id', tenantId!).order('start_date', { ascending: false })
+      const { data } = await supabase.from('marketing_campaigns').select('*, projects(name)').order('start_date', { ascending: false })
       return (data ?? []) as unknown as Campaign[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // All expenses linked to campaigns
   const { data: allExpenses = [] } = useQuery({
-    queryKey: ['campaign-expenses', tenantId],
+    queryKey: ['campaign-expenses'],
     queryFn: async () => {
-      const { data } = await supabase.from('marketing_expenses').select('*').eq('tenant_id', tenantId!).not('campaign_id', 'is', null).order('expense_date', { ascending: false })
+      const { data } = await supabase.from('marketing_expenses').select('*').not('campaign_id', 'is', null).order('expense_date', { ascending: false })
       return (data ?? []) as unknown as CampaignExpense[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const toggleStatus = useMutation({
@@ -259,9 +259,9 @@ function CreateCampaignModal({ tenantId, onClose, onSaved }: { tenantId: string;
   const [saving, setSaving] = useState(false)
 
   const { data: projects = [] } = useQuery({
-    queryKey: ['projects-simple', tenantId],
+    queryKey: ['projects-simple'],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId).eq('status', 'active')
+      const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
   })
@@ -270,7 +270,7 @@ function CreateCampaignModal({ tenantId, onClose, onSaved }: { tenantId: string;
     if (!name.trim()) { toast.error('Nom requis'); return }
     setSaving(true)
     const { error } = await supabase.from('marketing_campaigns').insert({
-      tenant_id: tenantId, name: name.trim(), source, start_date: startDate,
+ name: name.trim(), source, start_date: startDate,
       end_date: endDate || null, planned_budget: Number(budget) || 0,
       target_leads: Number(targetLeads) || 0, project_id: projectId || null, status: 'active',
     } as never)
@@ -344,7 +344,7 @@ function AddExpenseToCampaignModal({ tenantId, campaignId, onClose, onSaved }: {
     if (!amount || Number(amount) <= 0) { toast.error('Montant requis'); return }
     setSaving(true)
     const { error } = await supabase.from('marketing_expenses').insert({
-      tenant_id: tenantId, category, subcategory: subcategory || null, amount: Number(amount),
+ category, subcategory: subcategory || null, amount: Number(amount),
       expense_date: date, campaign_id: campaignId, notes: notes || null,
     } as never)
     setSaving(false)

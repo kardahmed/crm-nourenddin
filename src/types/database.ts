@@ -40,7 +40,6 @@ export type Database = {
       users: {
         Row: {
           id: string
-          tenant_id: string | null
           first_name: string
           last_name: string
           email: string
@@ -52,7 +51,6 @@ export type Database = {
         }
         Insert: {
           id: string
-          tenant_id?: string | null
           first_name: string
           last_name: string
           email: string
@@ -64,7 +62,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string | null
           first_name?: string
           last_name?: string
           email?: string
@@ -79,7 +76,6 @@ export type Database = {
       projects: {
         Row: {
           id: string
-          tenant_id: string
           code: string
           name: string
           description: string | null
@@ -93,7 +89,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           code: string
           name: string
           description?: string | null
@@ -107,7 +102,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           code?: string
           name?: string
           description?: string | null
@@ -124,7 +118,6 @@ export type Database = {
       units: {
         Row: {
           id: string
-          tenant_id: string
           project_id: string
           code: string
           type: UnitType
@@ -142,7 +135,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           project_id: string
           code: string
           type?: UnitType
@@ -160,7 +152,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           project_id?: string
           code?: string
           type?: UnitType
@@ -181,7 +172,6 @@ export type Database = {
       clients: {
         Row: {
           id: string
-          tenant_id: string
           agent_id: string | null
           full_name: string
           phone: string
@@ -210,7 +200,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           agent_id?: string | null
           full_name: string
           phone: string
@@ -239,7 +228,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           agent_id?: string | null
           full_name?: string
           phone?: string
@@ -271,7 +259,6 @@ export type Database = {
       visits: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string | null
@@ -283,7 +270,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id?: string | null
@@ -295,7 +281,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string
           project_id?: string | null
@@ -310,7 +295,6 @@ export type Database = {
       reservations: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -326,7 +310,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -342,7 +325,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string
           project_id?: string
@@ -361,7 +343,6 @@ export type Database = {
       sales: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -379,7 +360,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -397,7 +377,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string
           project_id?: string
@@ -418,7 +397,6 @@ export type Database = {
       payment_schedules: {
         Row: {
           id: string
-          tenant_id: string
           sale_id: string
           installment_number: number
           due_date: string
@@ -430,7 +408,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           sale_id: string
           installment_number: number
           due_date: string
@@ -442,7 +419,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           sale_id?: string
           installment_number?: number
           due_date?: string
@@ -457,7 +433,6 @@ export type Database = {
       charges: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           sale_id: string | null
           label: string
@@ -470,7 +445,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           sale_id?: string | null
           label: string
@@ -483,7 +457,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           sale_id?: string | null
           label?: string
@@ -499,7 +472,6 @@ export type Database = {
       sale_amenities: {
         Row: {
           id: string
-          tenant_id: string
           sale_id: string
           description: string
           price: number
@@ -507,7 +479,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           sale_id: string
           description: string
           price?: number
@@ -515,7 +486,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           sale_id?: string
           description?: string
           price?: number
@@ -526,7 +496,6 @@ export type Database = {
       history: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string | null
           type: HistoryType
@@ -537,7 +506,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id?: string | null
           type: HistoryType
@@ -548,7 +516,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string | null
           type?: HistoryType
@@ -562,7 +529,6 @@ export type Database = {
       tasks: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string | null
           title: string
@@ -573,7 +539,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id?: string | null
           title: string
@@ -584,7 +549,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string | null
           title?: string
@@ -598,7 +562,6 @@ export type Database = {
       documents: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           sale_id: string | null
           type: DocType
@@ -609,7 +572,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           sale_id?: string | null
           type?: DocType
@@ -620,7 +582,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           sale_id?: string | null
           type?: DocType
@@ -634,7 +595,6 @@ export type Database = {
       agent_goals: {
         Row: {
           id: string
-          tenant_id: string
           agent_id: string
           metric: GoalMetric
           period: GoalPeriod
@@ -647,7 +607,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           agent_id: string
           metric: GoalMetric
           period?: GoalPeriod
@@ -660,7 +619,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           agent_id?: string
           metric?: GoalMetric
           period?: GoalPeriod
@@ -676,7 +634,6 @@ export type Database = {
       tenant_settings: {
         Row: {
           id: string
-          tenant_id: string
           urgent_alert_days: number
           relaunch_alert_days: number
           reservation_duration_days: number
@@ -692,7 +649,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           urgent_alert_days?: number
           relaunch_alert_days?: number
           reservation_duration_days?: number
@@ -708,7 +664,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           urgent_alert_days?: number
           relaunch_alert_days?: number
           reservation_duration_days?: number
@@ -727,21 +682,18 @@ export type Database = {
       document_templates: {
         Row: {
           id: string
-          tenant_id: string
           type: DocType
           content: string
           updated_at: string
         }
         Insert: {
           id?: string
-          tenant_id: string
           type: DocType
           content?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          tenant_id?: string
           type?: DocType
           content?: string
           updated_at?: string
@@ -785,7 +737,7 @@ export type Database = {
 }
 
 // Enums
-export type UserRole = 'super_admin' | 'admin' | 'agent'
+export type UserRole = 'admin' | 'agent'
 export type UserStatus = 'active' | 'inactive'
 export type ProjectStatus = 'active' | 'inactive' | 'archived'
 export type UnitType = 'apartment' | 'local' | 'villa' | 'parking'

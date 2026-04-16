@@ -38,7 +38,7 @@ export function VisitsTab({ clientId, tenantId }: { clientId: string; tenantId: 
   const createVisit = useMutation({
     mutationFn: async (input: { scheduled_at: string; visit_type: string; notes: string }) => {
       const { error } = await supabase.from('visits').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: userId!,
+ client_id: clientId, agent_id: userId!,
         scheduled_at: input.scheduled_at, visit_type: input.visit_type, notes: input.notes || null,
       } as never)
       if (error) { handleSupabaseError(error); throw error }

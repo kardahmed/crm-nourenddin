@@ -23,10 +23,10 @@ export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenan
   const [selectedAgent, setSelectedAgent] = useState(currentAgentId ?? '')
 
   const { data: agents = [] } = useQuery({
-    queryKey: ['agents-reassign', tenantId],
+    queryKey: ['agents-reassign'],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('id, first_name, last_name, email')
-        .eq('tenant_id', tenantId).in('role', ['agent', 'admin']).eq('status', 'active').order('first_name')
+        .in('role', ['agent', 'admin']).eq('status', 'active').order('first_name')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; email: string }>
     },
     enabled: isOpen,
@@ -40,7 +40,7 @@ export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenan
 
       const newAgent = agents.find(a => a.id === selectedAgent)
       await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: userId,
+ client_id: clientId, agent_id: userId,
         type: 'note',
         title: `Client reassigne a ${newAgent?.first_name ?? ''} ${newAgent?.last_name ?? ''}`,
       } as never)

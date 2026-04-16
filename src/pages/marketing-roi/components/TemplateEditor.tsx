@@ -47,7 +47,7 @@ interface Props {
 }
 
 export function TemplateEditor({ initialTemplate, onClose }: Props) {
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const [name, setName] = useState(initialTemplate?.name ?? 'Nouveau template')
   const [subject, setSubject] = useState(initialTemplate?.subject ?? '')
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialTemplate?.blocks ?? [...STARTER_BLOCKS])

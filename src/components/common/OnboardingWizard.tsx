@@ -14,18 +14,18 @@ interface OnboardingStep {
 }
 
 export function OnboardingWizard() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const navigate = useNavigate()
   const [dismissed, setDismissed] = useState(false)
 
   const { data } = useQuery({
-    queryKey: ['onboarding-status', tenantId],
+    queryKey: ['onboarding-status'],
     queryFn: async () => {
       if (!tenantId) return null
       const [projects, agents, clients, tenant] = await Promise.all([
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('users').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).in('role', ['agent']),
-        supabase.from('clients').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('projects').select('id', { count: 'exact', head: true }),
+        supabase.from('users').select('id', { count: 'exact', head: true }).in('role', ['agent']),
+        supabase.from('clients').select('id', { count: 'exact', head: true }),
         supabase.from('tenants').select('onboarding_completed').eq('id', tenantId).single(),
       ])
       return {
@@ -35,7 +35,7 @@ export function OnboardingWizard() {
         completed: (tenant.data as { onboarding_completed: boolean } | null)?.onboarding_completed ?? false,
       }
     },
-    enabled: !!tenantId,
+    enabled: true,
     staleTime: 60_000,
   })
 

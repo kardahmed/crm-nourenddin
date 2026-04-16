@@ -47,7 +47,7 @@ type ViewMode = 'month' | 'week' | 'day'
 /* ═══ Component ═══ */
 
 export function PlanningPage() {
-  const { tenantId, session } = useAuthStore()
+  const { session } = useAuthStore()
   const userId = session?.user?.id
   const { isAgent } = usePermissions()
 
@@ -68,12 +68,12 @@ export function PlanningPage() {
 
   // Fetch visits
   const { data: visits = [], isLoading } = useQuery({
-    queryKey: ['planning-visits', tenantId, rangeStart, rangeEnd, agentFilter],
+    queryKey: ['planning-visits', rangeStart, rangeEnd, agentFilter],
     queryFn: async () => {
       let q = supabase
         .from('visits')
         .select('id, client_id, agent_id, project_id, scheduled_at, visit_type, status, notes, clients(full_name, phone, pipeline_stage, tenant_id), users!visits_agent_id_fkey(first_name, last_name)')
-        .eq('tenant_id', tenantId!)
+        
         .gte('scheduled_at', `${rangeStart}T00:00:00`)
         .lte('scheduled_at', `${rangeEnd}T23:59:59`)
         .order('scheduled_at')
@@ -109,40 +109,40 @@ export function PlanningPage() {
         } satisfies VisitRow
       })
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // Fetch agents for filter
   const { data: agents = [] } = useQuery({
-    queryKey: ['planning-agents', tenantId],
+    queryKey: ['planning-agents'],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
-    enabled: !!tenantId && !isAgent,
+    enabled: !isAgent,
   })
 
   // Fetch projects for filter
   const { data: projectsList = [] } = useQuery({
-    queryKey: ['planning-projects', tenantId],
+    queryKey: ['planning-projects'],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId!).eq('status', 'active')
+      const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // AI Tasks
   const { data: aiTasks = [] } = useQuery({
-    queryKey: ['ai-tasks', tenantId],
+    queryKey: ['ai-tasks'],
     queryFn: async () => {
-      let q = supabase.from('tasks').select('*, clients(full_name)').eq('tenant_id', tenantId!).eq('type', 'ai_generated').eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
+      let q = supabase.from('tasks').select('*, clients(full_name)').eq('type', 'ai_generated').eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
       if (isAgent && userId) q = q.eq('agent_id', userId)
       const { data, error } = await q
       if (error) return []
       return data as unknown as Array<Record<string, unknown>>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // KPIs

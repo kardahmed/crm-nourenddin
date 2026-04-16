@@ -28,7 +28,7 @@ export function WhatsAppButton({ clientId, clientName, phone, tenantId, message,
   const logMessage = useMutation({
     mutationFn: async () => {
       await supabase.from('history').insert({
-        tenant_id: tenantId,
+
         client_id: clientId,
         agent_id: userId,
         type: 'whatsapp_message',

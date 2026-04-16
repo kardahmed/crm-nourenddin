@@ -40,7 +40,6 @@ export type PermissionMap = Partial<Record<PermissionKey, boolean>>
 
 export interface PermissionProfile {
   id: string
-  tenant_id: string
   name: string
   description: string | null
   permissions: PermissionMap

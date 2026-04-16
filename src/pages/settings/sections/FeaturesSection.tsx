@@ -23,17 +23,17 @@ type FeatureKey = typeof FEATURES[number]['key']
 const PLAN_LABELS: Record<string, string> = { free: 'Free', starter: 'Starter', pro: 'Pro', enterprise: 'Enterprise' }
 
 export function FeaturesSection() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
 
   // Get tenant plan
   const { data: tenantPlan } = useQuery({
-    queryKey: ['tenant-plan', tenantId],
+    queryKey: ['tenant-plan'],
     queryFn: async () => {
       const { data } = await supabase.from('tenants').select('plan' as never).eq('id', tenantId!).single()
       return (data as unknown as { plan: string } | null)?.plan ?? 'free'
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // Get plan features
@@ -47,15 +47,15 @@ export function FeaturesSection() {
   })
 
   const { data: settings } = useQuery({
-    queryKey: ['tenant-features', tenantId],
+    queryKey: ['tenant-features'],
     queryFn: async () => {
       const { data } = await supabase.from('tenant_settings')
         .select('feature_payment_tracking, feature_charges, feature_documents, feature_goals, feature_landing_pages, feature_ai_scripts, feature_whatsapp, feature_auto_tasks' as never)
-        .eq('tenant_id', tenantId!)
+        
         .single()
       return data as unknown as Record<FeatureKey, boolean> | null
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const [features, setFeatures] = useState<Record<FeatureKey, boolean>>({
@@ -86,7 +86,7 @@ export function FeaturesSection() {
 
   const save = useMutation({
     mutationFn: async () => {
-      await supabase.from('tenant_settings').update(features as never).eq('tenant_id', tenantId!)
+      await supabase.from('tenant_settings').update(features as never)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-features'] }); toast.success('Fonctionnalités mises à jour') },
   })

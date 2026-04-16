@@ -30,7 +30,7 @@ const TYPE_COLORS: Record<string, string> = {
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
 
   useEffect(() => {
@@ -42,18 +42,18 @@ export function NotificationBell() {
   }, [])
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ['tenant-notifications', tenantId],
+    queryKey: ['tenant-notifications'],
     queryFn: async () => {
       if (!tenantId) return []
       const { data } = await supabase
         .from('notifications')
         .select('id, type, title, message, read, created_at')
-        .eq('tenant_id', tenantId)
+        
         .order('created_at', { ascending: false })
         .limit(20)
       return (data ?? []) as Notification[]
     },
-    enabled: !!tenantId,
+    enabled: true,
     refetchInterval: 60_000,
   })
 
@@ -62,7 +62,7 @@ export function NotificationBell() {
   const markAllRead = useMutation({
     mutationFn: async () => {
       if (!tenantId) return
-      await supabase.from('notifications').update({ read: true } as never).eq('tenant_id', tenantId).eq('read', false)
+      await supabase.from('notifications').update({ read: true } as never).eq('read', false)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-notifications'] }),
   })

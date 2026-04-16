@@ -78,7 +78,6 @@ const PAGE_SIZE = 25
 
 export function ReportsPage() {
   const navigate = useNavigate()
-  const { tenantId } = useAuthStore()
   const userId = useAuthStore((s) => s.session?.user?.id)
   const { isAgent } = usePermissions()
 
@@ -95,22 +94,21 @@ export function ReportsPage() {
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
-    queryKey: ['report-agents', tenantId],
+    queryKey: ['report-agents'],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name, last_activity, status').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).order('first_name')
+      const { data } = await supabase.from('users').select('id, first_name, last_name, last_activity, status').in('role', ['agent', 'admin']).order('first_name')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; last_activity: string | null; status: string }>
     },
-    enabled: !!tenantId,
   })
 
   // Fetch all history for period
   const { data: allHistory = [], isLoading } = useQuery({
-    queryKey: ['report-history', tenantId, rangeStart, rangeEnd],
+    queryKey: ['report-history', rangeStart, rangeEnd],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('history')
         .select('id, type, title, description, agent_id, client_id, created_at, clients(full_name)')
-        .eq('tenant_id', tenantId!)
+        
         .gte('created_at', rangeStart)
         .lte('created_at', rangeEnd)
         .order('created_at', { ascending: false })
@@ -127,21 +125,19 @@ export function ReportsPage() {
         project_name: null,
       })) satisfies HistoryEntry[]
     },
-    enabled: !!tenantId,
   })
 
   // Fetch new clients count per agent
   const { data: newClientsMap = new Map<string, number>() } = useQuery({
-    queryKey: ['report-new-clients', tenantId, rangeStart, rangeEnd],
+    queryKey: ['report-new-clients', rangeStart, rangeEnd],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('agent_id').eq('tenant_id', tenantId!).gte('created_at', rangeStart).lte('created_at', rangeEnd)
+      const { data } = await supabase.from('clients').select('agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)
       const m = new Map<string, number>()
       for (const c of (data ?? []) as Array<{ agent_id: string | null }>) {
         if (c.agent_id) m.set(c.agent_id, (m.get(c.agent_id) ?? 0) + 1)
       }
       return m
     },
-    enabled: !!tenantId,
   })
 
 

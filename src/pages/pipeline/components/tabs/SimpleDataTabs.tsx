@@ -204,7 +204,7 @@ export function ChargesTab({ clientId, tenantId }: { clientId: string; tenantId:
 
   const createCharge = useMutation({
     mutationFn: async (input: { label: string; type: string; amount: number; charge_date: string; status: string }) => {
-      const { error } = await supabase.from('charges').insert({ tenant_id: tenantId, client_id: clientId, ...input } as never)
+      const { error } = await supabase.from('charges').insert({  client_id: clientId, ...input } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {
@@ -362,7 +362,7 @@ export function TasksTab({ clientId, tenantId }: { clientId: string; tenantId: s
 
   const createTask = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('tasks').insert({ tenant_id: tenantId, client_id: clientId, agent_id: userId, title, type: 'manual', due_at: dueAt || null } as never)
+      const { error } = await supabase.from('tasks').insert({  client_id: clientId, agent_id: userId, title, type: 'manual', due_at: dueAt || null } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {

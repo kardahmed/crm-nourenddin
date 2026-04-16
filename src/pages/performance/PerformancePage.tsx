@@ -55,7 +55,7 @@ function getPeriodRange(key: PeriodKey) {
 /* ═══ Component ═══ */
 
 export function PerformancePage() {
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const { isAgent } = usePermissions()
   const userId = useAuthStore((s) => s.session?.user?.id)
   const qc = useQueryClient()
@@ -81,7 +81,7 @@ export function PerformancePage() {
 
   // Fetch all performance data
   const { data, isLoading } = useQuery({
-    queryKey: ['perf', tenantId, rangeStart, rangeEnd, agentFilter, projectFilter],
+    queryKey: ['perf', rangeStart, rangeEnd, agentFilter, projectFilter],
     queryFn: async () => {
       if (!tenantId) throw new Error('No tenant')
 
@@ -93,17 +93,17 @@ export function PerformancePage() {
       }
 
       const [salesRes, clientsRes, visitsRes, historyRes, agentsRes, pipelineRes] = await Promise.all([
-        withAgent(supabase.from('sales').select('id, final_price, created_at, agent_id').eq('tenant_id', tenantId).eq('status', 'active').gte('created_at', rangeStart).lte('created_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; final_price: number; created_at: string }> | null; error: unknown }>,
+        withAgent(supabase.from('sales').select('id, final_price, created_at, agent_id').eq('status', 'active').gte('created_at', rangeStart).lte('created_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; final_price: number; created_at: string }> | null; error: unknown }>,
 
-        withAgent(supabase.from('clients').select('id, source, created_at, agent_id').eq('tenant_id', tenantId).gte('created_at', rangeStart).lte('created_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; source: string; created_at: string }> | null; error: unknown }>,
+        withAgent(supabase.from('clients').select('id, source, created_at, agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; source: string; created_at: string }> | null; error: unknown }>,
 
-        withAgent(supabase.from('visits').select('id, status, scheduled_at, agent_id').eq('tenant_id', tenantId).gte('scheduled_at', rangeStart).lte('scheduled_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; status: string; scheduled_at: string }> | null; error: unknown }>,
+        withAgent(supabase.from('visits').select('id, status, scheduled_at, agent_id').gte('scheduled_at', rangeStart).lte('scheduled_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; status: string; scheduled_at: string }> | null; error: unknown }>,
 
-        supabase.from('history').select('id, type, created_at').eq('tenant_id', tenantId).gte('created_at', rangeStart).lte('created_at', rangeEnd) as unknown as Promise<{ data: Array<{ id: string; type: string; created_at: string }> | null; error: unknown }>,
+        supabase.from('history').select('id, type, created_at').gte('created_at', rangeStart).lte('created_at', rangeEnd) as unknown as Promise<{ data: Array<{ id: string; type: string; created_at: string }> | null; error: unknown }>,
 
-        supabase.from('users').select('id, first_name, last_name, last_activity').eq('tenant_id', tenantId).eq('status', 'active').in('role', ['agent', 'admin']) as unknown as Promise<{ data: Array<{ id: string; first_name: string; last_name: string; last_activity: string | null }> | null; error: unknown }>,
+        supabase.from('users').select('id, first_name, last_name, last_activity').eq('status', 'active').in('role', ['agent', 'admin']) as unknown as Promise<{ data: Array<{ id: string; first_name: string; last_name: string; last_activity: string | null }> | null; error: unknown }>,
 
-        supabase.from('clients').select('id, pipeline_stage').eq('tenant_id', tenantId) as unknown as Promise<{ data: Array<{ id: string; pipeline_stage: PipelineStage }> | null; error: unknown }>,
+        supabase.from('clients').select('id, pipeline_stage') as unknown as Promise<{ data: Array<{ id: string; pipeline_stage: PipelineStage }> | null; error: unknown }>,
       ])
 
       return {
@@ -115,7 +115,7 @@ export function PerformancePage() {
         pipeline: (pipelineRes.data ?? []),
       }
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const sales = data?.sales ?? []

@@ -264,22 +264,15 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
   const create = useMutation({
     mutationFn: async () => {
-      // Call the create-user edge function (admin API, no rate limits)
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) throw new Error('Session manquante — reconnectez-vous')
-
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ email, first_name: firstName, last_name: lastName, phone: phone || null, role }),
+      // Use supabase.functions.invoke — auto-injects the session bearer token + apikey
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { email, first_name: firstName, last_name: lastName, phone: phone || null, role },
       })
-
-      const body = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`)
-      return body as { user_id: string; temp_password: string }
+      if (error) throw error
+      const payload = data as { error?: string; user_id?: string; temp_password?: string }
+      if (payload?.error) throw new Error(payload.error)
+      if (!payload?.temp_password) throw new Error('Réponse serveur invalide')
+      return payload as { user_id: string; temp_password: string }
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })

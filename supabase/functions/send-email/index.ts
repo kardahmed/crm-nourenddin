@@ -48,10 +48,12 @@ serve(async (req: Request) => {
       })
     }
 
-    // Get from email + sender name from app_settings
+    // Get from email + sender name from app_settings.
+    // Default sender uses the immoprox.io domain (already verified in Resend).
+    // Admin can override per deployment via Settings → Entreprise.
     const { data: settings } = await supabase.from('app_settings').select('custom_app_name, company_email').limit(1).single()
-    const fromName = (settings as { custom_app_name: string | null } | null)?.custom_app_name ?? 'IMMO PRO-X'
-    const fromEmail = (settings as { company_email: string | null } | null)?.company_email ?? 'noreply@immoprox.com'
+    const fromName = (settings as { custom_app_name: string | null } | null)?.custom_app_name ?? 'CRM Noureddine'
+    const fromEmail = (settings as { company_email: string | null } | null)?.company_email ?? 'no-reply@immoprox.io'
 
     // If template was used, re-render with actual platform name
     if (template && !template_data?.platform_name) {

@@ -24,7 +24,7 @@ export function VisitScheduleSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-visit-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('work_days, work_start_hour, work_end_hour, visit_duration_minutes, visit_slots, lunch_break_start, lunch_break_end').single()
+      const { data } = await supabase.from('app_settings' as never).select('work_days, work_start_hour, work_end_hour, visit_duration_minutes, visit_slots, lunch_break_start, lunch_break_end').single()
       return data as {
         work_days: number[]
         work_start_hour: number
@@ -61,7 +61,7 @@ export function VisitScheduleSection() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('tenant_settings').update({
+      const { error } = await supabase.from('app_settings' as never).update({
         work_days: workDays,
         work_start_hour: startHour,
         work_end_hour: endHour,

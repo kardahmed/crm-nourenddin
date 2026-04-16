@@ -71,6 +71,13 @@ CREATE TABLE IF NOT EXISTS app_settings (
   custom_logo_url TEXT,
   custom_primary_color TEXT,
   custom_app_name TEXT,
+  -- Company info
+  company_name TEXT,
+  company_phone TEXT,
+  company_email TEXT,
+  company_address TEXT,
+  company_website TEXT,
+  company_wilaya TEXT,
   -- Alerts
   urgent_alert_days INTEGER NOT NULL DEFAULT 3,
   relaunch_alert_days INTEGER NOT NULL DEFAULT 7,

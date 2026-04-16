@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Save, Upload, X, Palette, Type, Image, Eye, RotateCcw } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import toast from 'react-hot-toast'
@@ -20,14 +19,13 @@ const PRESET_COLORS = [
 ]
 
 export function BrandingSection() {
-  const {} = useAuthStore()
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
-    queryKey: ['tenant-settings-branding'],
+    queryKey: ['app-settings-branding'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('custom_logo_url, custom_primary_color, custom_app_name').maybeSingle()
-      return data as { custom_logo_url: string | null; custom_primary_color: string | null; custom_app_name: string | null } | null
+      const { data } = await supabase.from('app_settings' as never).select('id, custom_logo_url, custom_primary_color, custom_app_name').limit(1).maybeSingle()
+      return data as { id: string; custom_logo_url: string | null; custom_primary_color: string | null; custom_app_name: string | null } | null
     },
     enabled: true,
   })
@@ -61,17 +59,18 @@ export function BrandingSection() {
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!settings?.id) throw new Error('app_settings row missing')
       const payload = {
         custom_logo_url: logoUrl || null,
         custom_primary_color: primaryColor || null,
         custom_app_name: appName || null,
       }
-      const { error } = await supabase.from('tenant_settings').update(payload as never)
+      const { error } = await supabase.from('app_settings' as never).update(payload).eq('id', settings.id)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['tenant-settings-branding'] })
-      qc.invalidateQueries({ queryKey: ['tenant-branding'] })
+      qc.invalidateQueries({ queryKey: ['app-settings-branding'] })
+      qc.invalidateQueries({ queryKey: ['branding'] })
       toast.success('Branding sauvegardé — rechargez la page pour voir les changements')
     },
   })

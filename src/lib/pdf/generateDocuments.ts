@@ -64,22 +64,26 @@ async function insertDocRecord(clientId: string, saleId: string | null, type: st
   } as never)
 }
 
-// Fetch single-tenant company info from app_settings (branding section holds these)
+// Fetch single-tenant company info from app_settings
 async function fetchCompany() {
   const { data, error } = await supabase
     .from('app_settings' as never)
-    .select('custom_app_name, custom_logo_url')
+    .select('custom_app_name, custom_logo_url, company_name, company_phone, company_email, company_address')
     .limit(1)
     .single()
   if (error) {
     console.warn('[pdf] fetchCompany failed, falling back to defaults:', error.message)
   }
-  const d = (data ?? {}) as { custom_app_name?: string | null; custom_logo_url?: string | null }
+  const d = (data ?? {}) as {
+    custom_app_name?: string | null; custom_logo_url?: string | null;
+    company_name?: string | null; company_phone?: string | null;
+    company_email?: string | null; company_address?: string | null;
+  }
   return {
-    name: d.custom_app_name ?? 'IMMO PRO-X',
-    address: '' as string | null,
-    phone: '' as string | null,
-    email: '' as string | null,
+    name: d.company_name ?? d.custom_app_name ?? 'IMMO PRO-X',
+    address: d.company_address ?? null,
+    phone: d.company_phone ?? null,
+    email: d.company_email ?? null,
     logo_url: d.custom_logo_url ?? null,
   }
 }

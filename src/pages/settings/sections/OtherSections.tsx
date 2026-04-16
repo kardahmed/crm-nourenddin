@@ -19,7 +19,7 @@ export function ReservationsSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').single()
+      const { data } = await supabase.from('app_settings' as never).select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: true,
@@ -38,9 +38,9 @@ export function ReservationsSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update({ reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
+        await supabase.from('app_settings' as never).update({ reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
       } else {
-        await supabase.from('tenant_settings').insert({  reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
+        await supabase.from('app_settings' as never).insert({  reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-settings'] }); toast.success(t('success.saved')) },
@@ -129,7 +129,7 @@ export function NotificationsSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').single()
+      const { data } = await supabase.from('app_settings' as never).select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: true,
@@ -161,9 +161,9 @@ export function NotificationsSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update(toggles as never)
+        await supabase.from('app_settings' as never).update(toggles as never)
       } else {
-        await supabase.from('tenant_settings').insert({  ...toggles } as never)
+        await supabase.from('app_settings' as never).insert({  ...toggles } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-settings'] }); toast.success(t('success.saved')) },
@@ -226,7 +226,7 @@ export function LanguageSection() {
 
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
-    if (true) await supabase.from('tenant_settings').update({ language: lang } as never)
+    if (true) await supabase.from('app_settings' as never).update({ language: lang } as never)
     toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 

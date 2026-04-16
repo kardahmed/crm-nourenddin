@@ -731,7 +731,7 @@ function AvailabilityMini({ agentId }: { agentId: string }) {
   const { data: visitSettings } = useQuery({
     queryKey: ['tenant-visit-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('work_days, visit_slots, visit_duration_minutes').single()
+      const { data } = await supabase.from('app_settings' as never).select('work_days, visit_slots, visit_duration_minutes').single()
       return data as { work_days: number[] | null; visit_slots: string[] | null; visit_duration_minutes: number | null } | null
     },
     staleTime: 300_000,

@@ -59,7 +59,7 @@ export function KanbanBoard({
 
       const [historyRes, settingsRes] = await Promise.all([
         supabase.from('history').select('client_id, created_at').eq('type', 'stage_change').in('client_id', allClientIds).order('created_at', { ascending: false }),
-        supabase.from('tenant_settings').select('urgent_alert_days').maybeSingle(),
+        supabase.from('app_settings' as never).select('urgent_alert_days').maybeSingle(),
       ])
 
       const dates = new Map<string, string>()

@@ -18,7 +18,7 @@ export function PipelineSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').single()
+      const { data } = await supabase.from('app_settings' as never).select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: true,
@@ -37,9 +37,9 @@ export function PipelineSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update({ urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
+        await supabase.from('app_settings' as never).update({ urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
       } else {
-        await supabase.from('tenant_settings').insert({  urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
+        await supabase.from('app_settings' as never).insert({  urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-settings'] }); toast.success(t('success.saved')) },

@@ -28,6 +28,9 @@ import { Separator } from '@/components/ui/separator'
 import { formatPrice, formatPriceCompact } from '@/lib/constants'
 import { HISTORY_TYPE_LABELS } from '@/types'
 import { UnitComparator } from './components/UnitComparator'
+import { CsvImportModal } from '@/components/common/CsvImportModal'
+import { UNIT_IMPORT_FIELDS } from './unitImportFields'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Unit, HistoryType } from '@/types'
 import { format, formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
@@ -68,6 +71,8 @@ export function ProjectDetailPage() {
   const [compareIds, setCompareIds] = useState<string[]>([])
   const [showComparator, setShowComparator] = useState(false)
   const [uploading, setUploading] = useState<'cover' | 'gallery' | null>(null)
+  const [showImportUnits, setShowImportUnits] = useState(false)
+  const qc = useQueryClient()
 
   async function uploadImage(file: File): Promise<string | null> {
     if (!projectId) return null
@@ -422,15 +427,28 @@ export function ProjectDetailPage() {
           <h3 className="text-sm font-semibold text-immo-text-primary">
             Biens du projet ({units.length})
           </h3>
-          {compareIds.length >= 2 && (
-            <Button
-              size="sm"
-              onClick={() => setShowComparator(true)}
-              className="bg-immo-accent-green text-white text-xs"
-            >
-              Comparer ({compareIds.length})
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {canManageProjects && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowImportUnits(true)}
+                className="border border-immo-border-default text-immo-text-secondary text-xs hover:bg-immo-bg-card-hover"
+                title="Importer des biens depuis un CSV"
+              >
+                <Upload className="mr-1.5 h-3.5 w-3.5" /> Importer CSV
+              </Button>
+            )}
+            {compareIds.length >= 2 && (
+              <Button
+                size="sm"
+                onClick={() => setShowComparator(true)}
+                className="bg-immo-accent-green text-white text-xs"
+              >
+                Comparer ({compareIds.length})
+              </Button>
+            )}
+          </div>
         </div>
         {units.length === 0 ? (
           <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-12 text-center text-sm text-immo-text-muted">
@@ -496,6 +514,22 @@ export function ProjectDetailPage() {
             />
           </div>
         )}
+
+        {/* Unit CSV Import — scoped to the current project */}
+        <CsvImportModal
+          isOpen={showImportUnits}
+          onClose={() => setShowImportUnits(false)}
+          title={`Importer des biens — ${project.name}`}
+          subtitle="Les biens importés seront rattachés à ce projet"
+          table="units"
+          fields={UNIT_IMPORT_FIELDS}
+          templateName={`biens-${project.code ?? 'projet'}`}
+          defaults={() => ({ project_id: projectId })}
+          onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ['project-detail', projectId] })
+            qc.invalidateQueries({ queryKey: ['units'] })
+          }}
+        />
       </div>
 
       {/* Activity history */}

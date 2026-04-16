@@ -33,7 +33,7 @@ export function LoginPage() {
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
 
   if (isAuthenticated && role) {
-    navigate(role === 'super_admin' ? '/admin' : '/dashboard', { replace: true })
+    navigate('/dashboard', { replace: true })
     return null
   }
 

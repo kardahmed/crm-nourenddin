@@ -29,7 +29,6 @@ import { Button } from '@/components/ui/button'
 import type { Unit } from '@/types'
 import { formatPrice } from '@/lib/constants'
 import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
-import { PlanLimitBanner } from '@/components/common/PlanLimitBanner'
 import { format } from 'date-fns'
 import { ProjectCard } from './components/ProjectCard'
 import { CreateProjectModal } from './components/CreateProjectModal'
@@ -317,11 +316,6 @@ export function ProjectsPage() {
           </Button>
         )}
       </div>
-
-      {/* Plan limit banner */}
-      {!canAddProject && (
-        <PlanLimitBanner type="projects" current={usage.projects} max={limits.max_projects} />
-      )}
 
       {/* Content */}
       {filtered.length === 0 ? (

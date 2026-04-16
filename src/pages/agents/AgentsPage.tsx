@@ -290,7 +290,10 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
-      toast.success(`Agent créé. Mot de passe temporaire : ${data.temp_password}`, { duration: 20000 })
+      const msg = (data as { email_sent?: boolean }).email_sent
+        ? `Agent créé. Email d'invitation envoyé. (Pwd : ${data.temp_password})`
+        : `Agent créé. Mot de passe temporaire : ${data.temp_password}`
+      toast.success(msg, { duration: 25000 })
       resetAndClose()
     },
     onError: (err) => {

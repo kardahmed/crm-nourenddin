@@ -9,6 +9,7 @@ import {
   Wallet,
   Plus,
   Download,
+  Upload,
   Kanban,
   LayoutGrid,
   List,
@@ -43,6 +44,10 @@ import { KanbanBoard } from './components/KanbanBoard'
 import { CardsView } from './components/CardsView'
 import { TableView } from './components/TableView'
 import { ClientFormModal } from './components/ClientFormModal'
+import { CsvImportModal } from '@/components/common/CsvImportModal'
+import { CLIENT_IMPORT_FIELDS } from './clientImportFields'
+import { supabase } from '@/lib/supabase'
+import { useQueryClient } from '@tanstack/react-query'
 import { SmartStageDialog } from './components/SmartStageDialog'
 import { ClientSidePanel } from './components/ClientSidePanel'
 import { AdvancedFilters, EMPTY_FILTERS } from './components/AdvancedFilters'
@@ -114,6 +119,8 @@ export function PipelinePage() {
   const [compact, setCompact] = useState(() => localStorage.getItem('pipeline-compact') === 'true')
   const [alertFilter, setAlertFilter] = useState<string[] | null>(null)
   const [showClientForm, setShowClientForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const qc = useQueryClient()
   const [sidePanelClientId, setSidePanelClientId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [reassignAgent, setReassignAgent] = useState('')
@@ -417,9 +424,19 @@ export function PipelinePage() {
         </div>
 
         {canManageProjects && (
-          <Button onClick={() => setShowClientForm(true)} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
-            <Plus className="mr-1.5 h-4 w-4" /> Client
-          </Button>
+          <>
+            <Button
+              onClick={() => setShowImport(true)}
+              variant="ghost"
+              className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover"
+              title="Importer depuis un CSV (migration d'un ancien CRM)"
+            >
+              <Upload className="mr-1.5 h-4 w-4" /> Importer
+            </Button>
+            <Button onClick={() => setShowClientForm(true)} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
+              <Plus className="mr-1.5 h-4 w-4" /> Client
+            </Button>
+          </>
         )}
       </div>
 
@@ -494,6 +511,20 @@ export function PipelinePage() {
       )}
 
       <ClientFormModal isOpen={showClientForm} onClose={() => setShowClientForm(false)} />
+      <CsvImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        title="Importer des clients"
+        subtitle="Depuis un CSV (ex: export de votre ancien CRM)"
+        table="clients"
+        fields={CLIENT_IMPORT_FIELDS}
+        defaults={async () => {
+          // Assign imported clients to the current user by default
+          const { data: { session } } = await supabase.auth.getSession()
+          return { agent_id: session?.user?.id ?? null }
+        }}
+        onSuccess={() => qc.invalidateQueries({ queryKey: ['clients'] })}
+      />
 
       {/* Stage change confirmation dialog */}
       {/* Client side panel */}

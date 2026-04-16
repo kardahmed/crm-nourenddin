@@ -38,12 +38,12 @@ interface CallScriptModalProps {
   clientName: string
   clientPhone: string
   clientStage: PipelineStage
-  tenantId: string
+
   agentId: string
 }
 
 export function CallScriptModal({
-  isOpen, onClose, clientId, clientName, clientPhone, clientStage, tenantId, agentId,
+  isOpen, onClose, clientId, clientName, clientPhone, clientStage, agentId,
 }: CallScriptModalProps) {
   const qc = useQueryClient()
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
@@ -90,11 +90,11 @@ export function CallScriptModal({
 
   // Fetch agent + tenant names for template variable replacement
   const { data: contextNames } = useQuery({
-    queryKey: ['script-context', agentId, tenantId],
+    queryKey: ['script-context', agentId],
     queryFn: async () => {
       const [agentRes, tenantRes] = await Promise.all([
         supabase.from('users').select('first_name, last_name').eq('id', agentId).single(),
-        supabase.from('tenants').select('name, phone').eq('id', tenantId).single(),
+        Promise.resolve({ data: null, error: null }),
       ])
       return {
         agentName: agentRes.data ? `${agentRes.data.first_name} ${agentRes.data.last_name}` : 'Agent',
@@ -174,7 +174,7 @@ export function CallScriptModal({
       const { data } = await supabase.from('sale_playbooks').select('*').eq('is_active', true).limit(1).maybeSingle()
       return data as { objective: string; tone: string; closing_phrases: string[]; objection_rules: ObjectionRule[]; custom_instructions: string } | null
     },
-    enabled: isOpen && !!tenantId,
+    enabled: isOpen,
   })
 
   const [showVisitForm, setShowVisitForm] = useState(false)
@@ -601,7 +601,7 @@ export function CallScriptModal({
           </div>
 
           {/* Mini availability calendar */}
-          <AvailabilityMini agentId={agentId} tenantId={tenantId} />
+          <AvailabilityMini agentId={agentId} />
           <div className="mb-4">
             {!showVisitForm ? (
               <Button onClick={() => setShowVisitForm(true)} className="w-full border border-immo-accent-blue/30 bg-immo-accent-blue/5 text-xs font-semibold text-immo-accent-blue hover:bg-immo-accent-blue/10">
@@ -726,7 +726,7 @@ export function CallScriptModal({
 }
 
 // Mini availability calendar — reads tenant visit settings
-function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: string }) {
+function AvailabilityMini({ agentId }: { agentId: string }) {
   // Load tenant visit settings
   const { data: visitSettings } = useQuery({
     queryKey: ['tenant-visit-settings'],

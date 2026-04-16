@@ -8,7 +8,7 @@ interface Props {
   clientId: string
   clientName: string
   phone: string
-  tenantId: string
+
   message?: string
   size?: 'sm' | 'md'
 }
@@ -20,7 +20,7 @@ const DEFAULT_TEMPLATES: Record<string, string> = {
   reservation: 'Bonjour {name}, felicitations ! Votre reservation a bien ete enregistree.',
 }
 
-export function WhatsAppButton({ clientId, clientName, phone, tenantId, message, size = 'sm' }: Props) {
+export function WhatsAppButton({ clientId, clientName, phone, message, size = 'sm' }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
   const { userProfile } = useAuthStore()
   const qc = useQueryClient()

@@ -21,7 +21,7 @@ interface ClientInfo {
   interested_projects: string[] | null
   interest_level: string
   pipeline_stage: PipelineStage
-  tenant_id: string
+
 }
 
 interface AvailableUnit {
@@ -70,12 +70,12 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
 
   // Fetch available units
   const { data: rawUnits = [] } = useQuery({
-    queryKey: ['ai-units', client?.tenant_id],
+    queryKey: ['ai-units'],
     queryFn: async () => {
       const { data } = await supabase
         .from('units')
         .select('id, code, type, subtype, building, floor, surface, price, delivery_date, project_id, projects(name)')
-        .eq('tenant_id', client!.tenant_id)
+        
         .eq('status', 'available')
         .order('code')
       return (data ?? []).map((u: Record<string, unknown>) => ({
@@ -83,17 +83,17 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
         project_name: (u.projects as { name: string } | null)?.name ?? '-',
       })) as unknown as AvailableUnit[]
     },
-    enabled: !!client?.tenant_id && isOpen,
+    enabled: isOpen,
   })
 
   // Fetch projects for filter
   const { data: projects = [] } = useQuery({
-    queryKey: ['ai-projects', client?.tenant_id],
+    queryKey: ['ai-projects'],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', client!.tenant_id).eq('status', 'active')
+      const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
-    enabled: !!client?.tenant_id && isOpen,
+    enabled: isOpen,
   })
 
   // Filter units

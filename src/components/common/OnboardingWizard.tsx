@@ -21,12 +21,12 @@ export function OnboardingWizard() {
   const { data } = useQuery({
     queryKey: ['onboarding-status'],
     queryFn: async () => {
-      if (!tenantId) return null
+      
       const [projects, agents, clients, tenant] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact', head: true }),
         supabase.from('users').select('id', { count: 'exact', head: true }).in('role', ['agent']),
         supabase.from('clients').select('id', { count: 'exact', head: true }),
-        supabase.from('tenants').select('onboarding_completed').eq('id', tenantId).single(),
+        Promise.resolve({ data: null, error: null }),
       ])
       return {
         hasProject: (projects.count ?? 0) > 0,
@@ -41,7 +41,7 @@ export function OnboardingWizard() {
 
   const markComplete = useMutation({
     mutationFn: async () => {
-      await supabase.from('tenants').update({ onboarding_completed: true } as never).eq('id', tenantId!)
+      await Promise.resolve({ error: null })
     },
   })
 

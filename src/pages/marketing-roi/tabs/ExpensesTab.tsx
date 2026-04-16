@@ -200,13 +200,13 @@ export function ExpensesTab() {
       </div>
 
       {/* Add Expense Modal */}
-      {showAdd && <AddExpenseModal tenantId={tenantId!} projects={projects} campaigns={campaigns} onClose={() => setShowAdd(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); setShowAdd(false) }} />}
+      {showAdd && <AddExpenseModal projects={projects} campaigns={campaigns} onClose={() => setShowAdd(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); setShowAdd(false) }} />}
     </div>
   )
 }
 
-function AddExpenseModal({ tenantId, projects, campaigns, onClose, onSaved }: {
-  tenantId: string; projects: Array<{ id: string; name: string }>; campaigns: Array<{ id: string; name: string }>
+function AddExpenseModal({ projects, campaigns, onClose, onSaved }: {
+   projects: Array<{ id: string; name: string }>; campaigns: Array<{ id: string; name: string }>
   onClose: () => void; onSaved: () => void
 }) {
   const [category, setCategory] = useState('ads_digital')

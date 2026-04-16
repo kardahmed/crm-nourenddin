@@ -17,7 +17,7 @@ import toast from 'react-hot-toast'
 interface ClientTask {
   id: string; title: string; stage: string; status: string; priority: string
   channel: string; scheduled_at: string | null; created_at: string
-  client_id: string; agent_id: string | null; tenant_id: string
+  client_id: string; agent_id: string | null
   client?: { full_name: string; phone: string; pipeline_stage: string } | null
   agent?: { first_name: string; last_name: string } | null
 }
@@ -58,27 +58,27 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
 
   // Fetch agent + tenant info
   const { data: context } = useQuery({
-    queryKey: ['task-detail-context', userId, tenantId],
+    queryKey: ['task-detail-context', userId],
     queryFn: async () => {
       const [agentRes, tenantRes] = await Promise.all([
         supabase.from('users').select('first_name, last_name, phone').eq('id', userId!).single(),
-        supabase.from('tenants').select('name, phone, email').eq('id', tenantId!).single(),
+        Promise.resolve({ data: null, error: null }),
       ])
       const a = agentRes.data as Record<string, string> | null
       const t = tenantRes.data as Record<string, string> | null
       return { agentName: `${a?.first_name ?? ''} ${a?.last_name ?? ''}`.trim(), agentPrenom: a?.first_name ?? '', agentPhone: a?.phone ?? '', agence: t?.name ?? '' }
     },
-    enabled: isOpen && !!userId && !!tenantId,
+    enabled: isOpen && !!userId,
   })
 
   // Fetch message template
   const { data: msgTemplate } = useQuery({
-    queryKey: ['task-msg-tpl', task.stage, task.channel, tenantId],
+    queryKey: ['task-msg-tpl', task.stage, task.channel],
     queryFn: async () => {
       const { data } = await supabase.from('message_templates').select('body').eq('stage', task.stage).limit(1).maybeSingle()
       return (data as { body: string } | null)?.body ?? null
     },
-    enabled: isOpen && !!tenantId,
+    enabled: isOpen,
   })
 
   // Build message with variables replaced
@@ -118,9 +118,9 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
     mutationFn: async () => {
       const { error } = await supabase.from('client_tasks').update({ status: 'completed', completed_at: new Date().toISOString(), executed_at: new Date().toISOString(), message_sent: message, client_response: clientResponse || null } as never).eq('id', task.id)
       // Log sent message
-      await supabase.from('sent_messages_log').insert({ tenant_id: task.tenant_id, client_id: task.client_id, agent_id: userId, task_id: task.id, channel: task.channel, message } as never)
+      await supabase.from('sent_messages_log').insert({  client_id: task.client_id, agent_id: userId, task_id: task.id, channel: task.channel, message } as never)
       if (error) { handleSupabaseError(error); throw error }
-      await supabase.from('history').insert({ tenant_id: task.tenant_id, client_id: task.client_id, agent_id: userId, type: task.channel === 'whatsapp' ? 'whatsapp_message' : task.channel === 'sms' ? 'sms' : 'call', title: `Tache executee: ${task.title}` } as never)
+      await supabase.from('history').insert({  client_id: task.client_id, agent_id: userId, type: task.channel === 'whatsapp' ? 'whatsapp_message' : task.channel === 'sms' ? 'sms' : 'call', title: `Tache executee: ${task.title}` } as never)
       await supabase.from('clients').update({ last_contact_at: new Date().toISOString() } as never).eq('id', task.client_id)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche marquée comme exécutée'); onClose() },

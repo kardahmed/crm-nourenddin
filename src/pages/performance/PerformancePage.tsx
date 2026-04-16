@@ -83,7 +83,7 @@ export function PerformancePage() {
   const { data, isLoading } = useQuery({
     queryKey: ['perf', rangeStart, rangeEnd, agentFilter, projectFilter],
     queryFn: async () => {
-      if (!tenantId) throw new Error('No tenant')
+      
 
       const agentEq = isAgent && userId ? userId : agentFilter !== 'all' ? agentFilter : null
 

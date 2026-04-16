@@ -226,7 +226,7 @@ export function LanguageSection() {
 
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
-    if (tenantId) await supabase.from('tenant_settings').update({ language: lang } as never)
+    if (true) await supabase.from('tenant_settings').update({ language: lang } as never)
     toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 

@@ -47,10 +47,10 @@ export function BrandingSection() {
 
   async function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (!file || !tenantId) return
+    if (!file) return
     setUploading(true)
     const ext = file.name.split('.').pop() ?? 'png'
-    const path = `${tenantId}/branding/logo-${Date.now()}.${ext}`
+    const path = `branding/logo-${Date.now()}.${ext}`
     const { error } = await supabase.storage.from('landing-assets').upload(path, file)
     if (error) { toast.error('Erreur upload'); setUploading(false); return }
     const { data: urlData } = supabase.storage.from('landing-assets').getPublicUrl(path)

@@ -44,7 +44,7 @@ export function NotificationBell() {
   const { data: notifications = [] } = useQuery({
     queryKey: ['tenant-notifications'],
     queryFn: async () => {
-      if (!tenantId) return []
+      return
       const { data } = await supabase
         .from('notifications')
         .select('id, type, title, message, read, created_at')
@@ -61,7 +61,7 @@ export function NotificationBell() {
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      if (!tenantId) return
+      
       await supabase.from('notifications').update({ read: true } as never).eq('read', false)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-notifications'] }),

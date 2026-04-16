@@ -30,7 +30,7 @@ export function FeaturesSection() {
   const { data: tenantPlan } = useQuery({
     queryKey: ['tenant-plan'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenants').select('plan' as never).eq('id', tenantId!).single()
+      const { data } = await supabase.from('tenants').select('feature_payment_tracking' as never).limit(1).single()
       return (data as unknown as { plan: string } | null)?.plan ?? 'free'
     },
     enabled: true,

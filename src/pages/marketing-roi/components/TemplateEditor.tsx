@@ -102,9 +102,9 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
 
   const handleImageUpload = async (files: File[], blockId: string) => {
     const file = files[0]
-    if (!file || !tenantId) return
+    if (!file) return
     const ext = file.name.split('.').pop()
-    const path = `${tenantId}/email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
+    const path = `email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
     const { error } = await supabase.storage.from('email-assets').upload(path, file)
     if (error) { toast.error('Erreur upload'); return }
     const { data: urlData } = supabase.storage.from('email-assets').getPublicUrl(path)

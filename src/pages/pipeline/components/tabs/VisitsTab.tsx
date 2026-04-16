@@ -16,7 +16,7 @@ import { format, isAfter } from 'date-fns'
 import toast from 'react-hot-toast'
 import { inputClass } from './shared'
 
-export function VisitsTab({ clientId, tenantId }: { clientId: string; tenantId: string }) {
+export function VisitsTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
   const [showCreate, setShowCreate] = useState(false)
   const userId = useAuthStore((s) => s.session?.user?.id)

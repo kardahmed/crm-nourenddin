@@ -26,7 +26,7 @@ interface ClientInfo {
   phone: string
   nin_cin: string | null
   pipeline_stage: PipelineStage
-  tenant_id: string
+
 }
 
 interface AvailableUnit {
@@ -217,7 +217,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
         const unitFinal = unitPrice - unitDiscount
 
         const { data: sale, error: saleErr } = await supabase.from('sales').insert({
-          tenant_id: client.tenant_id,
+          
           client_id: client.id,
           agent_id: userId,
           project_id: formData.projectId,
@@ -237,7 +237,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           const saleId = (sale as { id: string }).id
           for (const line of schedule) {
             await supabase.from('payment_schedules').insert({
-              tenant_id: client.tenant_id,
+              
               sale_id: saleId,
               installment_number: line.number,
               due_date: line.date,
@@ -252,7 +252,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           const saleId = (sale as { id: string }).id
           for (const a of formData.amenities) {
             await supabase.from('sale_amenities').insert({
-              tenant_id: client.tenant_id,
+              
               sale_id: saleId,
               description: a.description,
               price: a.price,
@@ -267,7 +267,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
       // 5. History
       const unitCodes = selectedUnitsData.map(u => u.code).join(', ')
       await supabase.from('history').insert({
-        tenant_id: client.tenant_id,
+        
         client_id: client.id,
         agent_id: userId,
         type: 'sale',

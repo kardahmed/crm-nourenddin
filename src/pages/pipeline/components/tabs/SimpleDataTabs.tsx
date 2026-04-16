@@ -95,9 +95,14 @@ export function ScheduleTab({ clientId }: { clientId: string }) {
   const { data: schedules = [] } = useQuery({
     queryKey: ['client-schedules', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('payment_schedules').select('*, sales(units(code))').eq('tenant_id', (await supabase.from('clients').select('tenant_id').eq('id', clientId).single()).data?.tenant_id ?? '').order('due_date')
+      const { data, error } = await supabase.from('payment_schedules').select('*, sales(units(code), client_id)').order('due_date')
+      // Filter by client_id in-memory (schedules linked to this client's sales)
+      const filtered = (data ?? []).filter((r: Record<string, unknown>) => {
+        const s = r.sales as { client_id: string } | null
+        return s?.client_id === clientId
+      })
       if (error) return []
-      return data as unknown as Array<Record<string, unknown>>
+      return filtered as unknown as Array<Record<string, unknown>>
     },
   })
 
@@ -188,7 +193,7 @@ export function DocumentsTab({ clientId }: { clientId: string }) {
 }
 
 /* ═══ Charges ═══ */
-export function ChargesTab({ clientId, tenantId }: { clientId: string; tenantId: string }) {
+export function ChargesTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
   const [showCreate, setShowCreate] = useState(false)
   const qc = useQueryClient()
@@ -344,7 +349,7 @@ export function NotesTab({ clientId }: { clientId: string }) {
 }
 
 /* ═══ Tasks ═══ */
-export function TasksTab({ clientId, tenantId }: { clientId: string; tenantId: string }) {
+export function TasksTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
   const [showCreate, setShowCreate] = useState(false)
   const [title, setTitle] = useState(''); const [dueAt, setDueAt] = useState('')

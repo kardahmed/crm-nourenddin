@@ -25,7 +25,7 @@ interface ClientInfo {
   full_name: string
   phone: string
   pipeline_stage: PipelineStage
-  tenant_id: string
+
 }
 
 interface PlanVisitModalProps {
@@ -62,10 +62,10 @@ export function PlanVisitModal({
   const { data: clientsList = [] } = useQuery({
     queryKey: ['clients-for-visit'],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage, tenant_id').order('full_name')
+      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage').order('full_name')
       return (data ?? []) as ClientInfo[]
     },
-    enabled: !client && !!tenantId,
+    enabled: !client,
   })
 
   const effectiveClient = client ?? clientsList.find(c => c.id === selectedClientId) ?? null
@@ -80,7 +80,7 @@ export function PlanVisitModal({
 
       // 1. Create visit
       const { error: visitErr } = await supabase.from('visits').insert({
-        tenant_id: effectiveClient.tenant_id,
+        
         client_id: effectiveClient.id,
         agent_id: userId,
         scheduled_at: scheduledAt,
@@ -97,7 +97,7 @@ export function PlanVisitModal({
 
       // 3. History entry
       const { error: histErr } = await supabase.from('history').insert({
-        tenant_id: effectiveClient.tenant_id,
+        
         client_id: effectiveClient.id,
         agent_id: userId,
         type: 'visit_planned',

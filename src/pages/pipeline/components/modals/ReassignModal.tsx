@@ -14,10 +14,10 @@ interface Props {
   onClose: () => void
   clientId: string
   currentAgentId: string | null
-  tenantId: string
+
 }
 
-export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenantId }: Props) {
+export function ReassignModal({ isOpen, onClose, clientId, currentAgentId }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   const [selectedAgent, setSelectedAgent] = useState(currentAgentId ?? '')

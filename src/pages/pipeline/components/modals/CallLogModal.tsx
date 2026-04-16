@@ -12,12 +12,12 @@ interface CallLogModalProps {
   onClose: () => void
   clientId: string
   clientName: string
-  tenantId: string
+
   agentId: string
   onSuccess?: () => void
 }
 
-export function CallLogModal({ isOpen, onClose, clientId, clientName, tenantId, agentId, onSuccess }: CallLogModalProps) {
+export function CallLogModal({ isOpen, onClose, clientId, clientName, agentId, onSuccess }: CallLogModalProps) {
   const [duration, setDuration] = useState('5')
   const [result, setResult] = useState<'interested' | 'callback' | 'not_interested'>('interested')
   const [notes, setNotes] = useState('')

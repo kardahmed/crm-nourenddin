@@ -21,7 +21,7 @@ import { TaskDetailModal } from './components/TaskDetailModal'
 interface ClientTask {
   id: string; title: string; stage: string; status: string; priority: string
   channel: string; scheduled_at: string | null; completed_at: string | null
-  created_at: string; client_id: string; agent_id: string | null; tenant_id: string
+  created_at: string; client_id: string; agent_id: string | null
   client?: { full_name: string; phone: string; pipeline_stage: string } | null
   agent?: { first_name: string; last_name: string } | null
 }
@@ -110,7 +110,7 @@ export function TasksPage() {
     queryFn: async () => {
       const [agentRes, tenantRes] = await Promise.all([
         supabase.from('users').select('first_name, last_name, phone').eq('id', userId!).single(),
-        supabase.from('tenants').select('name, phone').eq('id', tenantId!).single(),
+        Promise.resolve({ data: null, error: null }),
       ])
       return {
         agent_nom: `${(agentRes.data as Record<string,string>)?.first_name ?? ''} ${(agentRes.data as Record<string,string>)?.last_name ?? ''}`.trim(),
@@ -119,7 +119,7 @@ export function TasksPage() {
         agence: (tenantRes.data as Record<string,string>)?.name ?? '',
       }
     },
-    enabled: !!userId && !!tenantId,
+    enabled: !!userId,
   })
 
   // Fetch message templates
@@ -208,7 +208,7 @@ export function TasksPage() {
 
     // Log in history
     await supabase.from('history').insert({
-      tenant_id: task.tenant_id, client_id: task.client_id, agent_id: userId,
+       client_id: task.client_id, agent_id: userId,
       type: task.channel === 'whatsapp' ? 'whatsapp_message' : task.channel === 'sms' ? 'sms' : task.channel === 'call' ? 'call' : 'note',
       title: `Tache executee: ${task.title}`,
     } as never)
@@ -297,7 +297,7 @@ export function TasksPage() {
       {tab === 'config' && <TaskConfigSection />}
 
       {/* Messages tab */}
-      {tab === 'messages' && <MessagesTemplateTab tenantId={tenantId!} />}
+      {tab === 'messages' && <MessagesTemplateTab />}
 
       {/* Task list */}
       {!['config', 'messages'].includes(tab) && (
@@ -461,7 +461,7 @@ const TRIGGER_LABELS: Record<string, string> = {
 const CHANNEL_LABELS_MSG: Record<string, string> = { whatsapp: 'WhatsApp', sms: 'SMS', email: 'Email', call: 'Appel' }
 const VARIABLES_LIST = ['{client_nom}','{client_prenom}','{client_phone}','{client_budget}','{agent_nom}','{agent_prenom}','{agent_phone}','{agence}','{projet}','{prix_min}','{unite_visitee}','{prix_unite}','{date_visite}','{heure_visite}','{adresse_projet}','{lien_maps}','{montant_echeance}','{date_echeance}','{apport}','{nb_echeances}']
 
-function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
+function MessagesTemplateTab() {
   const qc = useQueryClient()
   const [editId, setEditId] = useState<string | null>(null)
   const [editBody, setEditBody] = useState('')

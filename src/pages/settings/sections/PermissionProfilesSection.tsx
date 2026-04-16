@@ -132,7 +132,6 @@ export function PermissionProfilesSection() {
       {(showCreate || editProfile) && (
         <ProfileEditor
           profile={editProfile}
-          tenantId={tenantId!}
           onClose={() => { setShowCreate(false); setEditProfile(null) }}
           onSaved={() => { qc.invalidateQueries({ queryKey: ['permission-profiles'] }); setShowCreate(false); setEditProfile(null) }}
         />
@@ -141,9 +140,9 @@ export function PermissionProfilesSection() {
   )
 }
 
-function ProfileEditor({ profile, tenantId, onClose, onSaved }: {
+function ProfileEditor({ profile, onClose, onSaved }: {
   profile: Profile | null
-  tenantId: string
+
   onClose: () => void
   onSaved: () => void
 }) {

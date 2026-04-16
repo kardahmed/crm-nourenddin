@@ -240,15 +240,15 @@ export function CampaignsTab() {
       )}
 
       {/* Create campaign modal */}
-      {showCreate && <CreateCampaignModal tenantId={tenantId!} onClose={() => setShowCreate(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ['marketing-campaigns'] }); setShowCreate(false) }} />}
+      {showCreate && <CreateCampaignModal onClose={() => setShowCreate(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ['marketing-campaigns'] }); setShowCreate(false) }} />}
 
       {/* Add expense to campaign modal */}
-      {showAddExpense && <AddExpenseToCampaignModal tenantId={tenantId!} campaignId={showAddExpense} onClose={() => setShowAddExpense(null)} onSaved={() => { qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); setShowAddExpense(null) }} />}
+      {showAddExpense && <AddExpenseToCampaignModal campaignId={showAddExpense} onClose={() => setShowAddExpense(null)} onSaved={() => { qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); setShowAddExpense(null) }} />}
     </div>
   )
 }
 
-function CreateCampaignModal({ tenantId, onClose, onSaved }: { tenantId: string; onClose: () => void; onSaved: () => void }) {
+function CreateCampaignModal({ onClose, onSaved }: {  onClose: () => void; onSaved: () => void }) {
   const [name, setName] = useState('')
   const [source, setSource] = useState('facebook_ads')
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -330,8 +330,8 @@ function CreateCampaignModal({ tenantId, onClose, onSaved }: { tenantId: string;
   )
 }
 
-function AddExpenseToCampaignModal({ tenantId, campaignId, onClose, onSaved }: {
-  tenantId: string; campaignId: string; onClose: () => void; onSaved: () => void
+function AddExpenseToCampaignModal({ campaignId, onClose, onSaved }: {
+   campaignId: string; onClose: () => void; onSaved: () => void
 }) {
   const [category, setCategory] = useState('ads_digital')
   const [subcategory, setSubcategory] = useState('')

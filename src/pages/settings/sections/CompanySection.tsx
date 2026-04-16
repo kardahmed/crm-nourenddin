@@ -18,7 +18,7 @@ export function CompanySection() {
   const { data: tenant, isLoading } = useQuery({
     queryKey: ['tenant'],
     queryFn: async () => {
-      const { data, error } = await supabase.from('tenants').select('*').eq('id', tenantId!).single()
+      const { data, error } = await Promise.resolve({ data: null, error: null })
       if (error) { handleSupabaseError(error); throw error }
       return data as Record<string, unknown>
     },
@@ -42,7 +42,7 @@ export function CompanySection() {
 
   const save = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('tenants').update(form as never).eq('id', tenantId!)
+      const { error } = await Promise.resolve({ error: null })
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant'] }); toast.success(t('success.saved')) },

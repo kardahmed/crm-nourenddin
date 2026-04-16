@@ -90,7 +90,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
 
   const deleteDoc = useMutation({
     mutationFn: async (name: string) => {
-      const path = `${tenantId}/${clientId}/${name}`
+      const path = `${clientId}/${name}`
       const { error } = await supabase.storage.from('client-documents').remove([path])
       if (error) { handleSupabaseError(error); throw error }
     },

@@ -24,15 +24,18 @@ Deno.serve(async (req: Request) => {
 
     // 1. Verify the caller is an authenticated admin
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) return json({ error: 'Missing Authorization header' }, 401)
+    console.log('[create-user] Authorization header present:', !!authHeader)
+    if (!authHeader) return json({ error: 'Session manquante — reconnectez-vous.' }, 401)
 
     const userClient = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     })
-    const { data: callerData, error: callerErr } = await userClient.auth.getUser(
-      authHeader.replace('Bearer ', ''),
-    )
-    if (callerErr || !callerData?.user) return json({ error: 'Invalid token' }, 401)
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    const { data: callerData, error: callerErr } = await userClient.auth.getUser(token)
+    if (callerErr || !callerData?.user) {
+      console.warn('[create-user] Token invalid:', callerErr?.message)
+      return json({ error: 'Session expirée — déconnectez-vous et reconnectez-vous.' }, 401)
+    }
 
     const { data: callerRow } = await userClient
       .from('users')
@@ -40,8 +43,10 @@ Deno.serve(async (req: Request) => {
       .eq('id', callerData.user.id)
       .single()
     if (!callerRow || (callerRow as { role: string }).role !== 'admin') {
-      return json({ error: 'Only admins can create users' }, 403)
+      console.warn('[create-user] Caller is not admin:', callerData.user.id)
+      return json({ error: 'Seul un administrateur peut créer des comptes.' }, 403)
     }
+    console.log('[create-user] Caller admin verified:', callerData.user.email)
 
     // 2. Parse payload
     const { email, first_name, last_name, phone, role, permission_profile_id } =

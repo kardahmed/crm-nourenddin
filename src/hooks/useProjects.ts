@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useTenant } from './useTenant'
 import toast from 'react-hot-toast'
 import type { Database } from '@/types'
 
@@ -9,16 +8,14 @@ type ProjectInsert = Database['public']['Tables']['projects']['Insert']
 type ProjectUpdate = Database['public']['Tables']['projects']['Update']
 
 export function useProjects() {
-  const tenantId = useTenant()
   const qc = useQueryClient()
 
   const projectsQuery = useQuery({
-    queryKey: ['projects', tenantId],
+    queryKey: ['projects'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
 
       if (error) { handleSupabaseError(error); throw error }
@@ -27,10 +24,10 @@ export function useProjects() {
   })
 
   const createProject = useMutation({
-    mutationFn: async (input: Omit<ProjectInsert, 'tenant_id'>) => {
+    mutationFn: async (input: ProjectInsert) => {
       const { data, error } = await supabase
         .from('projects')
-        .insert({ ...input, tenant_id: tenantId })
+        .insert(input)
         .select()
         .single()
 
@@ -87,21 +84,20 @@ export function useProjects() {
   }
 }
 
-/** Standalone hook for fetching a single project by ID (defense-in-depth with tenant_id) */
-export function useProjectById(id: string, tenantId: string) {
+/** Standalone hook for fetching a single project by ID */
+export function useProjectById(id: string) {
   return useQuery({
-    queryKey: ['projects', id, tenantId],
+    queryKey: ['projects', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*, units(*)')
         .eq('id', id)
-        .eq('tenant_id', tenantId)
         .single()
 
       if (error) { handleSupabaseError(error); throw error }
       return data
     },
-    enabled: !!id && !!tenantId,
+    enabled: !!id,
   })
 }

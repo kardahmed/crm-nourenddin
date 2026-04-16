@@ -29,24 +29,22 @@ export interface StageStat {
 }
 
 export function usePipelineStats() {
-  const { tenantId, session, role } = useAuthStore()
+  const { session, role } = useAuthStore()
   const userId = session?.user?.id
   const isAgent = role === 'agent'
 
   return useQuery({
-    queryKey: ['pipeline-stats', tenantId, userId, role],
+    queryKey: ['pipeline-stats', userId, role],
     queryFn: async () => {
-      if (!tenantId) throw new Error('No tenant')
-
       // Fetch settings, clients, tasks in parallel
       const [settingsRes, clientsRes, tasksRes] = await Promise.all([
-        supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId).maybeSingle(),
+        supabase.from('app_settings').select('*').limit(1).single(),
         (() => {
-          let q = supabase.from('clients').select('id, pipeline_stage, confirmed_budget, last_contact_at, created_at, is_priority, interest_level').eq('tenant_id', tenantId)
+          let q = supabase.from('clients').select('id, pipeline_stage, confirmed_budget, last_contact_at, created_at, is_priority, interest_level')
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
-        supabase.from('tasks').select('id').eq('tenant_id', tenantId).eq('status', 'pending')
+        supabase.from('tasks').select('id').eq('status', 'pending')
           .then(r => isAgent && userId ? { ...r, data: r.data } : r), // RLS handles filtering
       ])
 
@@ -123,6 +121,6 @@ export function usePipelineStats() {
 
       return { alerts, kpis, stageStats }
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 }

@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Phone, MessageCircle, Mail, Calendar, Clock, TrendingUp, Users, ArrowRight, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { PIPELINE_STAGES } from '@/types'
 import type { PipelineStage } from '@/types'
 import { KPICard, LoadingSpinner } from '@/components/common'
@@ -25,15 +24,13 @@ interface StageStats {
 }
 
 export function PipelineAnalytics() {
-  const tenantId = useAuthStore(s => s.tenantId)
-
   const { data, isLoading } = useQuery({
-    queryKey: ['pipeline-analytics', tenantId],
+    queryKey: ['pipeline-analytics'],
     queryFn: async () => {
       const [clientsRes, historyRes, visitsRes] = await Promise.all([
-        supabase.from('clients').select('id, pipeline_stage, created_at, last_contact_at').eq('tenant_id', tenantId!),
-        supabase.from('history').select('client_id, type, created_at').eq('tenant_id', tenantId!),
-        supabase.from('visits').select('client_id, status').eq('tenant_id', tenantId!),
+        supabase.from('clients').select('id, pipeline_stage, created_at, last_contact_at'),
+        supabase.from('history').select('client_id, type, created_at'),
+        supabase.from('visits').select('client_id, status'),
       ])
 
       const clients = (clientsRes.data ?? []) as Array<{ id: string; pipeline_stage: string; created_at: string; last_contact_at: string | null }>
@@ -98,7 +95,7 @@ export function PipelineAnalytics() {
 
       return { stats, totalClients, totalCalls, totalMessages, totalVisits, avgConversion }
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   if (isLoading || !data) return <LoadingSpinner size="lg" className="h-96" />

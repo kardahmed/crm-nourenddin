@@ -62,7 +62,6 @@ const labelClass = 'text-[11px] font-medium text-immo-text-muted'
 /* ═══ Component ═══ */
 
 export function GoalsPage() {
-  const { tenantId } = useAuthStore()
   const { canManageGoals, isAgent } = usePermissions()
   const userId = useAuthStore((s) => s.session?.user?.id)
 
@@ -72,12 +71,11 @@ export function GoalsPage() {
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
-    queryKey: ['goal-agents', tenantId],
+    queryKey: ['goal-agents'],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
-    enabled: !!tenantId,
   })
 
   const agentMap = useMemo(() => {
@@ -88,9 +86,9 @@ export function GoalsPage() {
 
   // Fetch goals
   const { data: rawGoals = [], isLoading: loadingGoals } = useQuery({
-    queryKey: ['goals', tenantId],
+    queryKey: ['goals'],
     queryFn: async () => {
-      let q = supabase.from('agent_goals').select('*').eq('tenant_id', tenantId!)
+      let q = supabase.from('agent_goals').select('*')
       if (isAgent && userId) q = q.eq('agent_id', userId)
       const { data, error } = await q.order('created_at', { ascending: false })
       if (error) { handleSupabaseError(error); throw error }
@@ -100,14 +98,13 @@ export function GoalsPage() {
         started_at: string; ended_at: string
       }>
     },
-    enabled: !!tenantId,
   })
 
   // Fetch actuals for all agents with goals
   const agentIds = useMemo(() => [...new Set(rawGoals.map(g => g.agent_id))], [rawGoals])
 
   const { data: actuals = new Map<string, AgentActuals>(), isLoading: loadingActuals } = useQuery({
-    queryKey: ['goal-actuals', tenantId, agentIds.join(',')],
+    queryKey: ['goal-actuals', agentIds.join(',')],
     queryFn: async () => {
       if (agentIds.length === 0) return new Map<string, AgentActuals>()
 
@@ -144,7 +141,7 @@ export function GoalsPage() {
 
       return map
     },
-    enabled: !!tenantId && agentIds.length > 0,
+    enabled: agentIds.length > 0,
   })
 
   // Build goal rows with computed values
@@ -310,7 +307,6 @@ export function GoalsPage() {
         isOpen={showCreate}
         onClose={() => setShowCreate(false)}
         agents={agents}
-        tenantId={tenantId!}
       />
     </div>
   )
@@ -318,11 +314,10 @@ export function GoalsPage() {
 
 /* ═══ Create Goal Modal ═══ */
 
-function CreateGoalModal({ isOpen, onClose, agents, tenantId }: {
+function CreateGoalModal({ isOpen, onClose, agents }: {
   isOpen: boolean
   onClose: () => void
   agents: Array<{ id: string; first_name: string; last_name: string }>
-  tenantId: string
 }) {
   const qc = useQueryClient()
   const [agentId, setAgentId] = useState('')
@@ -343,7 +338,6 @@ function CreateGoalModal({ isOpen, onClose, agents, tenantId }: {
   const createGoal = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('agent_goals').insert({
-        tenant_id: tenantId,
         agent_id: agentId,
         metric,
         period,

@@ -23,7 +23,6 @@ import { supabase } from '@/lib/supabase'
 
 interface ClientTabsProps {
   clientId: string
-  tenantId: string
 }
 
 const TAB_KEYS = [
@@ -47,7 +46,7 @@ const TAB_ICONS: Record<TabKey, typeof Calendar> = {
   history: Clock,
 }
 
-export function ClientTabs({ clientId, tenantId }: ClientTabsProps) {
+export function ClientTabs({ clientId }: ClientTabsProps) {
   const { t } = useTranslation()
   const [searchParams] = useSearchParams()
   const urlTab = searchParams.get('tab') as TabKey | null
@@ -94,17 +93,17 @@ export function ClientTabs({ clientId, tenantId }: ClientTabsProps) {
 
       {/* Tab content */}
       <div className="pt-5">
-        {activeTab === 'visits' && <VisitsTab clientId={clientId} tenantId={tenantId} />}
+        {activeTab === 'visits' && <VisitsTab clientId={clientId} />}
         {activeTab === 'reservation' && <ReservationTab clientId={clientId} />}
         {activeTab === 'sale' && <SaleTab clientId={clientId} />}
         {activeTab === 'schedule' && <ScheduleTab clientId={clientId} />}
         {activeTab === 'payment' && <PaymentTab clientId={clientId} />}
         {activeTab === 'documents' && <DocumentsTab clientId={clientId} />}
-        {activeTab === 'charges' && <ChargesTab clientId={clientId} tenantId={tenantId} />}
+        {activeTab === 'charges' && <ChargesTab clientId={clientId} />}
         {activeTab === 'notes' && <NotesTab clientId={clientId} />}
-        {activeTab === 'tasks' && <TasksTab clientId={clientId} tenantId={tenantId} />}
+        {activeTab === 'tasks' && <TasksTab clientId={clientId} />}
         {activeTab === 'auto_tasks' && clientInfo && (
-          <ClientTasksTab clientId={clientId} clientName={clientInfo.full_name} clientPhone={clientInfo.phone} clientStage={clientInfo.pipeline_stage} tenantId={tenantId} />
+          <ClientTasksTab clientId={clientId} clientName={clientInfo.full_name} clientPhone={clientInfo.phone} clientStage={clientInfo.pipeline_stage} />
         )}
         {activeTab === 'history' && <HistoryTab clientId={clientId} />}
       </div>

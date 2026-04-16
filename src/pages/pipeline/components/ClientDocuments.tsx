@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Upload, FileText, Trash2, Download, Eye, CheckCircle, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 // import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/common'
 import { format } from 'date-fns'
@@ -34,7 +33,6 @@ interface Props {
 }
 
 export function ClientDocuments({ clientId, cinVerified }: Props) {
-  const { tenantId } = useAuthStore()
   const qc = useQueryClient()
   const [uploading, setUploading] = useState(false)
 
@@ -42,7 +40,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
   const { data: documents = [] } = useQuery({
     queryKey: ['client-documents', clientId],
     queryFn: async () => {
-      const path = `${tenantId}/${clientId}`
+      const path = `${clientId}`
       const { data, error } = await supabase.storage.from('client-documents').list(path, { sortBy: { column: 'created_at', order: 'desc' } })
       if (error) return []
       return (data ?? []).map(f => ({
@@ -54,17 +52,17 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
         created_at: f.created_at ?? new Date().toISOString(),
       })) as Document[]
     },
-    enabled: !!tenantId && !!clientId,
+    enabled: !!clientId,
   })
 
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, docType: string) {
     const file = e.target.files?.[0]
-    if (!file || !tenantId) return
+    if (!file) return
 
     setUploading(true)
     const ext = file.name.split('.').pop() ?? 'pdf'
     const fileName = `${docType}-${Date.now()}.${ext}`
-    const path = `${tenantId}/${clientId}/${fileName}`
+    const path = `${clientId}/${fileName}`
 
     const { error } = await supabase.storage.from('client-documents').upload(path, file)
     if (error) {

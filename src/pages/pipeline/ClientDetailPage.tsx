@@ -98,7 +98,7 @@ export function ClientDetailPage() {
 
   // History entry creation for quick actions
   const addHistoryEntry = async (input: { client_id: string; agent_id: string; type: string; title: string }) => {
-    await supabase.from('history').insert({ tenant_id: client?.tenant_id, ...input } as never)
+    await supabase.from('history').insert({ ...input } as never)
   }
 
   // Project names lookup
@@ -300,7 +300,6 @@ export function ClientDetailPage() {
         clientPhone={client.phone}
         clientEmail={client.email}
         clientStage={client.pipeline_stage}
-        tenantId={client.tenant_id}
         agentId={userId ?? ''}
         agentName={agentName ?? undefined}
         projectName={client.interested_projects?.[0] && projectMap ? projectMap.get(client.interested_projects[0]) ?? undefined : undefined}
@@ -374,7 +373,7 @@ export function ClientDetailPage() {
       <Separator className="bg-immo-border-default" />
 
       {/* Client tabs: Visites, Réservation, Vente, etc. */}
-      <ClientTabs clientId={client.id} tenantId={client.tenant_id} />
+      <ClientTabs clientId={client.id} />
 
       {/* Edit client modal */}
       <ClientFormModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} client={client} />
@@ -394,14 +393,14 @@ export function ClientDetailPage() {
       <PlanVisitModal
         isOpen={showVisitModal}
         onClose={() => setShowVisitModal(false)}
-        client={{ id: client.id, full_name: client.full_name, phone: client.phone, pipeline_stage: client.pipeline_stage, tenant_id: client.tenant_id }}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone, pipeline_stage: client.pipeline_stage }}
       />
 
       {/* AI suggestions modal */}
       <AISuggestionsModal
         isOpen={showAIModal}
         onClose={() => setShowAIModal(false)}
-        client={{ id: client.id, full_name: client.full_name, phone: client.phone, confirmed_budget: client.confirmed_budget, desired_unit_types: client.desired_unit_types, interested_projects: client.interested_projects, interest_level: client.interest_level, pipeline_stage: client.pipeline_stage, tenant_id: client.tenant_id }}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone, confirmed_budget: client.confirmed_budget, desired_unit_types: client.desired_unit_types, interested_projects: client.interested_projects, interest_level: client.interest_level, pipeline_stage: client.pipeline_stage }}
       />
 
       {/* Reassign agent modal */}
@@ -411,7 +410,6 @@ export function ClientDetailPage() {
           onClose={() => setShowReassignModal(false)}
           clientId={client.id}
           currentAgentId={client.agent_id}
-          tenantId={client.tenant_id}
         />
       )}
     </div>

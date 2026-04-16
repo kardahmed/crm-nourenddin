@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useClients } from '@/hooks/useClients'
 import { useProjects } from '@/hooks/useProjects'
-import { useAuthStore } from '@/store/authStore'
 import { Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -52,22 +51,20 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
   const isEdit = !!client
   const { createClient, updateClient } = useClients()
   const { projects } = useProjects()
-  const tenantId = useAuthStore((s) => s.tenantId)
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
-    queryKey: ['tenant-agents', tenantId],
+    queryKey: ['tenant-agents'],
     queryFn: async () => {
       const { data } = await supabase
         .from('users')
         .select('id, first_name, last_name')
-        .eq('tenant_id', tenantId!)
         .in('role', ['agent', 'admin'])
         .eq('status', 'active')
         .order('first_name')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
-    enabled: !!tenantId && isOpen,
+    enabled: isOpen,
   })
 
   const {

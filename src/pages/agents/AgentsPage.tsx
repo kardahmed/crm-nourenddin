@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { USER_ROLE_LABELS } from '@/types'
 import type { UserRole } from '@/types'
-import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
 import { PermissionProfilesSection } from '@/pages/settings/sections/PermissionProfilesSection'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -49,9 +48,7 @@ function nameToColor(name: string): string {
 
 export function AgentsPage() {
   const navigate = useNavigate()
-  const { tenantId } = useAuthStore()
   const { canManageAgents } = usePermissions()
-  const { canAddAgent, usage, limits } = usePlanEnforcement()
   const qc = useQueryClient()
 
   const [activeTab, setActiveTab] = useState<'agents' | 'permissions'>('agents')
@@ -61,12 +58,11 @@ export function AgentsPage() {
 
   // Fetch agents with counts
   const { data: agents = [], isLoading } = useQuery({
-    queryKey: ['agents-list', tenantId],
+    queryKey: ['agents-list'],
     queryFn: async () => {
       const { data: users, error } = await supabase
         .from('users')
         .select('id, first_name, last_name, email, phone, role, status, last_activity')
-        .eq('tenant_id', tenantId!)
         .order('first_name')
       if (error) { handleSupabaseError(error); throw error }
 
@@ -74,8 +70,8 @@ export function AgentsPage() {
       if (agentIds.length === 0) return []
 
       const [clientsRes, salesRes] = await Promise.all([
-        supabase.from('clients').select('agent_id').eq('tenant_id', tenantId!),
-        supabase.from('sales').select('agent_id').eq('tenant_id', tenantId!).eq('status', 'active'),
+        supabase.from('clients').select('agent_id'),
+        supabase.from('sales').select('agent_id').eq('status', 'active'),
       ])
 
       const clientCounts = new Map<string, number>()
@@ -94,7 +90,6 @@ export function AgentsPage() {
         sales_count: saleCounts.get(u.id) ?? 0,
       }))
     },
-    enabled: !!tenantId,
   })
 
   // Deactivate agent
@@ -161,9 +156,7 @@ export function AgentsPage() {
         {canManageAgents && (
           <Button
             onClick={() => setShowCreate(true)}
-            disabled={!canAddAgent}
-            className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={!canAddAgent ? 'Limite atteinte — Passez au plan superieur' : undefined}
+            className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
           >
             <Plus className="mr-1.5 h-4 w-4" /> Ajouter un agent
           </Button>
@@ -240,7 +233,7 @@ export function AgentsPage() {
       </div>
 
       {/* Create modal */}
-      <CreateAgentModal isOpen={showCreate} onClose={() => setShowCreate(false)} tenantId={tenantId!} />
+      <CreateAgentModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
 
       {/* Deactivate confirm */}
       <ConfirmDialog
@@ -261,7 +254,7 @@ export function AgentsPage() {
 
 /* ═══ Create Agent Modal ═══ */
 
-function CreateAgentModal({ isOpen, onClose, tenantId }: { isOpen: boolean; onClose: () => void; tenantId: string }) {
+function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const qc = useQueryClient()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -286,7 +279,6 @@ function CreateAgentModal({ isOpen, onClose, tenantId }: { isOpen: boolean; onCl
       // Insert in users table
       const { error: userErr } = await supabase.from('users').insert({
         id: authData.user.id,
-        tenant_id: tenantId,
         first_name: firstName,
         last_name: lastName,
         email,

@@ -11,15 +11,14 @@ import { fr } from 'date-fns/locale'
 export function AgentDashboard() {
   const { t } = useTranslation()
   const userId = useAuthStore(s => s.session?.user?.id)
-  const tenantId = useAuthStore(s => s.tenantId)
 
   const { data, isLoading } = useQuery({
-    queryKey: ['agent-dashboard', userId, tenantId],
+    queryKey: ['agent-dashboard', userId],
     queryFn: async () => {
-      if (!userId || !tenantId) throw new Error('Missing context')
+      if (!userId) throw new Error('Missing context')
 
       const [clientsRes, visitsRes, salesRes, goalsRes] = await Promise.all([
-        supabase.from('clients').select('id, full_name, pipeline_stage, last_contact_at, confirmed_budget').eq('tenant_id', tenantId).eq('agent_id', userId),
+        supabase.from('clients').select('id, full_name, pipeline_stage, last_contact_at, confirmed_budget').eq('agent_id', userId),
         supabase.from('visits').select('id, scheduled_at, status, clients(full_name)').eq('agent_id', userId).gte('scheduled_at', new Date().toISOString().split('T')[0]).order('scheduled_at').limit(10),
         supabase.from('sales').select('final_price, created_at').eq('agent_id', userId).eq('status', 'active'),
         supabase.from('agent_goals').select('*').eq('agent_id', userId).limit(1).maybeSingle(),
@@ -56,7 +55,7 @@ export function AgentDashboard() {
         goalTarget: (goalsRes.data as Record<string, unknown> | null)?.target_sales_count as number ?? null,
       }
     },
-    enabled: !!userId && !!tenantId,
+    enabled: !!userId,
   })
 
   if (isLoading || !data) return <LoadingSpinner size="lg" className="h-96" />

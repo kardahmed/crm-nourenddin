@@ -14,7 +14,6 @@ interface QuickActionsProps {
   clientPhone: string
   clientEmail?: string | null
   clientStage?: PipelineStage
-  tenantId: string
   agentId: string
   agentName?: string
   projectName?: string
@@ -26,7 +25,7 @@ interface QuickActionsProps {
 
 export function QuickActions({
   clientId, clientName, clientPhone, clientEmail, clientStage,
-  tenantId, agentId, agentName, projectName,
+  agentId, agentName, projectName,
   onAction, onOpenVisit, onOpenAI, onOpenReassign,
 }: QuickActionsProps) {
   const [showCallLog, setShowCallLog] = useState(false)
@@ -120,7 +119,6 @@ export function QuickActions({
         clientName={clientName}
         clientPhone={clientPhone}
         clientStage={clientStage ?? 'accueil'}
-        tenantId={tenantId}
         agentId={agentId}
       />
 
@@ -130,7 +128,6 @@ export function QuickActions({
         onClose={() => setShowCallLog(false)}
         clientId={clientId}
         clientName={clientName}
-        tenantId={tenantId}
         agentId={agentId}
       />
 

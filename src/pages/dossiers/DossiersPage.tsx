@@ -56,8 +56,7 @@ const TAB_I18N: Record<TabKey, string> = {
 export function DossiersPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { tenantId, session } = useAuthStore()
-  const userId = session?.user?.id
+  const userId = useAuthStore(s => s.session?.user?.id)
   const { isAgent } = usePermissions()
 
   const [search, setSearch] = useState('')
@@ -67,16 +66,13 @@ export function DossiersPage() {
 
   // Fetch all data in parallel
   const { data, isLoading } = useQuery({
-    queryKey: ['dossiers', tenantId, userId, isAgent],
+    queryKey: ['dossiers', userId, isAgent],
     queryFn: async () => {
-      if (!tenantId) throw new Error('No tenant')
-
       const [salesRes, reservationsRes, schedulesRes, projectsRes] = await Promise.all([
         (() => {
           let q = supabase
             .from('sales')
             .select('id, client_id, agent_id, project_id, unit_id, final_price, status, clients(full_name, phone), projects(name), units(code), users!sales_agent_id_fkey(first_name, last_name)')
-            .eq('tenant_id', tenantId)
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
@@ -84,18 +80,15 @@ export function DossiersPage() {
           let q = supabase
             .from('reservations')
             .select('id, client_id, agent_id, project_id, unit_id, deposit_amount, status, expires_at, clients(full_name, phone), projects(name), units(code), users!reservations_agent_id_fkey(first_name, last_name)')
-            .eq('tenant_id', tenantId)
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
         supabase
           .from('payment_schedules')
-          .select('sale_id, amount, status, due_date')
-          .eq('tenant_id', tenantId),
+          .select('sale_id, amount, status, due_date'),
         supabase
           .from('projects')
           .select('id, name')
-          .eq('tenant_id', tenantId)
           .eq('status', 'active'),
       ])
 
@@ -110,7 +103,6 @@ export function DossiersPage() {
         projects: (projectsRes.data ?? []) as unknown as Array<{ id: string; name: string }>,
       }
     },
-    enabled: !!tenantId,
   })
 
   const sales = data?.sales ?? []

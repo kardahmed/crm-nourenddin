@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useTenant } from './useTenant'
 import toast from 'react-hot-toast'
 import type { Database, PipelineStage, ClientSource } from '@/types'
 
@@ -26,16 +25,14 @@ function sanitizeSearch(input: string): string {
 }
 
 export function useClients(filters?: ClientFilters) {
-  const tenantId = useTenant()
   const qc = useQueryClient()
 
   const clientsQuery = useQuery({
-    queryKey: ['clients', tenantId, filters],
+    queryKey: ['clients', filters],
     queryFn: async () => {
       let query = supabase
         .from('clients')
         .select('*, users!clients_agent_id_fkey(first_name, last_name)', { count: 'exact' })
-        .eq('tenant_id', tenantId)
 
       if (filters?.stage) query = query.eq('pipeline_stage', filters.stage)
       if (filters?.source) query = query.eq('source', filters.source)
@@ -62,10 +59,10 @@ export function useClients(filters?: ClientFilters) {
   })
 
   const createClient = useMutation({
-    mutationFn: async (input: Omit<ClientInsert, 'tenant_id'>) => {
+    mutationFn: async (input: ClientInsert) => {
       const { data, error } = await supabase
         .from('clients')
-        .insert({ ...input, tenant_id: tenantId })
+        .insert(input)
         .select()
         .single()
 
@@ -127,21 +124,20 @@ export function useClients(filters?: ClientFilters) {
   }
 }
 
-/** Standalone hook for fetching a single client by ID (defense-in-depth with tenant_id) */
-export function useClientById(id: string, tenantId: string) {
+/** Standalone hook for fetching a single client by ID */
+export function useClientById(id: string) {
   return useQuery({
-    queryKey: ['clients', id, tenantId],
+    queryKey: ['clients', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
         .select('*, users!clients_agent_id_fkey(first_name, last_name)')
         .eq('id', id)
-        .eq('tenant_id', tenantId)
         .single()
 
       if (error) { handleSupabaseError(error); throw error }
       return data
     },
-    enabled: !!id && !!tenantId,
+    enabled: !!id,
   })
 }

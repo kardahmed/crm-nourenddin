@@ -1,17 +1,14 @@
 import { useEffect } from 'react'
-import { useAuthStore } from '@/store/authStore'
 
 export function usePushNotifications() {
-  const tenantId = useAuthStore(s => s.tenantId)
-
   useEffect(() => {
-    if (!tenantId || !('Notification' in window)) return
+    if (!('Notification' in window)) return
 
     // Request permission on first load
     if (Notification.permission === 'default') {
       Notification.requestPermission()
     }
-  }, [tenantId])
+  }, [])
 
   function sendPush(title: string, body?: string, url?: string) {
     if (Notification.permission !== 'granted') return

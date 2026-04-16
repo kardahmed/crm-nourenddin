@@ -34,7 +34,6 @@ import type { PipelineStage, Client } from '@/types'
 
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { handleSupabaseError } from '@/lib/errors'
 import toast from 'react-hot-toast'
 import { AlertBar } from './components/AlertBar'
@@ -61,35 +60,32 @@ export function PipelinePage() {
   const { canManageProjects } = usePermissions()
 
   const clients = rawClients as unknown as Client[]
-  const tenantId = useAuthStore((s) => s.tenantId)
 
   // Shared lookup maps for Cards/Table views
   const { data: agentMap } = useQuery({
-    queryKey: ['agent-names', tenantId],
+    queryKey: ['agent-names'],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('users').select('id, first_name, last_name')
       const m = new Map<string, string>()
       for (const u of (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>) m.set(u.id, `${u.first_name} ${u.last_name}`)
       return m
     },
-    enabled: !!tenantId,
     staleTime: 300_000,
   })
 
   const { data: projectMap } = useQuery({
-    queryKey: ['project-names', tenantId],
+    queryKey: ['project-names'],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('projects').select('id, name')
       const m = new Map<string, string>()
       for (const p of (data ?? []) as Array<{ id: string; name: string }>) m.set(p.id, p.name)
       return m
     },
-    enabled: !!tenantId,
     staleTime: 300_000,
   })
 
   const { data: daysInStageMap } = useQuery({
-    queryKey: ['stage-dates', tenantId, clients.length],
+    queryKey: ['stage-dates', clients.length],
     queryFn: async () => {
       const ids = clients.map(c => c.id)
       if (ids.length === 0) return new Map<string, number>()
@@ -105,7 +101,7 @@ export function PipelinePage() {
       }
       return m
     },
-    enabled: !!tenantId && clients.length > 0,
+    enabled: clients.length > 0,
     staleTime: 60_000,
   })
 
@@ -200,7 +196,6 @@ export function PipelinePage() {
           // If note provided, add to history
           if (note) {
             supabase.from('history').insert({
-              tenant_id: tenantId,
               client_id: pendingMove.clientId,
               agent_id: null,
               type: 'note',

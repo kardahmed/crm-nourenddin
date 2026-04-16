@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { DollarSign, Check, Clock, AlertTriangle, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -43,7 +42,6 @@ interface Props {
 }
 
 export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) {
-  const { tenantId } = useAuthStore()
   const qc = useQueryClient()
   const [showAddPayment, setShowAddPayment] = useState(false)
   const [payAmount, setPayAmount] = useState('')
@@ -78,7 +76,6 @@ export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) 
     mutationFn: async () => {
       const nextNum = schedules.length + 1
       const { error } = await supabase.from('payment_schedules').insert({
-        tenant_id: tenantId,
         sale_id: saleId,
         installment_number: nextNum,
         description: payLabel || `Echeance ${nextNum}`,

@@ -40,10 +40,9 @@ interface Props {
   clientName: string
   clientPhone: string
   clientStage: string
-  tenantId: string
 }
 
-export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage, tenantId }: Props) {
+export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('pending')
@@ -62,12 +61,11 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage,
     mutationFn: async () => {
       // Fetch active templates for current stage
       const { data: templates } = await supabase.from('task_templates').select('*')
-        .eq('tenant_id', tenantId).eq('stage', clientStage).eq('is_active', true).order('sort_order')
+        .eq('stage', clientStage).eq('is_active', true).order('sort_order')
 
       if (!templates || templates.length === 0) { toast.error('Aucun template actif pour cette étape'); return }
 
       const newTasks = (templates as TaskTemplate[]).map(t => ({
-        tenant_id: tenantId,
         client_id: clientId,
         template_id: t.id,
         title: t.title,
@@ -123,7 +121,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage,
 
     // Log in history
     supabase.from('history').insert({
-      tenant_id: tenantId, client_id: clientId, agent_id: userId,
+      client_id: clientId, agent_id: userId,
       type: task.channel === 'whatsapp' ? 'whatsapp_message' : task.channel === 'sms' ? 'sms' : task.channel === 'call' ? 'call' : 'note',
       title: `Tache executee: ${task.title}`,
     } as never)

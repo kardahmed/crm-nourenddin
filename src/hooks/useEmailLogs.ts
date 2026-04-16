@@ -4,7 +4,6 @@ import { handleSupabaseError } from '@/lib/errors'
 
 export interface EmailLog {
   id: string
-  tenant_id: string | null
   template: string | null
   recipient: string
   subject: string

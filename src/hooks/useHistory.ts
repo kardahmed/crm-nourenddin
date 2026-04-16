@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useTenant } from './useTenant'
 import type { Database, HistoryType } from '@/types'
 
 type HistoryInsert = Database['public']['Tables']['history']['Insert']
@@ -11,7 +10,6 @@ interface HistoryFilters {
 }
 
 export function useHistory(clientId: string, filters?: HistoryFilters) {
-  const tenantId = useTenant()
   const qc = useQueryClient()
 
   const historyQuery = useQuery({
@@ -21,7 +19,6 @@ export function useHistory(clientId: string, filters?: HistoryFilters) {
         .from('history')
         .select('*, users!history_agent_id_fkey(first_name, last_name)')
         .eq('client_id', clientId)
-        .eq('tenant_id', tenantId)
 
       if (filters?.type) query = query.eq('type', filters.type)
 
@@ -34,10 +31,10 @@ export function useHistory(clientId: string, filters?: HistoryFilters) {
   })
 
   const addEntry = useMutation({
-    mutationFn: async (input: Omit<HistoryInsert, 'tenant_id'>) => {
+    mutationFn: async (input: HistoryInsert) => {
       const { data, error } = await supabase
         .from('history')
-        .insert({ ...input, tenant_id: tenantId })
+        .insert(input)
         .select()
         .single()
 

@@ -1,14 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useTenant } from './useTenant'
 import type { EmailBlock } from '@/lib/blocksToHtml'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface EmailTemplate {
   id: string
-  tenant_id: string
   name: string
   subject: string
   blocks: EmailBlock[]
@@ -19,7 +17,6 @@ export interface EmailTemplate {
 
 export interface EmailCampaign {
   id: string
-  tenant_id: string
   template_id: string | null
   name: string
   subject: string
@@ -56,24 +53,20 @@ export interface CampaignRecipient {
 // ─── Templates ──────────────────────────────────────────────────────────────
 
 export function useEmailTemplates() {
-  const tenantId = useTenant()
   return useQuery({
-    queryKey: ['email-templates', tenantId],
+    queryKey: ['email-templates'],
     queryFn: async () => {
-      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailTemplate[] | null; error: { message: string } | null }> } } } })
+      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailTemplate[] | null; error: { message: string } | null }> } } })
         .from('email_templates')
         .select('*')
-        .eq('tenant_id', tenantId)
         .order('updated_at', { ascending: false })
       if (error) { handleSupabaseError(error as never); throw error }
       return (data ?? []).map(d => ({ ...d, blocks: (d.blocks ?? []) as unknown as EmailBlock[] }))
     },
-    enabled: !!tenantId,
   })
 }
 
 export function useSaveTemplate() {
-  const tenantId = useTenant()
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (template: { id?: string; name: string; subject: string; blocks: EmailBlock[]; html_cache: string }) => {
@@ -91,7 +84,6 @@ export function useSaveTemplate() {
       } else {
         const { error } = await supabase.from('email_templates' as never)
           .insert({
-            tenant_id: tenantId,
             name: template.name,
             subject: template.subject,
             blocks: template.blocks,
@@ -118,14 +110,12 @@ export function useDeleteTemplate() {
 // ─── Campaigns ──────────────────────────────────────────────────────────────
 
 export function useEmailCampaigns() {
-  const tenantId = useTenant()
   return useQuery({
-    queryKey: ['email-campaigns', tenantId],
+    queryKey: ['email-campaigns'],
     queryFn: async () => {
-      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailCampaign[] | null; error: { message: string } | null }> } } } })
+      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailCampaign[] | null; error: { message: string } | null }> } } })
         .from('email_campaigns')
         .select('*, email_templates(name)')
-        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
       if (error) { handleSupabaseError(error as never); throw error }
       return (data ?? []).map(d => ({
@@ -133,12 +123,10 @@ export function useEmailCampaigns() {
         segment_rules: (d.segment_rules ?? {}) as SegmentRules,
       }))
     },
-    enabled: !!tenantId,
   })
 }
 
 export function useSaveCampaign() {
-  const tenantId = useTenant()
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (campaign: {

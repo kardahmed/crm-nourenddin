@@ -52,9 +52,9 @@ export function useProjects() {
       if (error) { handleSupabaseError(error); throw error }
       return data
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['projects'] })
-      toast.success('Projet mis a jour')
+      qc.invalidateQueries({ queryKey: ['project-detail', variables.id] })
     },
   })
 

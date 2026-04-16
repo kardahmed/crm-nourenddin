@@ -15,6 +15,8 @@ import {
   Archive,
   Image as ImageIcon,
   Clock,
+  Upload,
+  X as XIcon,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -65,6 +67,68 @@ export function ProjectDetailPage() {
   const [editLocation, setEditLocation] = useState('')
   const [compareIds, setCompareIds] = useState<string[]>([])
   const [showComparator, setShowComparator] = useState(false)
+  const [uploading, setUploading] = useState<'cover' | 'gallery' | null>(null)
+
+  async function uploadImage(file: File): Promise<string | null> {
+    if (!projectId) return null
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    if (!['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+      toast.error('Format non supporté (JPG, PNG, WEBP ou GIF uniquement)')
+      return null
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 5 Mo)')
+      return null
+    }
+    const path = `projects/${projectId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const { error } = await supabase.storage.from('landing-assets').upload(path, file, { upsert: false })
+    if (error) {
+      toast.error(`Erreur upload : ${error.message}`)
+      return null
+    }
+    const { data: urlData } = supabase.storage.from('landing-assets').getPublicUrl(path)
+    return urlData.publicUrl
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !projectId) return
+    setUploading('cover')
+    const url = await uploadImage(file)
+    if (url) {
+      await updateProject.mutateAsync({ id: projectId, cover_url: url } as never)
+      toast.success('Image de couverture mise à jour')
+    }
+    setUploading(null)
+  }
+
+  async function handleGalleryUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (!files.length || !projectId) return
+    setUploading('gallery')
+    const urls: string[] = []
+    for (const file of files) {
+      const url = await uploadImage(file)
+      if (url) urls.push(url)
+    }
+    if (urls.length && project) {
+      const current = (project.gallery_urls ?? []) as string[]
+      await updateProject.mutateAsync({ id: projectId, gallery_urls: [...current, ...urls] } as never)
+      toast.success(`${urls.length} image(s) ajoutée(s)`)
+    }
+    setUploading(null)
+  }
+
+  async function removeGalleryImage(url: string) {
+    if (!projectId || !project) return
+    const current = (project.gallery_urls ?? []) as string[]
+    const next = current.filter((u) => u !== url)
+    await updateProject.mutateAsync({ id: projectId, gallery_urls: next } as never)
+    setGalleryIndex(0)
+    toast.success('Image retirée')
+  }
 
   // Fetch project with units
   const { data: project, isLoading } = useQuery({
@@ -243,6 +307,42 @@ export function ProjectDetailPage() {
                   <ImageIcon className="h-12 w-12" />
                   <span className="text-sm">Aucune photo</span>
                 </div>
+              )}
+
+              {/* Admin controls overlay */}
+              {canManageProjects && (
+                <div className="absolute right-3 top-3 flex gap-2">
+                  <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur hover:bg-black/80">
+                    {uploading === 'cover' ? (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    )}
+                    Couverture
+                    <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" disabled={uploading !== null} />
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur hover:bg-black/80">
+                    {uploading === 'gallery' ? (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    Ajouter
+                    <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" disabled={uploading !== null} />
+                  </label>
+                </div>
+              )}
+
+              {/* Remove current image button (admin + gallery image) */}
+              {canManageProjects && gallery.length > 0 && gallery[galleryIndex] && (
+                <button
+                  onClick={() => removeGalleryImage(gallery[galleryIndex])}
+                  className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur hover:bg-immo-status-red/90"
+                  title="Retirer cette photo"
+                >
+                  <XIcon className="h-3.5 w-3.5" />
+                  Retirer
+                </button>
               )}
             </div>
             {/* Thumbnails */}

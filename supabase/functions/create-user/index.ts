@@ -129,53 +129,27 @@ Deno.serve(async (req: Request) => {
       return json({ error: insertErr.message }, 400)
     }
 
-    // 7. Send invitation email (best-effort — don't fail user creation if mail fails)
-    let emailSent = false
+    // Email d'invitation : Supabase enverra un email de bienvenue/récupération
+    // via le SMTP configuré (Hostinger) — on utilise generateLink pour obtenir
+    // un magic link que l'on joint à l'email standard. Les admins peuvent aussi
+    // partager le mot de passe temporaire retourné par cette fonction.
+    let invitationSent = false
     try {
-      const { data: settings } = await admin.from('app_settings').select('custom_app_name, company_email').limit(1).single()
-      const appName = (settings as { custom_app_name?: string } | null)?.custom_app_name ?? 'CRM Noureddine'
-      const fromEmail = (settings as { company_email?: string } | null)?.company_email ?? 'no-reply@immoprox.io'
-      const appUrl = req.headers.get('origin') ?? Deno.env.get('APP_URL') ?? ''
-
-      const html = `
-        <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;max-width:600px;margin:0 auto;padding:24px">
-          <h1 style="color:#0579DA;font-size:22px;margin:0 0 8px">Bienvenue sur ${appName}</h1>
-          <p style="color:#425466;font-size:14px;line-height:1.6">Bonjour ${first_name},</p>
-          <p style="color:#425466;font-size:14px;line-height:1.6">Un compte ${role === 'admin' ? 'administrateur' : 'agent'} vient d'être créé pour vous sur <strong>${appName}</strong>.</p>
-          <div style="background:#F6F9FC;border:1px solid #E3E8EF;border-radius:12px;padding:20px;margin:24px 0">
-            <p style="margin:0 0 8px;color:#8898AA;font-size:12px;text-transform:uppercase;letter-spacing:.5px">Vos identifiants</p>
-            <p style="margin:4px 0;color:#0A2540;font-size:14px"><strong>Email :</strong> ${email}</p>
-            <p style="margin:4px 0;color:#0A2540;font-size:14px"><strong>Mot de passe temporaire :</strong> <code style="background:#fff;padding:4px 8px;border-radius:4px;border:1px solid #E3E8EF">${tempPassword}</code></p>
-          </div>
-          <p style="color:#425466;font-size:14px;line-height:1.6">Connectez-vous et changez votre mot de passe dès la première connexion.</p>
-          ${appUrl ? `<p style="text-align:center;margin:32px 0"><a href="${appUrl}/login" style="display:inline-block;background:#0579DA;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px">Se connecter</a></p>` : ''}
-          <p style="color:#8898AA;font-size:12px;text-align:center;margin-top:32px">${appName} — CRM Immobilier</p>
-        </div>
-      `
-
-      // Send via Resend directly (Supabase SMTP is for auth flows; we use Resend API for transactional)
-      const resendKey = Deno.env.get('RESEND_API_KEY')
-      if (resendKey) {
-        const resendRes = await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${resendKey}` },
-          body: JSON.stringify({
-            from: `${appName} <${fromEmail}>`,
-            to: [email],
-            subject: `Bienvenue sur ${appName} — vos identifiants`,
-            html,
-          }),
-        })
-        emailSent = resendRes.ok
-        if (!resendRes.ok) {
-          console.warn('[create-user] Resend send failed:', await resendRes.text())
-        }
-      }
-    } catch (mailErr) {
-      console.warn('[create-user] Invitation email error:', mailErr)
+      const { data: linkData } = await admin.auth.admin.generateLink({
+        type: 'recovery',
+        email,
+      })
+      invitationSent = !!linkData
+    } catch (linkErr) {
+      console.warn('[create-user] Unable to generate invitation link:', linkErr)
     }
 
-    return json({ success: true, user_id: authUserId, temp_password: tempPassword, email_sent: emailSent })
+    return json({
+      success: true,
+      user_id: authUserId,
+      temp_password: tempPassword,
+      invitation_sent: invitationSent,
+    })
   } catch (err) {
     console.error('[create-user]', err)
     return json({ error: (err as Error).message }, 500)

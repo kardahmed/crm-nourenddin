@@ -264,34 +264,30 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
 
   const create = useMutation({
     mutationFn: async () => {
-      // Generate temp password
-      const tempPassword = `Immo${Date.now().toString(36).slice(-6)}!`
+      // Call the create-user edge function (admin API, no rate limits)
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Session manquante — reconnectez-vous')
 
-      // Create auth user via Supabase
-      const { data: authData, error: authErr } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: { data: { first_name: firstName, last_name: lastName } },
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ email, first_name: firstName, last_name: lastName, phone: phone || null, role }),
       })
-      if (authErr) { handleSupabaseError(authErr); throw authErr }
-      if (!authData.user) throw new Error('User creation failed')
 
-      // Insert in users table
-      const { error: userErr } = await supabase.from('users').insert({
-        id: authData.user.id,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone: phone || null,
-        role,
-        status: 'active',
-      } as never)
-      if (userErr) { handleSupabaseError(userErr); throw userErr }
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`)
+      return body as { user_id: string; temp_password: string }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
-      toast.success('Agent créé — un email de bienvenue a été envoyé')
+      toast.success(`Agent créé. Mot de passe temporaire : ${data.temp_password}`, { duration: 20000 })
       resetAndClose()
+    },
+    onError: (err) => {
+      toast.error((err as Error).message)
     },
   })
 

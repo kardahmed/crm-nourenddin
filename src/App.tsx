@@ -24,8 +24,8 @@ const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage').then(m => (
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
-// Landing pages
-const LandingPagesManager = lazy(() => import('@/pages/landing/LandingPagesManager').then(m => ({ default: m.LandingPagesManager })))
+// Landing pages - REMOVED
+
 
 // Super Admin pages
 const SuperAdminLayout = lazy(() => import('@/pages/superadmin/SuperAdminLayout').then(m => ({ default: m.SuperAdminLayout })))
@@ -47,8 +47,8 @@ const EmailsPage = lazy(() => import('@/pages/superadmin/EmailsPage').then(m => 
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const MarketingROIPage = lazy(() => import('@/pages/marketing-roi/MarketingROIPage').then(m => ({ default: m.MarketingROIPage })))
 
-// Landing pages
-const PublicLandingPage = lazy(() => import('@/pages/landing/PublicLandingPage').then(m => ({ default: m.PublicLandingPage })))
+// Public landing page - REMOVED
+
 
 function PageLoader() {
   return (
@@ -58,13 +58,13 @@ function PageLoader() {
   )
 }
 
-// Landing page component — loads marketing HTML inline
-const MarketingPage = lazy(() => import('@/pages/marketing/MarketingPage').then(m => ({ default: m.MarketingPage })))
+// Marketing page - REMOVED
+
 
 function HomeRedirect() {
   const hasSession = Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
   if (hasSession) return <Navigate to="/dashboard" replace />
-  return <MarketingPage />
+  return <Navigate to="/login" replace />
 }
 
 function App() {
@@ -75,7 +75,7 @@ function App() {
         <Route path="/" element={<HomeRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
-        <Route path="/p/:slug" element={<PublicLandingPage />} />
+
 
         {/* Super Admin routes — /admin/* */}
         <Route element={<SuperAdminRoute />}>
@@ -112,7 +112,7 @@ function App() {
 
             {/* Admin & super_admin only */}
             <Route element={<RoleRoute allowedRoles={['admin', 'super_admin']} />}>
-              <Route path="/landing" element={<LandingPagesManager />} />
+              {/* <Route path="/landing" element={<LandingPagesManager />} /> - REMOVED */}
               <Route path="/goals" element={<GoalsPage />} />
               <Route path="/performance" element={<PerformancePage />} />
               <Route path="/agents" element={<AgentsPage />} />

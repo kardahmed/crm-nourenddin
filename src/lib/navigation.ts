@@ -19,7 +19,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Objectifs', path: '/goals', icon: 'Target', roles: 'all', requiredPermission: 'goals.view_own' },
   { label: 'Performance', path: '/performance', icon: 'TrendingUp', roles: 'all', requiredPermission: 'performance.view_own' },
   { label: 'Agents', path: '/agents', icon: 'Users', roles: ['admin', 'super_admin'], requiredPermission: 'agents.view' },
-  { label: 'Pages capture', path: '/landing', icon: 'Globe', roles: ['admin', 'super_admin'], requiredPermission: 'landing.view' },
   { label: 'Rapports', path: '/reports', icon: 'BarChart3', roles: 'all', requiredPermission: 'reports.view' },
   { label: 'ROI Marketing', path: '/marketing-roi', icon: 'Target', roles: ['admin', 'super_admin'] },
   { label: 'Paramètres', path: '/settings', icon: 'Settings', roles: ['admin', 'super_admin'], requiredPermission: 'settings.view' },

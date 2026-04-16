@@ -11,7 +11,6 @@ import {
   Users,
   BarChart3,
   Settings,
-  Globe,
   LogOut,
   CheckSquare,
 } from 'lucide-react'
@@ -33,7 +32,6 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Users,
   BarChart3,
   Settings,
-  Globe,
   CheckSquare,
 }
 
@@ -48,7 +46,6 @@ const NAV_KEYS: Record<string, string> = {
   '/goals': 'nav.goals',
   '/performance': 'nav.performance',
   '/agents': 'nav.agents',
-  '/landing': 'nav.landing',
   '/reports': 'nav.reports',
   '/marketing-roi': 'nav.marketing_roi',
   '/settings': 'nav.settings',

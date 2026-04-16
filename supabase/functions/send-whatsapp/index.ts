@@ -24,15 +24,10 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authErr || !user) return json({ error: 'Invalid token' }, 401)
 
-    // Get tenant
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', user.id).single()
-    if (!profile?.tenant_id) return json({ error: 'No tenant' }, 403)
-
-    // Check WhatsApp is active for this tenant
+    // Check WhatsApp is active
     const { data: waAccount } = await supabase
       .from('whatsapp_accounts')
       .select('*')
-      .eq('tenant_id', profile.tenant_id)
       .eq('is_active', true)
       .single()
 
@@ -104,7 +99,7 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       // Log failed message
       await supabase.from('whatsapp_messages').insert({
-        tenant_id: profile.tenant_id,
+        
         client_id: client_id ?? null,
         agent_id: user.id,
         template_name,
@@ -122,7 +117,7 @@ Deno.serve(async (req) => {
 
     // Log successful message
     await supabase.from('whatsapp_messages').insert({
-      tenant_id: profile.tenant_id,
+      
       client_id: client_id ?? null,
       agent_id: user.id,
       template_name,
@@ -132,16 +127,16 @@ Deno.serve(async (req) => {
       status: 'sent',
     })
 
-    // Increment tenant message counter
+    // Increment message counter
     await supabase
       .from('whatsapp_accounts')
       .update({ messages_sent: account.messages_sent + 1 } as never)
-      .eq('tenant_id', profile.tenant_id)
+      .eq('is_active', true)
 
     // Log in client history if client_id provided
     if (client_id) {
       await supabase.from('history').insert({
-        tenant_id: profile.tenant_id,
+        
         client_id,
         agent_id: user.id,
         type: 'whatsapp_message',

@@ -83,7 +83,7 @@ serve(async (req: Request) => {
           break
         }
         case 'storage_limit': {
-          const { data: settings } = await supabase.from('tenant_settings').select('tenant_id, storage_used_mb').gt('storage_used_mb', alert.threshold)
+          const { data: settings } = await supabase.from('tenant_settings').select('storage_used_mb').gt('storage_used_mb', alert.threshold)
           if ((settings ?? []).length > 0) {
             triggered = true
             message = `${(settings ?? []).length} tenant(s) depasse(nt) ${alert.threshold}MB de stockage`

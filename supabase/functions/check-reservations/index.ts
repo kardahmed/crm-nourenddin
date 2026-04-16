@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     // 1. Find expired reservations with client/unit details for email
     const { data: expired, error: fetchErr } = await supabase
       .from('reservations')
-      .select('id, tenant_id, client_id, unit_id, agent_id, clients(full_name), units(code)')
+      .select('id, client_id, unit_id, agent_id, clients(full_name), units(code)')
       .eq('status', 'active')
       .lt('expires_at', new Date().toISOString())
 
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
         const { error: histErr } = await supabase
           .from('history')
           .insert({
-            tenant_id: reservation.tenant_id,
+            
             client_id: reservation.client_id,
             agent_id: null,
             type: 'stage_change',
@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
                 unit_code: unit?.code ?? '-',
                 reservation_id: reservation.id,
               },
-              tenant_id: reservation.tenant_id,
+              
               client_id: reservation.client_id,
             })
             if (result.sent) emailsSent++

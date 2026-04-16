@@ -17,7 +17,7 @@ serve(async (req: Request) => {
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     const supabase = createClient(supabaseUrl, serviceKey)
 
-    const { type, to, subject, body, template, template_data, tenant_id, client_id, metadata } = await req.json()
+    const { type, to, subject, body, template, template_data, client_id, metadata } = await req.json()
 
     // Resolve email content: template or raw body
     let emailSubject = subject
@@ -48,10 +48,10 @@ serve(async (req: Request) => {
       })
     }
 
-    // Get platform settings for from email
-    const { data: settings } = await supabase.from('platform_settings').select('support_email, platform_name').limit(1).single()
-    const fromName = (settings as { platform_name: string } | null)?.platform_name ?? 'IMMO PRO-X'
-    const fromEmail = (settings as { support_email: string } | null)?.support_email ?? 'noreply@immoprox.com'
+    // Get from email + sender name from app_settings
+    const { data: settings } = await supabase.from('app_settings').select('custom_app_name, company_email').limit(1).single()
+    const fromName = (settings as { custom_app_name: string | null } | null)?.custom_app_name ?? 'IMMO PRO-X'
+    const fromEmail = (settings as { company_email: string | null } | null)?.company_email ?? 'noreply@immoprox.com'
 
     // If template was used, re-render with actual platform name
     if (template && !template_data?.platform_name) {
@@ -108,7 +108,7 @@ serve(async (req: Request) => {
 
     // Log to email_logs table
     await supabase.from('email_logs').insert({
-      tenant_id: tenant_id ?? null,
+      
       template: template ?? null,
       recipient: to,
       subject: emailSubject,
@@ -123,17 +123,16 @@ serve(async (req: Request) => {
 
     // Also log in notifications (backward compat)
     await supabase.from('notifications').insert({
-      tenant_id: tenant_id ?? null,
+      
       type: 'email_sent',
       title: `Email: ${emailSubject}`,
       message: `Envoye a ${to} via ${provider}`,
     })
 
-    // Log in audit trail if tenant context
-    if (tenant_id) {
+    // Log email in client history when a client is tied to the send
+    if (client_id) {
       await supabase.from('history').insert({
-        tenant_id,
-        client_id: client_id ?? null,
+        client_id,
         type: 'email',
         title: `Email envoye: ${emailSubject}`,
         description: `Destinataire: ${to}`,

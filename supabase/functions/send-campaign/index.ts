@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
     let query = supabase
       .from('clients')
       .select('id, email, full_name')
-      .eq('tenant_id', campaign.tenant_id)
+      
       .not('email', 'is', null)
 
     if (rules.pipeline_stages?.length) query = query.in('pipeline_stage', rules.pipeline_stages)
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
 
     // 9. Log in email_logs
     await supabase.from('email_logs').insert({
-      tenant_id: campaign.tenant_id,
+      
       template: 'campaign',
       recipient: `${totalSent} destinataires`,
       subject: emailSubject,

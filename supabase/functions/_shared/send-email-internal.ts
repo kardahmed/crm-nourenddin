@@ -7,7 +7,6 @@ export async function sendEmailInternal(params: {
   to: string
   template: TemplateName
   template_data: Record<string, unknown>
-  tenant_id?: string
   client_id?: string
   subject?: string
 }): Promise<{ sent: boolean; error?: string }> {
@@ -26,7 +25,7 @@ export async function sendEmailInternal(params: {
         subject: params.subject,
         template: params.template,
         template_data: params.template_data,
-        tenant_id: params.tenant_id,
+        
         client_id: params.client_id,
       }),
     })

@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
     const { data: playbook } = await supabase
       .from('sale_playbooks')
       .select('methodology, objective, tone, closing_phrases, objection_rules, custom_instructions')
-      .eq('tenant_id', client.tenant_id as string)
+      
       .eq('is_active', true)
       .limit(1)
       .maybeSingle()
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
       const { data: defaultScript } = await supabase
         .from('call_scripts')
         .select('*')
-        .eq('tenant_id', client.tenant_id as string)
+        
         .eq('pipeline_stage', client.pipeline_stage as string)
         .eq('is_active', true)
         .limit(1)
@@ -265,7 +265,7 @@ REPONDS UNIQUEMENT avec le JSON, aucun texte autour.`
       const { data: fallbackScript } = await supabase
         .from('call_scripts')
         .select('*')
-        .eq('tenant_id', client.tenant_id as string)
+        
         .eq('pipeline_stage', client.pipeline_stage as string)
         .eq('is_active', true)
         .limit(1)

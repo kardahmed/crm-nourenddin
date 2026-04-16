@@ -1,3 +1,6 @@
+// Cron: mark overdue payments as late and notify admins.
+// Runs daily via pg_cron or scheduled edge function trigger.
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { sendEmailInternal } from '../_shared/send-email-internal.ts'
 
@@ -5,7 +8,6 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 Deno.serve(async (req) => {
-  // Verify authorization: must provide service role key as Bearer token
   const authHeader = req.headers.get('Authorization')
   if (authHeader !== `Bearer ${supabaseServiceKey}`) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), {
@@ -19,13 +21,13 @@ Deno.serve(async (req) => {
   })
 
   try {
-    // 1. Atomically mark overdue payments as late and return them
+    // 1. Mark overdue payments as late
     const { data: updated, error: updateErr } = await supabase
       .from('payment_schedules')
       .update({ status: 'late' })
       .eq('status', 'pending')
       .lt('due_date', new Date().toISOString().split('T')[0])
-      .select('id, tenant_id, sale_id, amount, due_date, installment_number, sales(client_id, agent_id, clients(full_name, phone), units(code))')
+      .select('id, sale_id, amount, due_date, installment_number, sales(client_id, agent_id, clients(full_name, phone), units(code))')
 
     if (updateErr) {
       console.error('Update error:', updateErr)
@@ -43,114 +45,75 @@ Deno.serve(async (req) => {
 
     console.log(`Marked ${updated.length} overdue payment(s) as late`)
 
-    // 2. Check tenant notification preferences
-    const tenantIds = [...new Set(updated.map((p: { tenant_id: string }) => p.tenant_id))]
-
+    // 2. Check global notification preference
     const { data: settings } = await supabase
-      .from('tenant_settings')
-      .select('tenant_id, notif_payment_late')
-      .in('tenant_id', tenantIds)
+      .from('app_settings')
+      .select('notif_payment_late')
+      .limit(1)
+      .single()
 
-    const notifyTenants = new Set(
-      (settings ?? [])
-        .filter((s: { notif_payment_late: boolean }) => s.notif_payment_late !== false)
-        .map((s: { tenant_id: string }) => s.tenant_id)
-    )
+    if (settings?.notif_payment_late === false) {
+      return new Response(JSON.stringify({
+        message: `Marked ${updated.length} payment(s) as late (notifications disabled)`,
+        updated: updated.length,
+        emails_sent: 0,
+      }), { headers: { 'Content-Type': 'application/json' } })
+    }
 
-    // 3. Get admin emails per tenant for email notifications
-    const { data: adminUsers } = await supabase
+    // 3. Notify all active admins by email
+    const { data: admins } = await supabase
       .from('users')
-      .select('id, email, tenant_id')
-      .in('tenant_id', tenantIds)
+      .select('id, email')
       .eq('role', 'admin')
+      .eq('status', 'active')
 
-    const adminEmailByTenant = new Map<string, string>()
-    for (const u of adminUsers ?? []) {
-      if (u.email && !adminEmailByTenant.has(u.tenant_id)) {
-        adminEmailByTenant.set(u.tenant_id, u.email)
-      }
-    }
-
-    // 4. Group overdue by tenant and send emails
-    const byTenant = new Map<string, Array<{
-      client_name: string
-      client_phone: string
-      unit_code: string
-      amount: number
-      due_date: string
-      installment: number
-      client_id: string | null
-    }>>()
-
-    for (const payment of updated) {
-      const sale = payment.sales as {
-        client_id: string
-        agent_id: string
-        clients: { full_name: string; phone: string } | null
-        units: { code: string } | null
-      } | null
-
-      if (!notifyTenants.has(payment.tenant_id)) continue
-
-      if (!byTenant.has(payment.tenant_id)) byTenant.set(payment.tenant_id, [])
-      byTenant.get(payment.tenant_id)!.push({
-        client_name: sale?.clients?.full_name ?? '-',
-        client_phone: sale?.clients?.phone ?? '',
-        unit_code: sale?.units?.code ?? '-',
-        amount: payment.amount,
-        due_date: payment.due_date,
-        installment: payment.installment_number,
-        client_id: sale?.client_id ?? null,
-      })
-    }
-
-    // 5. Send email notifications per tenant
     let emailsSent = 0
-    const notifications: Array<{ tenant_id: string; count: number; details: string[] }> = []
-
-    for (const [tenantId, payments] of byTenant) {
-      const adminEmail = adminEmailByTenant.get(tenantId)
-      const details = payments.map(
-        (p) => `${p.client_name} — ${p.unit_code} — Echeance #${p.installment} — ${p.amount} DA — Du le ${p.due_date}`
-      )
-
-      notifications.push({ tenant_id: tenantId, count: payments.length, details })
-
-      // Send an email per overdue payment
-      if (adminEmail) {
-        for (const p of payments) {
-          const result = await sendEmailInternal({
-            to: adminEmail,
-            template: 'payment_overdue',
-            template_data: {
-              client_name: p.client_name,
-              client_phone: p.client_phone,
-              unit_code: p.unit_code,
-              installment_number: p.installment,
-              amount: p.amount,
-              due_date: p.due_date,
-            },
-            tenant_id: tenantId,
-            client_id: p.client_id ?? undefined,
-          })
-          if (result.sent) emailsSent++
-        }
+    for (const admin of admins ?? []) {
+      if (!admin.email) continue
+      for (const payment of updated) {
+        const sale = payment.sales as {
+          client_id: string
+          agent_id: string
+          clients: { full_name: string; phone: string } | null
+          units: { code: string } | null
+        } | null
+        const result = await sendEmailInternal({
+          to: admin.email,
+          template: 'payment_overdue',
+          template_data: {
+            client_name: sale?.clients?.full_name ?? '-',
+            client_phone: sale?.clients?.phone ?? '',
+            unit_code: sale?.units?.code ?? '-',
+            installment_number: payment.installment_number,
+            amount: payment.amount,
+            due_date: payment.due_date,
+          },
+          client_id: sale?.client_id,
+        })
+        if (result.sent) emailsSent++
       }
-
-      console.log(`[Tenant ${tenantId}] ${payments.length} paiement(s) en retard`)
     }
 
-    const result = {
+    // 4. Create in-app notifications for admins
+    const adminIds = (admins ?? []).map((a) => a.id)
+    if (adminIds.length > 0) {
+      await supabase.from('notifications').insert(
+        adminIds.map((id) => ({
+          user_id: id,
+          type: 'payment_late',
+          title: `${updated.length} paiement(s) en retard`,
+          message: 'Consultez la section Dossiers pour relancer les clients.',
+          metadata: { count: updated.length },
+        })),
+      )
+    }
+
+    return new Response(JSON.stringify({
       message: `Marked ${updated.length} payment(s) as late`,
       updated: updated.length,
-      notifications_sent: notifications.length,
+      admins_notified: adminIds.length,
       emails_sent: emailsSent,
-      notifications,
-    }
-
-    return new Response(JSON.stringify(result), {
-      headers: { 'Content-Type': 'application/json' },
-    })
+    }), { headers: { 'Content-Type': 'application/json' } })
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err)
     console.error('Fatal error:', msg)

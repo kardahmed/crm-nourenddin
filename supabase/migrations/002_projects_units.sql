@@ -5,7 +5,7 @@
 
 -- 1. Projects
 CREATE TABLE IF NOT EXISTS projects (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code TEXT NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS projects (
 
 -- 2. Units
 CREATE TABLE IF NOT EXISTS units (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   code TEXT NOT NULL,
   type unit_type NOT NULL DEFAULT 'apartment',
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS units (
 
 -- 3. Project files (plans, images, brochures)
 CREATE TABLE IF NOT EXISTS project_files (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   project_id UUID REFERENCES projects(id) ON DELETE CASCADE,
   file_name TEXT NOT NULL,
   file_type TEXT NOT NULL,

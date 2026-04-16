@@ -7,7 +7,7 @@
 
 -- 1. Task bundles (groups of task templates per pipeline stage)
 CREATE TABLE IF NOT EXISTS task_bundles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   stage TEXT NOT NULL,
   is_active BOOLEAN DEFAULT TRUE,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS task_bundles (
 
 -- 2. Task templates (reusable task definitions)
 CREATE TABLE IF NOT EXISTS task_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   bundle_id UUID REFERENCES task_bundles(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   stage TEXT NOT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS task_templates (
 
 -- 3. Client tasks (actual task instances assigned to clients)
 CREATE TABLE IF NOT EXISTS client_tasks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   agent_id UUID REFERENCES users(id) ON DELETE SET NULL,
   template_id UUID REFERENCES task_templates(id) ON DELETE SET NULL,
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS client_tasks (
 
 -- 4. Agent goals
 CREATE TABLE IF NOT EXISTS agent_goals (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   metric goal_metric NOT NULL,
   period goal_period NOT NULL DEFAULT 'monthly',
@@ -80,7 +80,7 @@ CREATE TABLE IF NOT EXISTS agent_goals (
 
 -- 5. Notifications
 CREATE TABLE IF NOT EXISTS notifications (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   type TEXT NOT NULL,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS notifications (
 
 -- 6. Audit trail
 CREATE TABLE IF NOT EXISTS audit_trail (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   action TEXT NOT NULL,
   table_name TEXT NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS audit_trail (
 
 -- 7. Message templates (WhatsApp, SMS, email templates per stage)
 CREATE TABLE IF NOT EXISTS message_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   body TEXT NOT NULL,
   stage TEXT NOT NULL,
   trigger_type TEXT NOT NULL,
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS message_templates (
 
 -- 8. Sent messages log
 CREATE TABLE IF NOT EXISTS sent_messages_log (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
   agent_id UUID REFERENCES users(id) ON DELETE SET NULL,
   task_id UUID REFERENCES client_tasks(id) ON DELETE SET NULL,

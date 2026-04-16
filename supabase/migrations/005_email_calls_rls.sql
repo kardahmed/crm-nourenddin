@@ -7,7 +7,7 @@
 -- ─── Call scripts & responses ───
 
 CREATE TABLE IF NOT EXISTS call_scripts (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   pipeline_stage TEXT NOT NULL,
   title TEXT NOT NULL,
   intro_text TEXT DEFAULT '',
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS call_scripts (
 );
 
 CREATE TABLE IF NOT EXISTS call_responses (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   agent_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   script_id UUID REFERENCES call_scripts(id) ON DELETE SET NULL,
@@ -52,7 +52,7 @@ CREATE POLICY "call_responses_update" ON call_responses FOR UPDATE TO authentica
 
 -- 1. Email templates (visual builder with JSON blocks)
 CREATE TABLE IF NOT EXISTS email_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   subject TEXT NOT NULL DEFAULT '',
   blocks JSONB NOT NULL DEFAULT '[]',
@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS email_templates (
 
 -- 2. Email campaigns
 CREATE TABLE IF NOT EXISTS email_campaigns (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   template_id UUID REFERENCES email_templates(id) ON DELETE SET NULL,
   name TEXT NOT NULL,
   subject TEXT NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS email_campaigns (
 
 -- 3. Campaign recipients
 CREATE TABLE IF NOT EXISTS email_campaign_recipients (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID NOT NULL REFERENCES email_campaigns(id) ON DELETE CASCADE,
   client_id UUID REFERENCES clients(id) ON DELETE SET NULL,
   email TEXT NOT NULL,
@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS email_campaign_recipients (
 
 -- 4. Email events (opens, clicks, bounces)
 CREATE TABLE IF NOT EXISTS email_events (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   campaign_id UUID REFERENCES email_campaigns(id) ON DELETE CASCADE,
   recipient_id UUID REFERENCES email_campaign_recipients(id) ON DELETE CASCADE,
   event_type TEXT NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE IF NOT EXISTS email_events (
 
 -- 5. Email logs (all emails sent by the platform)
 CREATE TABLE IF NOT EXISTS email_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   template TEXT,
   recipient TEXT NOT NULL,
   subject TEXT NOT NULL,

@@ -7,7 +7,7 @@
 
 -- 1. Clients
 CREATE TABLE IF NOT EXISTS clients (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   agent_id UUID REFERENCES users(id) ON DELETE SET NULL,
   full_name TEXT NOT NULL,
   phone TEXT NOT NULL,
@@ -41,7 +41,7 @@ ALTER TABLE units ADD CONSTRAINT fk_units_client
 
 -- 2. Visits
 CREATE TABLE IF NOT EXISTS visits (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   agent_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id UUID REFERENCES projects(id) ON DELETE SET NULL,
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS visits (
 
 -- 3. Reservations
 CREATE TABLE IF NOT EXISTS reservations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   agent_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -71,7 +71,7 @@ CREATE TABLE IF NOT EXISTS reservations (
 
 -- 4. Sale playbooks (AI-driven sales methodology)
 CREATE TABLE IF NOT EXISTS sale_playbooks (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   objective TEXT,
   methodology TEXT,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS sale_playbooks (
 
 -- 5. Sales
 CREATE TABLE IF NOT EXISTS sales (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   agent_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS sales (
 
 -- 6. Payment schedules
 CREATE TABLE IF NOT EXISTS payment_schedules (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
   installment_number INTEGER NOT NULL,
   due_date DATE NOT NULL,
@@ -118,7 +118,7 @@ CREATE TABLE IF NOT EXISTS payment_schedules (
 
 -- 7. Charges
 CREATE TABLE IF NOT EXISTS charges (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   sale_id UUID REFERENCES sales(id) ON DELETE SET NULL,
   label TEXT NOT NULL,
@@ -132,7 +132,7 @@ CREATE TABLE IF NOT EXISTS charges (
 
 -- 8. Sale amenities
 CREATE TABLE IF NOT EXISTS sale_amenities (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
   description TEXT NOT NULL,
   price NUMERIC NOT NULL DEFAULT 0,
@@ -141,7 +141,7 @@ CREATE TABLE IF NOT EXISTS sale_amenities (
 
 -- 9. Sale charges (per-sale cost breakdown)
 CREATE TABLE IF NOT EXISTS sale_charges (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE,
   label TEXT NOT NULL,
   amount NUMERIC,
@@ -153,7 +153,7 @@ CREATE TABLE IF NOT EXISTS sale_charges (
 
 -- 10. History (activity log)
 CREATE TABLE IF NOT EXISTS history (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   agent_id UUID REFERENCES users(id) ON DELETE SET NULL,
   type history_type NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE IF NOT EXISTS history (
 
 -- 11. Documents
 CREATE TABLE IF NOT EXISTS documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id UUID NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   sale_id UUID REFERENCES sales(id) ON DELETE SET NULL,
   type doc_type NOT NULL DEFAULT 'autre',
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS documents (
 
 -- 12. Document templates
 CREATE TABLE IF NOT EXISTS document_templates (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   type doc_type NOT NULL,
   content TEXT NOT NULL DEFAULT '',
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -41,7 +41,7 @@ DO $$ BEGIN CREATE TYPE goal_status AS ENUM ('in_progress', 'achieved', 'exceede
 
 -- 1. Permission profiles (created before users so FK can reference it)
 CREATE TABLE IF NOT EXISTS permission_profiles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   description TEXT,
   permissions JSONB DEFAULT '{}',
@@ -66,7 +66,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- 3. App settings (singleton — replaces tenant_settings)
 CREATE TABLE IF NOT EXISTS app_settings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   -- Branding
   custom_logo_url TEXT,
   custom_primary_color TEXT,
@@ -107,7 +107,7 @@ CREATE TABLE IF NOT EXISTS app_settings (
 );
 
 -- Insert default app_settings row
-INSERT INTO app_settings (id) VALUES (uuid_generate_v4());
+INSERT INTO app_settings (id) VALUES (gen_random_uuid());
 
 
 -- ─── RLS ───

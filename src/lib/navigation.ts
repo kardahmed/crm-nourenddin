@@ -33,9 +33,14 @@ export function getVisibleNavItems(
   if (role === 'admin') {
     return NAV_ITEMS
   }
-  // Agent: filter by permission profile
+  // Filter for non-admin roles
   return NAV_ITEMS.filter((item) => {
-    if (!item.requiredPermission) return true
-    return can ? can(item.requiredPermission) : item.roles === 'all'
+    // 1. Role restriction: skip items that don't include this role
+    if (item.roles !== 'all' && !item.roles.includes(role)) return false
+    // 2. Permission requirement: if a permission is required, check it
+    if (item.requiredPermission && can) {
+      return can(item.requiredPermission)
+    }
+    return true
   })
 }

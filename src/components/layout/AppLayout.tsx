@@ -4,7 +4,6 @@ import { Bell, X } from 'lucide-react'
 import { useState } from 'react'
 import { Sidebar, MobileSidebar } from './Sidebar'
 import { Topbar } from './Topbar'
-import { TrialBanner } from '@/components/common/TrialBanner'
 import { OnboardingWizard } from '@/components/common/OnboardingWizard'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
@@ -57,7 +56,6 @@ export function AppLayout() {
       {isMobile && <MobileSidebar />}
 
       <div className="flex flex-1 flex-col overflow-hidden">
-        <TrialBanner />
         <AnnouncementBanner />
         <Topbar title={title} subtitle={subtitle} />
         <main className="flex-1 overflow-y-auto p-3 md:p-6">

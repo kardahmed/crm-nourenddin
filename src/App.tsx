@@ -2,7 +2,6 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { RoleRoute } from '@/components/auth/RoleRoute'
-import { SuperAdminRoute } from '@/components/auth/SuperAdminRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -24,30 +23,8 @@ const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage').then(m => (
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
-// Landing pages - REMOVED
-
-
-// Super Admin pages
-const SuperAdminLayout = lazy(() => import('@/pages/superadmin/SuperAdminLayout').then(m => ({ default: m.SuperAdminLayout })))
-const TenantsPage = lazy(() => import('@/pages/superadmin/TenantsPage').then(m => ({ default: m.TenantsPage })))
-const TenantDetailPage = lazy(() => import('@/pages/superadmin/TenantDetailPage').then(m => ({ default: m.TenantDetailPage })))
-const GlobalStatsPage = lazy(() => import('@/pages/superadmin/GlobalStatsPage').then(m => ({ default: m.GlobalStatsPage })))
-const PlatformSettingsPage = lazy(() => import('@/pages/superadmin/PlatformSettingsPage').then(m => ({ default: m.PlatformSettingsPage })))
-const AuditLogsPage = lazy(() => import('@/pages/superadmin/AuditLogsPage').then(m => ({ default: m.AuditLogsPage })))
-const BillingPage = lazy(() => import('@/pages/superadmin/BillingPage').then(m => ({ default: m.BillingPage })))
-const MessagesPage = lazy(() => import('@/pages/superadmin/MessagesPage').then(m => ({ default: m.MessagesPage })))
-const SupportPage = lazy(() => import('@/pages/superadmin/SupportPage').then(m => ({ default: m.SupportPage })))
-const ChangelogPage = lazy(() => import('@/pages/superadmin/ChangelogPage').then(m => ({ default: m.ChangelogPage })))
-const MonitoringPage = lazy(() => import('@/pages/superadmin/MonitoringPage').then(m => ({ default: m.MonitoringPage })))
-const PlansConfigPage = lazy(() => import('@/pages/superadmin/PlansConfigPage').then(m => ({ default: m.PlansConfigPage })))
-const PlaybookAdminPage = lazy(() => import('@/pages/superadmin/PlaybookAdminPage').then(m => ({ default: m.PlaybookAdminPage })))
-const WhatsAppPage = lazy(() => import('@/pages/superadmin/WhatsAppPage').then(m => ({ default: m.WhatsAppPage })))
-const EmailsPage = lazy(() => import('@/pages/superadmin/EmailsPage').then(m => ({ default: m.EmailsPage })))
-
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const MarketingROIPage = lazy(() => import('@/pages/marketing-roi/MarketingROIPage').then(m => ({ default: m.MarketingROIPage })))
-
-// Public landing page - REMOVED
 
 
 function PageLoader() {
@@ -57,8 +34,6 @@ function PageLoader() {
     </div>
   )
 }
-
-// Marketing page - REMOVED
 
 
 function HomeRedirect() {
@@ -76,27 +51,6 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-
-        {/* Super Admin routes — /admin/* */}
-        <Route element={<SuperAdminRoute />}>
-          <Route path="/admin" element={<SuperAdminLayout />}>
-            <Route index element={<TenantsPage />} />
-            <Route path="tenants/:tenantId" element={<TenantDetailPage />} />
-            <Route path="logs" element={<AuditLogsPage />} />
-            <Route path="plans" element={<PlansConfigPage />} />
-            <Route path="playbook" element={<PlaybookAdminPage />} />
-            <Route path="emails" element={<EmailsPage />} />
-            <Route path="whatsapp" element={<WhatsAppPage />} />
-            <Route path="billing" element={<BillingPage />} />
-            <Route path="messages" element={<MessagesPage />} />
-            <Route path="support" element={<SupportPage />} />
-            <Route path="changelog" element={<ChangelogPage />} />
-            <Route path="monitoring" element={<MonitoringPage />} />
-            <Route path="stats" element={<GlobalStatsPage />} />
-            <Route path="settings" element={<PlatformSettingsPage />} />
-          </Route>
-        </Route>
-
         {/* App routes — /dashboard, /pipeline, etc. */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
@@ -110,9 +64,8 @@ function App() {
             <Route path="/planning" element={<PlanningPage />} />
             <Route path="/dossiers" element={<DossiersPage />} />
 
-            {/* Admin & super_admin only */}
-            <Route element={<RoleRoute allowedRoles={['admin', 'super_admin']} />}>
-              {/* <Route path="/landing" element={<LandingPagesManager />} /> - REMOVED */}
+            {/* Admin only */}
+            <Route element={<RoleRoute allowedRoles={['admin']} />}>
               <Route path="/goals" element={<GoalsPage />} />
               <Route path="/performance" element={<PerformancePage />} />
               <Route path="/agents" element={<AgentsPage />} />

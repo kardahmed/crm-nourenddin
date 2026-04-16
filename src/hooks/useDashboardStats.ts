@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
-import { useSuperAdminStore } from '@/store/superAdminStore'
 
 interface ProjectProgress {
   id: string
@@ -97,11 +96,9 @@ interface HistoryRow { id: string; type: string; title: string; created_at: stri
 const PIPELINE_STAGES = ['accueil', 'visite_a_gerer', 'visite_confirmee', 'visite_terminee', 'negociation', 'reservation', 'vente', 'relancement', 'perdue']
 
 export function useDashboardStats() {
-  const { tenantId: authTenantId, role, session } = useAuthStore()
-  const { inspectedTenantId } = useSuperAdminStore()
+  const { tenantId, role, session } = useAuthStore()
   const userId = session?.user?.id
   const isAgent = role === 'agent'
-  const tenantId = role === 'super_admin' ? inspectedTenantId : authTenantId
 
   return useQuery({
     queryKey: ['dashboard-stats', tenantId, role, userId],

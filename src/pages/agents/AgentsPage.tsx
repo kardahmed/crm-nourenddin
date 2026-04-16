@@ -20,7 +20,6 @@ import {
 import { USER_ROLE_LABELS } from '@/types'
 import type { UserRole } from '@/types'
 import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
-import { PlanLimitBanner } from '@/components/common/PlanLimitBanner'
 import { PermissionProfilesSection } from '@/pages/settings/sections/PermissionProfilesSection'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -155,11 +154,6 @@ export function AgentsPage() {
         <KPICard label="Inactifs" value={inactive} accent="red" icon={<UserX className="h-4 w-4 text-immo-status-red" />} />
         <KPICard label="Clients assignés" value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
-
-      {/* Plan limit banner */}
-      {!canAddAgent && (
-        <PlanLimitBanner type="agents" current={usage.agents} max={limits.max_agents} />
-      )}
 
       {/* Toolbar */}
       <div className="flex items-center gap-3">

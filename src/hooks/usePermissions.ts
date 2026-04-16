@@ -31,14 +31,12 @@ export function usePermissions(): Permissions {
   const permissionProfile = useAuthStore((s) => s.permissionProfile)
 
   return useMemo(() => {
-    const isSuper = role === 'super_admin'
     const isAdm = role === 'admin'
-    const isAdminOrAbove = isSuper || isAdm
 
     // Core permission check
     function can(permission: PermissionKey): boolean {
-      // Admin and super_admin bypass — always have all permissions
-      if (isAdminOrAbove) return true
+      // Admin bypass — always has all permissions
+      if (isAdm) return true
       // Agent: check profile permissions
       return permissionProfile?.permissions?.[permission] === true
     }
@@ -52,15 +50,15 @@ export function usePermissions(): Permissions {
       canManageSettings: can('settings.edit'),
       canViewAllClients: can('pipeline.view_all'),
       canViewAllAgents: can('agents.view'),
-      canDeleteData: isSuper, // keep super_admin only
-      canViewAllTenants: isSuper,
+      canDeleteData: isAdm,
+      canViewAllTenants: false,
       canManageProjects: can('projects.edit'),
       canManageGoals: can('goals.create'),
       canManageTemplates: can('documents.generate'),
       canExportData: can('reports.export'),
 
-      // Role flags (unchanged)
-      isSuperAdmin: isSuper,
+      // Role flags
+      isSuperAdmin: false,
       isAdmin: isAdm,
       isAgent: role === 'agent',
       hasRole: (...roles: UserRole[]) => role !== null && roles.includes(role),

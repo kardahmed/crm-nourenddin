@@ -18,10 +18,10 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Dossiers', path: '/dossiers', icon: 'FolderOpen', roles: 'all', requiredPermission: 'dossiers.view' },
   { label: 'Objectifs', path: '/goals', icon: 'Target', roles: 'all', requiredPermission: 'goals.view_own' },
   { label: 'Performance', path: '/performance', icon: 'TrendingUp', roles: 'all', requiredPermission: 'performance.view_own' },
-  { label: 'Agents', path: '/agents', icon: 'Users', roles: ['admin', 'super_admin'], requiredPermission: 'agents.view' },
+  { label: 'Agents', path: '/agents', icon: 'Users', roles: ['admin'], requiredPermission: 'agents.view' },
   { label: 'Rapports', path: '/reports', icon: 'BarChart3', roles: 'all', requiredPermission: 'reports.view' },
-  { label: 'ROI Marketing', path: '/marketing-roi', icon: 'Target', roles: ['admin', 'super_admin'] },
-  { label: 'Paramètres', path: '/settings', icon: 'Settings', roles: ['admin', 'super_admin'], requiredPermission: 'settings.view' },
+  { label: 'ROI Marketing', path: '/marketing-roi', icon: 'Target', roles: ['admin'] },
+  { label: 'Paramètres', path: '/settings', icon: 'Settings', roles: ['admin'], requiredPermission: 'settings.view' },
 ]
 
 export function getVisibleNavItems(
@@ -29,8 +29,8 @@ export function getVisibleNavItems(
   can?: (permission: PermissionKey) => boolean,
 ): NavItem[] {
   if (!role) return []
-  // Admin/super_admin see everything
-  if (role === 'admin' || role === 'super_admin') {
+  // Admin sees everything
+  if (role === 'admin') {
     return NAV_ITEMS
   }
   // Agent: filter by permission profile

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Upload, FileText, AlertCircle, CheckCircle, X, ArrowRight } from 'lucide-react'
+import { Upload, FileText, AlertCircle, CheckCircle, X, ArrowRight, Download } from 'lucide-react'
 import { Modal } from './Modal'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/lib/supabase'
@@ -27,6 +27,8 @@ export interface CsvFieldSpec {
   transform?: (raw: string) => unknown
   /** Hint shown under the dropdown */
   hint?: string
+  /** Example value shown in the downloadable template */
+  example?: string
 }
 
 export interface CsvImportProps<_T extends object = object> {
@@ -42,6 +44,8 @@ export interface CsvImportProps<_T extends object = object> {
   defaults?: () => Promise<Record<string, unknown>> | Record<string, unknown>
   /** Called once the import succeeds */
   onSuccess?: (insertedCount: number) => void
+  /** Filename stem for the downloadable template (no extension) */
+  templateName?: string
 }
 
 type Step = 'upload' | 'map' | 'import' | 'done'
@@ -85,8 +89,19 @@ function parseCsv(text: string): ParsedCsv {
   return { headers, rows }
 }
 
+function escapeCsv(value: string): string {
+  if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`
+  return value
+}
+
+function buildTemplateCsv(fields: CsvFieldSpec[]): string {
+  const header = fields.map((f) => escapeCsv(f.label)).join(',')
+  const example = fields.map((f) => escapeCsv(f.example ?? '')).join(',')
+  return `${header}\n${example}\n`
+}
+
 export function CsvImportModal({
-  isOpen, onClose, title, subtitle, table, fields, defaults, onSuccess,
+  isOpen, onClose, title, subtitle, table, fields, defaults, onSuccess, templateName,
 }: CsvImportProps) {
   const [step, setStep] = useState<Step>('upload')
   const [csv, setCsv] = useState<ParsedCsv | null>(null)
@@ -107,6 +122,20 @@ export function CsvImportModal({
   function closeAndReset() {
     reset()
     onClose()
+  }
+
+  function downloadTemplate() {
+    const csv = buildTemplateCsv(fields)
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${templateName ?? table}-modele.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    toast.success('Modèle téléchargé')
   }
 
   async function handleFile(file: File) {
@@ -186,6 +215,23 @@ export function CsvImportModal({
     <Modal isOpen={isOpen} onClose={closeAndReset} title={title} subtitle={subtitle ?? 'Importer des données depuis un fichier CSV'} size="lg">
       {step === 'upload' && (
         <div className="space-y-4">
+          {/* Template download CTA */}
+          <button
+            type="button"
+            onClick={downloadTemplate}
+            className="flex w-full items-center gap-3 rounded-lg border border-immo-accent-blue/30 bg-immo-accent-blue/5 p-3 text-left transition-colors hover:bg-immo-accent-blue/10"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-immo-accent-blue/15">
+              <Download className="h-4 w-4 text-immo-accent-blue" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-immo-text-primary">Télécharger le modèle CSV</p>
+              <p className="text-[11px] text-immo-text-muted">
+                Pré-rempli avec les en-têtes attendues + une ligne d'exemple — remplissez-le puis revenez ici.
+              </p>
+            </div>
+          </button>
+
           <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-immo-border-default p-10 transition-colors hover:border-immo-accent-green hover:bg-immo-accent-green/5">
             <Upload className="h-10 w-10 text-immo-text-muted" />
             <div className="text-center">
@@ -194,9 +240,10 @@ export function CsvImportModal({
             </div>
             <input type="file" accept=".csv,.tsv,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} className="hidden" />
           </label>
+
           <div className="rounded-lg border border-immo-border-default bg-immo-bg-primary p-4 text-[11px] text-immo-text-muted">
             <p className="mb-2 font-semibold text-immo-text-secondary">💡 Astuce</p>
-            <p>Exportez vos données depuis votre ancien CRM au format CSV. À l'étape suivante, vous associerez chaque colonne du fichier à un champ du CRM.</p>
+            <p>Vous pouvez aussi exporter vos données depuis un ancien CRM en CSV, puis associer manuellement chaque colonne au champ correspondant à l'étape suivante.</p>
           </div>
         </div>
       )}

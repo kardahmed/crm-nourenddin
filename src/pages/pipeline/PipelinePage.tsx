@@ -517,6 +517,7 @@ export function PipelinePage() {
         subtitle="Depuis un CSV (ex: export de votre ancien CRM)"
         table="clients"
         fields={CLIENT_IMPORT_FIELDS}
+        templateName="clients"
         defaults={async () => {
           // Assign imported clients to the current user by default
           const { data: { session } } = await supabase.auth.getSession()

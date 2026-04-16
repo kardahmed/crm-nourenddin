@@ -312,7 +312,7 @@ export function ProjectsPage() {
         </div>
 
         {canManageProjects && (
-          <>
+          <div className="flex items-center gap-2">
             <Button
               onClick={() => setShowImport(true)}
               variant="ghost"
@@ -329,7 +329,7 @@ export function ProjectsPage() {
             >
               <Plus className="mr-1.5 h-4 w-4" /> Nouveau projet
             </Button>
-          </>
+          </div>
         )}
       </div>
 

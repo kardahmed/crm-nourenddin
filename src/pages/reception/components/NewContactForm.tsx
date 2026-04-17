@@ -91,7 +91,12 @@ export function NewContactForm() {
         .insert(payload as never)
         .select('id, full_name, agent_id')
         .single()
-      if (error) { handleSupabaseError(error); throw error }
+      if (error) {
+        if (error.code === '23505' && error.message?.includes('uq_clients_phone_normalized')) {
+          throw new Error('Ce numéro est déjà attribué à un autre client. Transférez l\'appel à l\'agent existant.')
+        }
+        handleSupabaseError(error); throw error
+      }
 
       // Log the override reason in history so admins can audit why the
       // receptionist bypassed the suggested agent. `reassignment` fits

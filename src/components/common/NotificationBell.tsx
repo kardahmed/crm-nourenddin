@@ -1,10 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, CreditCard, Clock, Users, AlertTriangle } from 'lucide-react'
+import { Bell, CheckCheck, CreditCard, Clock, Users, AlertTriangle, BellRing } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import toast from 'react-hot-toast'
 
 interface Notification {
   id: string
@@ -30,7 +32,8 @@ const TYPE_COLORS: Record<string, string> = {
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  
+  const { permission, enablePush, isSupported } = usePushNotifications()
+
   const qc = useQueryClient()
 
   useEffect(() => {
@@ -88,6 +91,19 @@ export function NotificationBell() {
               </button>
             )}
           </div>
+          {isSupported && permission !== 'granted' && (
+            <button
+              onClick={async () => {
+                const result = await enablePush()
+                if (result === 'granted') toast.success('Notifications activées sur cet appareil')
+                else if (result === 'denied') toast.error('Notifications bloquées dans le navigateur')
+              }}
+              className="flex w-full items-center gap-2 border-b border-immo-border-default bg-immo-accent-green/5 px-4 py-2.5 text-left text-[11px] text-immo-accent-green hover:bg-immo-accent-green/10"
+            >
+              <BellRing className="h-3.5 w-3.5" />
+              Activer les notifications push pour cet appareil
+            </button>
+          )}
           <div className="max-h-[400px] divide-y divide-immo-border-default overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-xs text-immo-text-muted">Aucune notification</div>

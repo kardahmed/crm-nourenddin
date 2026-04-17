@@ -24,6 +24,9 @@ export default defineConfig({
         cleanupOutdatedCaches: true,
         globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
         navigateFallbackDenylist: [/^\/api/, /^\/auth/],
+        // Pull in our Web Push handler (push + notificationclick listeners).
+        // Served from /public so it's addressable at the site root.
+        importScripts: ['/push-handler.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\//,

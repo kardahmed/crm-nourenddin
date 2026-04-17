@@ -103,6 +103,7 @@ BEGIN
     WHERE w.id = v_winner_id;
 
     -- Reassign children (ALL tables that reference clients.id).
+    -- ON DELETE CASCADE children — migrate first, then delete losers.
     UPDATE visits        SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
     UPDATE reservations  SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
     UPDATE sales         SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
@@ -110,14 +111,11 @@ BEGIN
     UPDATE history       SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
     UPDATE documents     SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
     UPDATE client_tasks  SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
-    -- calls / emails / sent_messages_log: SET NULL on delete, but we
-    -- prefer to preserve the link by reassigning explicitly.
-    UPDATE calls              SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
-    UPDATE emails             SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
-    UPDATE sent_messages_log  SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
-    -- units have a SET NULL on delete, but if a loser had a reserved
-    -- unit we point it at the winner instead.
-    UPDATE units         SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
+    UPDATE call_responses SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
+    -- ON DELETE SET NULL children — reassign to preserve the link.
+    UPDATE email_campaign_recipients SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
+    UPDATE sent_messages_log         SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
+    UPDATE units                     SET client_id = v_winner_id WHERE client_id = ANY(v_loser_ids);
 
     -- Delete losers. At this point no child row references them.
     DELETE FROM clients WHERE id = ANY(v_loser_ids);

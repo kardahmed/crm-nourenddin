@@ -61,6 +61,27 @@ Deno.serve(async (req) => {
 
     if (!to || !template_name) return json({ error: 'to and template_name required' }, 400)
 
+    // Cross-agent isolation: if a client_id is supplied, the caller must
+    // either be admin or own the client. Without this check, agent A could
+    // pollute agent B's client history / last_contact_at via service_role.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (client_id !== undefined && client_id !== null) {
+      if (typeof client_id !== 'string' || !UUID_RE.test(client_id)) {
+        return json({ error: 'Invalid client_id' }, 400)
+      }
+      const [{ data: callerRow }, { data: clientRow }] = await Promise.all([
+        supabase.from('users').select('role, is_active').eq('id', user.id).single(),
+        supabase.from('clients').select('agent_id').eq('id', client_id).single(),
+      ])
+      const role = (callerRow as { role: string; is_active: boolean } | null)?.role
+      const active = (callerRow as { role: string; is_active: boolean } | null)?.is_active ?? false
+      if (!active) return json({ error: 'Inactive user' }, 403)
+      const ownerId = (clientRow as { agent_id: string | null } | null)?.agent_id ?? null
+      if (role !== 'admin' && ownerId !== user.id) {
+        return json({ error: 'Forbidden: not your client' }, 403)
+      }
+    }
+
     // Clean phone number (ensure format: 213XXXXXXXXX)
     let phone = to.replace(/[\s\-\(\)\+]/g, '')
     if (phone.startsWith('0')) phone = '213' + phone.slice(1)

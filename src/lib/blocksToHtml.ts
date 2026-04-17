@@ -14,37 +14,99 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
+// Minimal whitelist HTML sanitiser for text block content. Allows only safe
+// formatting tags and strips on*-handlers + javascript:/data: URLs.
+const ALLOWED_TEXT_TAGS = new Set([
+  'p','br','h1','h2','h3','h4','h5','h6','strong','em','b','i','u','a',
+  'span','div','ul','ol','li','hr','blockquote',
+])
+
+function stripDangerousAttrs(tag: string): string {
+  let t = tag.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
+  t = t.replace(/\s+(href|src)\s*=\s*"(\s*(?:javascript|data|vbscript):[^"]*)"/gi, ' $1="#"')
+  t = t.replace(/\s+(href|src)\s*=\s*'(\s*(?:javascript|data|vbscript):[^']*)'/gi, " $1='#'")
+  return t
+}
+
+function sanitizeTextHtml(input: string): string {
+  let html = String(input ?? '')
+  html = html.replace(/<(script|style|iframe|object|embed|svg|math|link|meta|form|input|textarea|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
+  html = html.replace(/<(script|style|iframe|object|embed|svg|math|link|meta|form|input|textarea|button)\b[^>]*\/?>/gi, '')
+  html = html.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tagName: string) => {
+    return ALLOWED_TEXT_TAGS.has(tagName.toLowerCase()) ? stripDangerousAttrs(match) : ''
+  })
+  return html
+}
+
+// CSS value validators: block expression(), url(), javascript:, @import, and
+// any character that could break out of an attribute context.
+const CSS_FORBID = /(?:expression\s*\(|url\s*\(|behavior\s*:|javascript\s*:|vbscript\s*:|data\s*:|@import|<|>|;|\{|\})/i
+
+function cssSafeRaw(v: string | undefined): string | null {
+  if (!v) return null
+  const s = String(v).trim()
+  if (!s || CSS_FORBID.test(s) || s.includes('"')) return null
+  return s
+}
+
+function cssSize(v: string | undefined, fallback: string): string {
+  const s = cssSafeRaw(v)
+  if (!s) return fallback
+  if (/^(-?\d+(\.\d+)?(px|em|rem|%|pt|vh|vw)?\s*){1,4}$/i.test(s)) return s
+  return fallback
+}
+
+function cssColor(v: string | undefined, fallback: string): string {
+  const s = cssSafeRaw(v)
+  if (!s) return fallback
+  if (/^#[0-9a-f]{3,8}$/i.test(s)) return s
+  if (/^rgba?\(\s*[\d.\s,%]+\s*\)$/i.test(s)) return s
+  if (/^[a-z]+$/i.test(s)) return s
+  return fallback
+}
+
+function cssAlign(v: string | undefined, fallback: string): string {
+  const s = String(v ?? '').toLowerCase()
+  return ['left', 'right', 'center', 'justify'].includes(s) ? s : fallback
+}
+
+function safeUrl(v: string | undefined, fallback = '#'): string {
+  if (!v) return fallback
+  const s = String(v).trim()
+  if (!/^(https?:\/\/|mailto:|tel:|\/|#)/i.test(s)) return fallback
+  return s.replace(/"/g, '%22').replace(/</g, '%3C').replace(/>/g, '%3E')
+}
+
 function blockToHtml(block: EmailBlock, trackingBaseUrl?: string): string {
-  const s = block.styles
+  const s = block.styles || {}
 
   switch (block.type) {
     case 'text': {
-      const text = String(block.content.text ?? '')
-      const fontSize = s.fontSize ?? '14px'
-      const color = s.color ?? '#1A2B3D'
-      const align = s.textAlign ?? 'left'
-      const padding = s.padding ?? '8px 0'
+      const text = sanitizeTextHtml(String(block.content.text ?? ''))
+      const fontSize = cssSize(s.fontSize, '14px')
+      const color = cssColor(s.color, '#1A2B3D')
+      const align = cssAlign(s.textAlign, 'left')
+      const padding = cssSize(s.padding, '8px 0')
       return `<tr><td style="padding:${padding};font-size:${fontSize};color:${color};text-align:${align};line-height:1.6;font-family:${DEFAULT_FONT}">${text}</td></tr>`
     }
 
     case 'image': {
-      const src = String(block.content.src ?? '')
+      const src = safeUrl(String(block.content.src ?? ''), '')
       const alt = escapeHtml(String(block.content.alt ?? ''))
-      const width = s.width ?? '100%'
-      const align = s.textAlign ?? 'center'
-      const borderRadius = s.borderRadius ?? '8px'
+      const width = cssSize(s.width, '100%')
+      const align = cssAlign(s.textAlign, 'center')
+      const borderRadius = cssSize(s.borderRadius, '8px')
       if (!src) return ''
       return `<tr><td style="padding:8px 0;text-align:${align}"><img src="${src}" alt="${alt}" width="${width}" style="max-width:100%;height:auto;border-radius:${borderRadius};display:block;margin:0 auto" /></td></tr>`
     }
 
     case 'button': {
       const text = escapeHtml(String(block.content.text ?? 'Cliquer ici'))
-      let url = String(block.content.url ?? '#')
-      const bgColor = s.backgroundColor ?? '#0579DA'
-      const textColor = s.color ?? '#ffffff'
-      const borderRadius = s.borderRadius ?? '8px'
-      const align = s.textAlign ?? 'center'
-      // Wrap URL for click tracking
+      let url = safeUrl(String(block.content.url ?? '#'))
+      const bgColor = cssColor(s.backgroundColor, '#0579DA')
+      const textColor = cssColor(s.color, '#ffffff')
+      const borderRadius = cssSize(s.borderRadius, '8px')
+      const align = cssAlign(s.textAlign, 'center')
       if (trackingBaseUrl && url !== '#') {
         url = `${trackingBaseUrl}&url=${encodeURIComponent(url)}`
       }
@@ -53,23 +115,24 @@ function blockToHtml(block: EmailBlock, trackingBaseUrl?: string): string {
 
     case 'columns': {
       const children = (block.content.children ?? []) as EmailBlock[]
-      const gap = s.gap ?? '16px'
+      const gap = cssSize(s.gap, '16px')
       const cols = children.length || 2
       const widthPct = Math.floor(100 / cols)
+      const gapPx = parseInt(gap, 10) || 16
       const cells = children.map(child =>
-        `<td style="width:${widthPct}%;vertical-align:top;padding:0 ${parseInt(gap) / 2}px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${blockToHtml(child, trackingBaseUrl)}</table></td>`
+        `<td style="width:${widthPct}%;vertical-align:top;padding:0 ${gapPx / 2}px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">${blockToHtml(child, trackingBaseUrl)}</table></td>`
       ).join('')
       return `<tr><td style="padding:8px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${cells}</tr></table></td></tr>`
     }
 
     case 'divider': {
-      const color = s.borderColor ?? '#E3E8EF'
-      const margin = s.margin ?? '16px 0'
+      const color = cssColor(s.borderColor, '#E3E8EF')
+      const margin = cssSize(s.margin, '16px 0')
       return `<tr><td style="padding:${margin}"><hr style="border:none;border-top:1px solid ${color};margin:0" /></td></tr>`
     }
 
     case 'spacer': {
-      const height = s.height ?? '24px'
+      const height = cssSize(s.height, '24px')
       return `<tr><td style="height:${height};line-height:${height};font-size:1px">&nbsp;</td></tr>`
     }
 

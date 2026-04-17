@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -32,12 +32,13 @@ export function LoginPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  if (isAuthenticated && role) {
-    navigate('/dashboard', { replace: true })
-    return null
-  }
+  useEffect(() => {
+    if (isAuthenticated && role) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isAuthenticated, role, navigate])
 
-  if (isAuthenticated && !role) {
+  if (isAuthenticated) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F6F9FC]">
         <div className="flex flex-col items-center gap-4">

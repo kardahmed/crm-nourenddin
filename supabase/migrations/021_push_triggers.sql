@@ -110,11 +110,15 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS on_task_insert_notify ON tasks;
-CREATE TRIGGER on_task_insert_notify
-  AFTER INSERT ON tasks
-  FOR EACH ROW
-  EXECUTE FUNCTION trg_notify_task_assigned();
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'tasks') THEN
+    EXECUTE 'DROP TRIGGER IF EXISTS on_task_insert_notify ON public.tasks';
+    EXECUTE 'CREATE TRIGGER on_task_insert_notify AFTER INSERT ON public.tasks FOR EACH ROW EXECUTE FUNCTION public.trg_notify_task_assigned()';
+  ELSE
+    RAISE NOTICE 'Skipping on_task_insert_notify: public.tasks does not exist';
+  END IF;
+END $$;
 
 
 -- Visit scheduled ----------------------------------------------------
@@ -142,11 +146,15 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS on_visit_insert_notify ON visits;
-CREATE TRIGGER on_visit_insert_notify
-  AFTER INSERT ON visits
-  FOR EACH ROW
-  EXECUTE FUNCTION trg_notify_visit_scheduled();
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'visits') THEN
+    EXECUTE 'DROP TRIGGER IF EXISTS on_visit_insert_notify ON public.visits';
+    EXECUTE 'CREATE TRIGGER on_visit_insert_notify AFTER INSERT ON public.visits FOR EACH ROW EXECUTE FUNCTION public.trg_notify_visit_scheduled()';
+  ELSE
+    RAISE NOTICE 'Skipping on_visit_insert_notify: public.visits does not exist';
+  END IF;
+END $$;
 
 
 -- Client reassigned --------------------------------------------------
@@ -170,12 +178,15 @@ BEGIN
 END;
 $$;
 
-DROP TRIGGER IF EXISTS on_client_reassign_notify ON clients;
-CREATE TRIGGER on_client_reassign_notify
-  AFTER UPDATE OF agent_id ON clients
-  FOR EACH ROW
-  WHEN (OLD.agent_id IS DISTINCT FROM NEW.agent_id)
-  EXECUTE FUNCTION trg_notify_client_reassigned();
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_tables WHERE schemaname = 'public' AND tablename = 'clients') THEN
+    EXECUTE 'DROP TRIGGER IF EXISTS on_client_reassign_notify ON public.clients';
+    EXECUTE 'CREATE TRIGGER on_client_reassign_notify AFTER UPDATE OF agent_id ON public.clients FOR EACH ROW WHEN (OLD.agent_id IS DISTINCT FROM NEW.agent_id) EXECUTE FUNCTION public.trg_notify_client_reassigned()';
+  ELSE
+    RAISE NOTICE 'Skipping on_client_reassign_notify: public.clients does not exist';
+  END IF;
+END $$;
 
 
 -- Diagnostic helper: call from SQL Editor to send a test push to self

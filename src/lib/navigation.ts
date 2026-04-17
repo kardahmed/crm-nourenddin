@@ -28,6 +28,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: 'Rapports', path: '/reports', icon: 'BarChart3', roles: 'all', requiredPermission: 'reports.view' },
   { label: 'ROI Marketing', path: '/marketing-roi', icon: 'Target', roles: ['admin'] },
   { label: 'Paramètres', path: '/settings', icon: 'Settings', roles: ['admin'], requiredPermission: 'settings.view' },
+  { label: 'Mon profil', path: '/profile', icon: 'UserCircle', roles: ['agent', 'admin', 'reception'] },
 ]
 
 export function getVisibleNavItems(

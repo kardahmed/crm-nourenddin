@@ -31,6 +31,7 @@ const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ defa
 const MarketingROIPage = lazy(() => import('@/pages/marketing-roi/MarketingROIPage').then(m => ({ default: m.MarketingROIPage })))
 const ReceptionPage = lazy(() => import('@/pages/reception/ReceptionPage').then(m => ({ default: m.ReceptionPage })))
 const TodayPage = lazy(() => import('@/pages/today/TodayPage').then(m => ({ default: m.TodayPage })))
+const ProfilePage = lazy(() => import('@/pages/profile/ProfilePage').then(m => ({ default: m.ProfilePage })))
 
 
 function PageLoader() {
@@ -77,6 +78,7 @@ function App() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/planning" element={<PlanningPage />} />
             <Route path="/dossiers" element={<DossiersPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
 
             {/* Reception + admin (front-desk hub) */}
             <Route element={<RoleRoute allowedRoles={['reception', 'admin']} />}>

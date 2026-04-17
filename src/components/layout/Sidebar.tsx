@@ -14,6 +14,7 @@ import {
   LogOut,
   CheckSquare,
   UserPlus,
+  UserCircle,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -36,6 +37,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   Settings,
   CheckSquare,
   UserPlus,
+  UserCircle: UserCircle,
 }
 
 // Map nav path → i18n key
@@ -54,6 +56,7 @@ const NAV_KEYS: Record<string, string> = {
   '/reports': 'nav.reports',
   '/marketing-roi': 'nav.marketing_roi',
   '/settings': 'nav.settings',
+  '/profile': 'nav.profile',
 }
 
 // Shared sidebar content (used by both desktop and mobile)
@@ -124,20 +127,22 @@ function SidebarContent({ onNavClick }: { onNavClick?: () => void }) {
       {/* User info + logout */}
       <div className="px-3 py-4">
         <div className="flex items-center gap-3 rounded-lg px-3 py-2">
-          <UserAvatar
-            firstName={userProfile?.first_name}
-            lastName={userProfile?.last_name}
-            avatarUrl={userProfile?.avatar_url}
-            size="sm"
-          />
-          <div className="min-w-0 flex-1">
+          <Link to="/profile" onClick={onNavClick} className="shrink-0">
+            <UserAvatar
+              firstName={userProfile?.first_name}
+              lastName={userProfile?.last_name}
+              avatarUrl={userProfile?.avatar_url}
+              size="sm"
+            />
+          </Link>
+          <Link to="/profile" onClick={onNavClick} className="min-w-0 flex-1 hover:opacity-80">
             <div className="truncate text-sm font-medium text-immo-text-primary">
               {userProfile?.first_name} {userProfile?.last_name}
             </div>
             <div className="text-[11px] text-immo-text-muted">
               {role ? t(`role.${role}`) : ''}
             </div>
-          </div>
+          </Link>
           <button
             onClick={signOut}
             className="shrink-0 rounded-md p-1.5 text-immo-text-muted transition-colors hover:bg-immo-status-red-bg hover:text-immo-status-red"

@@ -13,6 +13,7 @@ const PAGE_KEYS: Record<string, { titleKey: string; subtitleKey: string }> = {
   '/agents': { titleKey: 'nav.agents', subtitleKey: 'page.agents_subtitle' },
   '/reports': { titleKey: 'nav.reports', subtitleKey: 'page.reports_subtitle' },
   '/settings': { titleKey: 'nav.settings', subtitleKey: 'page.settings_subtitle' },
+  '/profile': { titleKey: 'nav.profile', subtitleKey: 'page.profile_subtitle' },
 }
 
 export function usePageMeta() {

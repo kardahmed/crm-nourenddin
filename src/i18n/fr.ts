@@ -16,6 +16,7 @@ export const fr = {
     tasks: 'Tâches',
     marketing_roi: 'ROI Marketing',
     settings: 'Paramètres',
+    profile: 'Mon profil',
   },
 
   // Page meta
@@ -31,6 +32,7 @@ export const fr = {
     agents_subtitle: "Gestion de l'équipe commerciale",
     reports_subtitle: 'Rapports et statistiques',
     settings_subtitle: "Configuration de l'agence",
+    profile_subtitle: 'Vos informations et sécurité du compte',
   },
 
   // Actions

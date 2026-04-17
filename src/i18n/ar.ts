@@ -16,6 +16,7 @@ export const ar = {
     tasks: 'المهام',
     marketing_roi: 'عائد التسويق',
     settings: 'الإعدادات',
+    profile: 'ملفي الشخصي',
   },
 
   // Page meta
@@ -31,6 +32,7 @@ export const ar = {
     agents_subtitle: 'إدارة الفريق التجاري',
     reports_subtitle: 'التقارير والإحصائيات',
     settings_subtitle: 'إعدادات الوكالة',
+    profile_subtitle: 'معلوماتك وأمان الحساب',
   },
 
   // Actions

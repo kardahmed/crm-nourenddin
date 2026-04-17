@@ -67,7 +67,9 @@ Deno.serve(async (req) => {
 
     if (rules.pipeline_stages?.length) query = query.in('pipeline_stage', rules.pipeline_stages)
     if (rules.sources?.length) query = query.in('source', rules.sources)
-    if (rules.project_ids?.length) query = query.in('project_id', rules.project_ids)
+    // `clients` has no project_id column; the UI stores interested projects
+    // as a text[] on clients.interested_projects, so use overlap semantics.
+    if (rules.project_ids?.length) query = query.overlaps('interested_projects', rules.project_ids)
 
     const { data: clients, error: clientErr } = await query
     if (clientErr) throw new Error(`Segment query failed: ${clientErr.message}`)

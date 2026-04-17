@@ -1,3 +1,5 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
 export type Database = {
   public: {
     Tables: {
@@ -700,6 +702,200 @@ export type Database = {
         }
         Relationships: []
       }
+      email_templates: {
+        Row: {
+          id: string
+          tenant_id: string
+          name: string
+          subject: string
+          blocks: Json
+          html_cache: string | null
+          thumbnail_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string
+          name: string
+          subject?: string
+          blocks?: Json
+          html_cache?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          name?: string
+          subject?: string
+          blocks?: Json
+          html_cache?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_campaigns: {
+        Row: {
+          id: string
+          tenant_id: string
+          template_id: string | null
+          name: string
+          subject: string
+          status: string
+          segment_rules: Json
+          scheduled_at: string | null
+          sent_at: string | null
+          total_recipients: number
+          total_sent: number
+          total_opened: number
+          total_clicked: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string
+          template_id?: string | null
+          name: string
+          subject: string
+          status?: string
+          segment_rules?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          total_recipients?: number
+          total_sent?: number
+          total_opened?: number
+          total_clicked?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          template_id?: string | null
+          name?: string
+          subject?: string
+          status?: string
+          segment_rules?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          total_recipients?: number
+          total_sent?: number
+          total_opened?: number
+          total_clicked?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'email_campaigns_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'email_templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      email_campaign_recipients: {
+        Row: {
+          id: string
+          campaign_id: string
+          client_id: string | null
+          email: string
+          full_name: string | null
+          status: string
+          sent_at: string | null
+          opened_at: string | null
+          clicked_at: string | null
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          client_id?: string | null
+          email: string
+          full_name?: string | null
+          status?: string
+          sent_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+        }
+        Update: {
+          id?: string
+          campaign_id?: string
+          client_id?: string | null
+          email?: string
+          full_name?: string | null
+          status?: string
+          sent_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+        }
+        Relationships: []
+      }
+      email_events: {
+        Row: {
+          id: string
+          campaign_id: string | null
+          recipient_id: string | null
+          event_type: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id?: string | null
+          recipient_id?: string | null
+          event_type: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          campaign_id?: string | null
+          recipient_id?: string | null
+          event_type?: string
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          template: string | null
+          recipient: string
+          subject: string
+          status: string
+          provider: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          template?: string | null
+          recipient: string
+          subject: string
+          status?: string
+          provider?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          template?: string | null
+          recipient?: string
+          subject?: string
+          status?: string
+          provider?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -783,3 +979,8 @@ export type Document = Database['public']['Tables']['documents']['Row']
 export type AgentGoal = Database['public']['Tables']['agent_goals']['Row']
 export type TenantSettings = Database['public']['Tables']['tenant_settings']['Row']
 export type DocumentTemplate = Database['public']['Tables']['document_templates']['Row']
+export type EmailTemplateRow = Database['public']['Tables']['email_templates']['Row']
+export type EmailCampaignRow = Database['public']['Tables']['email_campaigns']['Row']
+export type EmailCampaignRecipientRow = Database['public']['Tables']['email_campaign_recipients']['Row']
+export type EmailEventRow = Database['public']['Tables']['email_events']['Row']
+export type EmailLogRow = Database['public']['Tables']['email_logs']['Row']

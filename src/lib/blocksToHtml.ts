@@ -28,7 +28,7 @@ function stripDangerousAttrs(tag: string): string {
   return t
 }
 
-function sanitizeTextHtml(input: string): string {
+export function sanitizeTextHtml(input: string): string {
   let html = String(input ?? '')
   html = html.replace(/<(script|style|iframe|object|embed|svg|math|link|meta|form|input|textarea|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
   html = html.replace(/<(script|style|iframe|object|embed|svg|math|link|meta|form|input|textarea|button)\b[^>]*\/?>/gi, '')

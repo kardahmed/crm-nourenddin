@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
-import { blocksToHtml, STARTER_BLOCKS } from '@/lib/blocksToHtml'
+import { blocksToHtml, sanitizeTextHtml, STARTER_BLOCKS } from '@/lib/blocksToHtml'
 import type { EmailBlock } from '@/lib/blocksToHtml'
 import { useSaveTemplate } from '@/hooks/useEmailMarketing'
 import { DragDropZone } from '@/components/common/DragDropZone'
@@ -154,7 +154,8 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
               srcDoc={blocksToHtml(blocks)}
               className="w-full rounded-xl"
               style={{ minHeight: 600, border: 'none' }}
-              sandbox="allow-same-origin"
+              sandbox=""
+              referrerPolicy="no-referrer"
               title="Email preview"
             />
           </div>
@@ -262,7 +263,7 @@ function BlockPreview({ block, onImageUpload }: { block: EmailBlock; onImageUplo
       return (
         <div
           className="text-sm text-immo-text-primary"
-          dangerouslySetInnerHTML={{ __html: String(block.content.text ?? '') }}
+          dangerouslySetInnerHTML={{ __html: sanitizeTextHtml(String(block.content.text ?? '')) }}
         />
       )
     case 'image': {

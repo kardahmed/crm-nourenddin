@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal,
+  Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal, Archive,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -36,6 +36,7 @@ interface AgentRow {
   role: UserRole
   status: string
   last_activity: string | null
+  archived_at: string | null
   clients_count: number
   sales_count: number
 }
@@ -51,10 +52,13 @@ export function AgentsPage() {
   const navigate = useNavigate()
   const { canManageAgents } = usePermissions()
 
+  const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<'agents' | 'permissions'>('agents')
+  const [showArchived, setShowArchived] = useState(false)
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
+  const [archiveId, setArchiveId] = useState<string | null>(null)
 
   // Fetch agents with counts
   const { data: agents = [], isLoading } = useQuery({
@@ -62,7 +66,7 @@ export function AgentsPage() {
     queryFn: async () => {
       const { data: users, error } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email, phone, role, status, last_activity')
+        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at')
         .order('first_name')
       if (error) { handleSupabaseError(error); throw error }
 
@@ -97,21 +101,48 @@ export function AgentsPage() {
     () => agents.find(a => a.id === deactivateId) ?? null,
     [agents, deactivateId],
   )
+  const archiveAgentRow = useMemo(
+    () => agents.find(a => a.id === archiveId) ?? null,
+    [agents, archiveId],
+  )
 
-  // KPIs
-  const total = agents.length
+  // Archive mutation — hits the archive_agent RPC which validates
+  // that the user is already inactive and owns nothing.
+  const archive = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.rpc('archive_agent' as never, { p_agent_id: userId } as never)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agents-list'] })
+      toast.success('Utilisateur archivé. Historique conservé.')
+      setArchiveId(null)
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Échec de l\'archivage')
+    },
+  })
+
+  // KPIs (computed on the full, unfiltered list so archived users
+  // don't distort the "inactif" count)
+  const nonArchived = agents.filter(a => a.status !== 'archived')
+  const total = nonArchived.length
   const active = agents.filter(a => a.status === 'active').length
   const inactive = agents.filter(a => a.status === 'inactive').length
+  const archivedCount = agents.filter(a => a.status === 'archived').length
   const totalClients = agents.reduce((s, a) => s + a.clients_count, 0)
 
-  // Filter
+  // Filter: hide archived by default; `showArchived` flips to archived-only.
   const filtered = useMemo(() => {
-    if (!search) return agents
+    const base = showArchived
+      ? agents.filter(a => a.status === 'archived')
+      : agents.filter(a => a.status !== 'archived')
+    if (!search) return base
     const q = search.toLowerCase()
-    return agents.filter(a =>
+    return base.filter(a =>
       `${a.first_name} ${a.last_name}`.toLowerCase().includes(q) || a.email.toLowerCase().includes(q)
     )
-  }, [agents, search])
+  }, [agents, search, showArchived])
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 
@@ -140,13 +171,24 @@ export function AgentsPage() {
         <KPICard label="Total agents" value={total} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
         <KPICard label="Actifs" value={active} accent="green" icon={<UserCheck className="h-4 w-4 text-immo-accent-green" />} />
         <KPICard label="Inactifs" value={inactive} accent="red" icon={<UserX className="h-4 w-4 text-immo-status-red" />} />
-        <KPICard label="Clients assignés" value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={archivedCount > 0 ? `Archivés (${archivedCount})` : 'Clients assignés'} value={archivedCount > 0 ? archivedCount : totalClients} accent="blue" icon={archivedCount > 0 ? <Archive className="h-4 w-4 text-immo-accent-blue" /> : <Users className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
 
       {/* Toolbar */}
       <div className="flex items-center gap-3">
         <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-[260px]" />
-        {canManageAgents && (
+        <button
+          onClick={() => setShowArchived(v => !v)}
+          className={`flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors ${
+            showArchived
+              ? 'border-immo-accent-blue bg-immo-accent-blue/10 text-immo-accent-blue'
+              : 'border-immo-border-default text-immo-text-muted hover:text-immo-text-primary'
+          }`}
+        >
+          <Archive className="h-3.5 w-3.5" />
+          {showArchived ? `Archivés (${archivedCount})` : 'Voir archivés'}
+        </button>
+        {canManageAgents && !showArchived && (
           <Button
             onClick={() => setShowCreate(true)}
             className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
@@ -195,7 +237,22 @@ export function AgentsPage() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <StatusBadge label={a.status === 'active' ? 'Actif' : 'Inactif'} type={a.status === 'active' ? 'green' : 'red'} />
+                      <StatusBadge
+                        label={
+                          a.status === 'active'
+                            ? 'Actif'
+                            : a.status === 'archived'
+                              ? 'Archivé'
+                              : 'Inactif'
+                        }
+                        type={
+                          a.status === 'active'
+                            ? 'green'
+                            : a.status === 'archived'
+                              ? 'muted'
+                              : 'red'
+                        }
+                      />
                     </td>
                     <td className="whitespace-nowrap px-4 py-2">
                       <DropdownMenu>
@@ -212,6 +269,11 @@ export function AgentsPage() {
                           {a.status === 'active' && canManageAgents && (
                             <DropdownMenuItem onClick={() => setDeactivateId(a.id)} className="text-sm text-immo-status-red focus:bg-immo-status-red-bg">
                               <Ban className="mr-2 h-3.5 w-3.5" /> Désactiver
+                            </DropdownMenuItem>
+                          )}
+                          {a.status === 'inactive' && canManageAgents && (
+                            <DropdownMenuItem onClick={() => setArchiveId(a.id)} className="text-sm text-immo-text-muted focus:bg-immo-bg-card-hover">
+                              <Archive className="mr-2 h-3.5 w-3.5" /> Archiver définitivement
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -235,6 +297,44 @@ export function AgentsPage() {
         agentId={deactivateId}
         agentName={deactivateAgent ? `${deactivateAgent.first_name} ${deactivateAgent.last_name}` : ''}
       />
+
+      {/* Archive confirmation */}
+      <Modal
+        isOpen={!!archiveId}
+        onClose={() => (!archive.isPending ? setArchiveId(null) : undefined)}
+        title="Archiver définitivement"
+        subtitle={archiveAgentRow ? `${archiveAgentRow.first_name} ${archiveAgentRow.last_name}` : ''}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3 text-[12px] leading-relaxed text-immo-text-primary">
+            <p className="mb-2 font-medium">L'archivage est définitif. Ce que cela implique:</p>
+            <ul className="list-disc space-y-1 pl-5 text-immo-text-secondary">
+              <li>Le compte disparaît de la liste principale (visible uniquement dans "Archivés").</li>
+              <li>Toutes les ventes, visites, appels et historique passés restent visibles au nom de cet utilisateur.</li>
+              <li>Aucune réactivation prévue. Si la personne revient, crée un nouveau compte.</li>
+            </ul>
+          </div>
+          <div className="flex justify-end gap-2 border-t border-immo-border-default pt-4">
+            <Button variant="ghost" onClick={() => setArchiveId(null)} disabled={archive.isPending}>
+              Annuler
+            </Button>
+            <Button
+              onClick={() => archiveId && archive.mutate(archiveId)}
+              disabled={archive.isPending}
+              className="bg-immo-text-muted font-semibold text-immo-bg-primary hover:bg-immo-text-muted/90"
+            >
+              {archive.isPending ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
+              ) : (
+                <>
+                  <Archive className="mr-1.5 h-4 w-4" /> Archiver
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       </>
       )}
     </div>

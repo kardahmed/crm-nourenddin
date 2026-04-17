@@ -5,6 +5,7 @@ import { RoleRoute } from '@/components/auth/RoleRoute'
 import { GuestOnlyRoute } from '@/components/auth/GuestOnlyRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { useAuthStore } from '@/store/authStore'
 
 // Lazy-loaded pages for code splitting
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -28,6 +29,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ defa
 
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const MarketingROIPage = lazy(() => import('@/pages/marketing-roi/MarketingROIPage').then(m => ({ default: m.MarketingROIPage })))
+const ReceptionPage = lazy(() => import('@/pages/reception/ReceptionPage').then(m => ({ default: m.ReceptionPage })))
 
 
 function PageLoader() {
@@ -41,8 +43,11 @@ function PageLoader() {
 
 function HomeRedirect() {
   const hasSession = Object.keys(localStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'))
-  if (hasSession) return <Navigate to="/dashboard" replace />
-  return <Navigate to="/login" replace />
+  const role = useAuthStore(s => s.role)
+  if (!hasSession) return <Navigate to="/login" replace />
+  // Reception lands on /reception; everyone else on /dashboard.
+  if (role === 'reception') return <Navigate to="/reception" replace />
+  return <Navigate to="/dashboard" replace />
 }
 
 function App() {
@@ -70,6 +75,11 @@ function App() {
             <Route path="/tasks" element={<TasksPage />} />
             <Route path="/planning" element={<PlanningPage />} />
             <Route path="/dossiers" element={<DossiersPage />} />
+
+            {/* Reception + admin (front-desk hub) */}
+            <Route element={<RoleRoute allowedRoles={['reception', 'admin']} />}>
+              <Route path="/reception" element={<ReceptionPage />} />
+            </Route>
 
             {/* Admin only */}
             <Route element={<RoleRoute allowedRoles={['admin']} />}>

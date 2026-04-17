@@ -9,6 +9,18 @@ import type { PermissionKey } from '@/types/permissions'
  * the day-to-day commercial work without admin intervention. Admins can
  * still create restrictive profiles and assign them to specific agents.
  */
+/**
+ * Permissions granted to the `reception` role. The receptionist is a
+ * dispatcher, not a commercial — she sees the client list to assign it,
+ * reads projects to answer phone questions, but never touches sales,
+ * reservations, pipeline stages or goals.
+ */
+const RECEPTION_PERMISSIONS: PermissionKey[] = [
+  'pipeline.view_all', 'pipeline.create',
+  'projects.view', 'units.view',
+  'visits.view_all',
+]
+
 const DEFAULT_AGENT_PERMISSIONS: PermissionKey[] = [
   'dashboard.view',
   'pipeline.view_own', 'pipeline.create', 'pipeline.edit', 'pipeline.change_stage',
@@ -62,6 +74,8 @@ export function usePermissions(): Permissions {
     function can(permission: PermissionKey): boolean {
       // Admin bypass — full access
       if (isAdm) return true
+      // Reception has a narrow, fixed scope — no inherited agent perms.
+      if (isRecep) return RECEPTION_PERMISSIONS.includes(permission)
       // Agent with a custom profile → use the profile
       if (permissionProfile?.permissions) {
         return permissionProfile.permissions[permission] === true

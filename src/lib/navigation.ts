@@ -9,9 +9,14 @@ export interface NavItem {
   requiredPermission?: PermissionKey
 }
 
+// "all" historically meant "every non-admin role sees this" — i.e. agents.
+// With the reception role added, we keep that meaning (agent + admin) and
+// wire reception-specific items explicitly. Reception users see the
+// /reception hub plus a read-only view of projects for phone answers.
 export const NAV_ITEMS: NavItem[] = [
+  { label: 'Reception', path: '/reception', icon: 'UserPlus', roles: ['reception', 'admin'] },
   { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard', roles: 'all', requiredPermission: 'dashboard.view' },
-  { label: 'Projets', path: '/projects', icon: 'Building2', roles: 'all', requiredPermission: 'projects.view' },
+  { label: 'Projets', path: '/projects', icon: 'Building2', roles: ['agent', 'admin', 'reception'], requiredPermission: 'projects.view' },
   { label: 'Pipeline', path: '/pipeline', icon: 'GitBranch', roles: 'all', requiredPermission: 'pipeline.view_own' },
   { label: 'Taches', path: '/tasks', icon: 'CheckSquare', roles: 'all' },
   { label: 'Planning', path: '/planning', icon: 'Calendar', roles: 'all', requiredPermission: 'visits.view_own' },
@@ -35,8 +40,14 @@ export function getVisibleNavItems(
   }
   // Filter for non-admin roles
   return NAV_ITEMS.filter((item) => {
-    // 1. Role restriction: skip items that don't include this role
-    if (item.roles !== 'all' && !item.roles.includes(role)) return false
+    // 1. Role restriction: skip items that don't include this role.
+    //    'all' is legacy shorthand for agent-scoped visibility; reception
+    //    gets only items that list it explicitly.
+    if (item.roles === 'all') {
+      if (role !== 'agent') return false
+    } else if (!item.roles.includes(role)) {
+      return false
+    }
     // 2. Permission requirement: if a permission is required, check it
     if (item.requiredPermission && can) {
       return can(item.requiredPermission)

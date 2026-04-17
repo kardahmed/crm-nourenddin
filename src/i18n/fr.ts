@@ -1,6 +1,7 @@
 export const fr = {
   // Navigation
   nav: {
+    reception: 'Réception',
     dashboard: 'Dashboard',
     projects: 'Projets',
     pipeline: 'Pipeline',
@@ -116,9 +117,9 @@ export const fr = {
 
   // Rôles
   role: {
-    super_admin: 'Super Admin',
     admin: 'Administrateur',
     agent: 'Agent commercial',
+    reception: 'Réception',
   },
 
   // Types d'unités

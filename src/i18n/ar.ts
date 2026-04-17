@@ -1,6 +1,7 @@
 export const ar = {
   // Navigation
   nav: {
+    reception: 'الاستقبال',
     dashboard: 'لوحة التحكم',
     projects: 'المشاريع',
     pipeline: 'مسار العملاء',
@@ -116,9 +117,9 @@ export const ar = {
 
   // Rôles
   role: {
-    super_admin: 'مدير عام',
     admin: 'مدير',
     agent: 'وكيل تجاري',
+    reception: 'الاستقبال',
   },
 
   // Types d'unités

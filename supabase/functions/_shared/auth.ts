@@ -12,13 +12,16 @@
 // Returns a 401/403 Response on failure, or the resolved principal.
 
 import { createClient, type SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { verifyInternalToken } from './internalToken.ts'
 
 export type Principal =
   | { kind: 'service' }
+  | { kind: 'internal' }
   | { kind: 'user'; userId: string; role: string; isActive: boolean }
 
 export interface AuthOptions {
   allowService?: boolean
+  allowInternal?: boolean
   requireAdmin?: boolean
   corsHeaders?: Record<string, string>
 }
@@ -38,6 +41,20 @@ export async function authenticate(
   const supabase = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   })
+
+  // Internal edge-function-to-edge-function HMAC token path.
+  const internalToken = req.headers.get('x-internal-token') ?? req.headers.get('X-Internal-Token')
+  if (internalToken && (opts.allowService || opts.allowInternal)) {
+    if (await verifyInternalToken(internalToken)) {
+      return { ok: true, principal: { kind: 'internal' }, supabase }
+    }
+    return {
+      ok: false,
+      response: new Response(JSON.stringify({ error: 'Invalid internal token' }), {
+        status: 401, headers: jsonHeaders(opts.corsHeaders),
+      }),
+    }
+  }
 
   const authHeader = req.headers.get('Authorization') ?? req.headers.get('authorization') ?? ''
   const match = authHeader.match(/^Bearer\s+(.+)$/i)

@@ -6,7 +6,7 @@ import { rateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-internal-token',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
@@ -18,7 +18,7 @@ serve(async (req: Request) => {
     })
   }
 
-  const auth = await authenticate(req, { allowService: true, requireAdmin: true, corsHeaders })
+  const auth = await authenticate(req, { allowService: true, allowInternal: true, requireAdmin: true, corsHeaders })
   if (!auth.ok) return auth.response
   const { principal, supabase } = auth
 

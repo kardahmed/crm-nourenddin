@@ -197,7 +197,7 @@ export const RESERVATION_STATUS_LABELS: Record<ReservationStatus, { label: strin
 // ─── User Roles ───
 
 export const USER_ROLE_LABELS: Record<UserRole, string> = {
-  super_admin: 'Super Admin',
   admin: 'Administrateur',
   agent: 'Agent commercial',
+  reception: 'Réception',
 }

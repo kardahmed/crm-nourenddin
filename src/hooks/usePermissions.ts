@@ -46,6 +46,8 @@ export interface Permissions {
   isSuperAdmin: boolean
   isAdmin: boolean
   isAgent: boolean
+  isReception: boolean
+  canAssignClients: boolean
   hasRole: (...roles: UserRole[]) => boolean
 }
 
@@ -55,6 +57,7 @@ export function usePermissions(): Permissions {
 
   return useMemo(() => {
     const isAdm = role === 'admin'
+    const isRecep = role === 'reception'
 
     function can(permission: PermissionKey): boolean {
       // Admin bypass — full access
@@ -86,6 +89,10 @@ export function usePermissions(): Permissions {
       isSuperAdmin: false,
       isAdmin: isAdm,
       isAgent: role === 'agent',
+      isReception: isRecep,
+      // Reception can assign any client; admin inherits it implicitly.
+      // Agents cannot reassign away from themselves.
+      canAssignClients: isAdm || isRecep,
       hasRole: (...roles: UserRole[]) => role !== null && roles.includes(role),
     }
   }, [role, permissionProfile])

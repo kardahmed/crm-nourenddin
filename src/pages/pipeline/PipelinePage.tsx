@@ -61,7 +61,7 @@ export function PipelinePage() {
   const { clients: rawClients, isLoading: loadingClients, updateClientStage } = useClients()
   const { generateForStage } = useAutoTasks()
   const { data: stats, isLoading: loadingStats } = usePipelineStats()
-  const { canManageProjects } = usePermissions()
+  const { canManageProjects, isAgent } = usePermissions()
 
   const clients = rawClients as unknown as Client[]
 
@@ -423,19 +423,19 @@ export function PipelinePage() {
         </div>
 
         {canManageProjects && (
-          <>
-            <Button
-              onClick={() => setShowImport(true)}
-              variant="ghost"
-              className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover"
-              title="Importer depuis un CSV (migration d'un ancien CRM)"
-            >
-              <Upload className="mr-1.5 h-4 w-4" /> Importer
-            </Button>
-            <Button onClick={() => setShowClientForm(true)} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
-              <Plus className="mr-1.5 h-4 w-4" /> Client
-            </Button>
-          </>
+          <Button
+            onClick={() => setShowImport(true)}
+            variant="ghost"
+            className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover"
+            title="Importer depuis un CSV (migration d'un ancien CRM)"
+          >
+            <Upload className="mr-1.5 h-4 w-4" /> Importer
+          </Button>
+        )}
+        {(canManageProjects || isAgent) && (
+          <Button onClick={() => setShowClientForm(true)} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
+            <Plus className="mr-1.5 h-4 w-4" /> Client
+          </Button>
         )}
       </div>
 

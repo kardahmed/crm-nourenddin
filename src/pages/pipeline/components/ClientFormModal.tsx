@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { useClients } from '@/hooks/useClients'
 import { useProjects } from '@/hooks/useProjects'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useAuthStore } from '@/store/authStore'
 import { Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -51,6 +53,8 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
   const isEdit = !!client
   const { createClient, updateClient } = useClients()
   const { projects } = useProjects()
+  const { isAgent } = usePermissions()
+  const currentUserId = useAuthStore(s => s.session?.user?.id)
 
   // Fetch agents
   const { data: agents = [] } = useQuery({
@@ -122,8 +126,11 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
       })
     } else if (!client && isOpen) {
       reset()
+      if (isAgent && currentUserId) {
+        setValue('agent_id', currentUserId)
+      }
     }
-  }, [client, isOpen, reset])
+  }, [client, isOpen, reset, isAgent, currentUserId, setValue])
 
   async function onSubmit(data: FormData) {
     const payload = {
@@ -316,7 +323,12 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
                 control={control}
                 name="agent_id"
                 render={({ field }) => (
-                  <select value={field.value ?? ''} onChange={(e) => field.onChange(e.target.value)} className={`h-9 w-full rounded-md border px-3 text-sm ${inputClass} ${errors.agent_id ? 'border-immo-status-red' : ''}`}>
+                  <select
+                    value={field.value ?? ''}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    disabled={isAgent && !isEdit}
+                    className={`h-9 w-full rounded-md border px-3 text-sm ${inputClass} ${errors.agent_id ? 'border-immo-status-red' : ''} ${isAgent && !isEdit ? 'opacity-60 cursor-not-allowed' : ''}`}
+                  >
                     <option value="">Selectionner l'agent</option>
                     {agents.map(a => <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>)}
                   </select>

@@ -1,10 +1,15 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
+import { isSafeOutboundUrl } from '../_shared/safeUrl.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
+
+const SLACK_HOSTS = ['hooks.slack.com']
+const DISCORD_HOSTS = ['discord.com', 'discordapp.com']
 
 interface PlatformAlert {
   id: string
@@ -23,9 +28,10 @@ serve(async (req: Request) => {
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, serviceKey)
 
-    // Verify caller is using service role key
+    // Verify caller carries the service role key verbatim. Prior check
+    // matched any Bearer header, which effectively allowed anyone in.
     const authHeader = req.headers.get('Authorization') ?? ''
-    if (!authHeader.includes(serviceKey) && !authHeader.includes('Bearer')) {
+    if (authHeader !== `Bearer ${serviceKey}`) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
@@ -128,6 +134,13 @@ serve(async (req: Request) => {
             }
           }
         } else if (alert.channel === 'slack' && alert.webhook_url) {
+          if (!isSafeOutboundUrl(alert.webhook_url, { allowHosts: SLACK_HOSTS })) {
+            await supabase.from('super_admin_logs').insert({
+              action: 'error', details: { message: `Slack alert blocked (unsafe URL): ${alert.type}` },
+            })
+            results.push({ alert_type: alert.type, triggered, message: message || undefined })
+            continue
+          }
           try {
             await fetch(alert.webhook_url, {
               method: 'POST',
@@ -147,6 +160,13 @@ serve(async (req: Request) => {
             })
           }
         } else if (alert.channel === 'discord' && alert.webhook_url) {
+          if (!isSafeOutboundUrl(alert.webhook_url, { allowHosts: DISCORD_HOSTS })) {
+            await supabase.from('super_admin_logs').insert({
+              action: 'error', details: { message: `Discord alert blocked (unsafe URL): ${alert.type}` },
+            })
+            results.push({ alert_type: alert.type, triggered, message: message || undefined })
+            continue
+          }
           try {
             await fetch(alert.webhook_url, {
               method: 'POST',
@@ -169,6 +189,13 @@ serve(async (req: Request) => {
             })
           }
         } else if (alert.channel === 'webhook' && alert.webhook_url) {
+          if (!isSafeOutboundUrl(alert.webhook_url)) {
+            await supabase.from('super_admin_logs').insert({
+              action: 'error', details: { message: `Webhook alert blocked (unsafe URL): ${alert.type}` },
+            })
+            results.push({ alert_type: alert.type, triggered, message: message || undefined })
+            continue
+          }
           try {
             await fetch(alert.webhook_url, {
               method: 'POST',
@@ -197,7 +224,8 @@ serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error('send-alert error:', error)
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

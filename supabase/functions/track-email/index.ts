@@ -1,10 +1,16 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { isSafeOutboundUrl } from '../_shared/safeUrl.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 
 // 1x1 transparent GIF
 const TRACKING_PIXEL = Uint8Array.from(atob('R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'), c => c.charCodeAt(0))
+
+// Fallback destination when the click URL is missing or unsafe. Points at
+// the Supabase project homepage so we never emit an attacker-controlled
+// Location header.
+const SAFE_FALLBACK = new URL(supabaseUrl).origin
 
 Deno.serve(async (req) => {
   const url = new URL(req.url)
@@ -89,11 +95,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Redirect to the actual URL
-      const destination = redirectUrl || '/'
+      // Redirect to the actual URL only if it parses and is not private.
+      const destination = redirectUrl && isSafeOutboundUrl(redirectUrl, { schemes: ['http:', 'https:'] })
+        ? redirectUrl
+        : SAFE_FALLBACK
       return new Response(null, {
         status: 302,
-        headers: { 'Location': destination },
+        headers: { 'Location': destination, 'Referrer-Policy': 'no-referrer' },
       })
     }
 
@@ -104,7 +112,10 @@ Deno.serve(async (req) => {
     if (type === 'open') {
       return new Response(TRACKING_PIXEL, { headers: { 'Content-Type': 'image/gif' } })
     }
-    // For click, redirect even if logging fails
-    return new Response(null, { status: 302, headers: { 'Location': redirectUrl || '/' } })
+    // For click, redirect even if logging fails (safe fallback only).
+    const safeDest = redirectUrl && isSafeOutboundUrl(redirectUrl, { schemes: ['http:', 'https:'] })
+      ? redirectUrl
+      : SAFE_FALLBACK
+    return new Response(null, { status: 302, headers: { 'Location': safeDest, 'Referrer-Policy': 'no-referrer' } })
   }
 })

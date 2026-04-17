@@ -1,11 +1,20 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { format, subDays, startOfDay } from 'date-fns'
+import { format, subDays, startOfDay, eachDayOfInterval } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { AlertTriangle, TrendingUp, Scale, Shuffle, Users } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts'
 import { supabase } from '@/lib/supabase'
 import { LoadingSpinner } from '@/components/common'
 import type { AssignmentMode } from '@/hooks/useReceptionAssignment'
+
+// Stable palette for stacked bars — cycles for deep agent lists
+const AGENT_COLORS = [
+  '#00D4A0', '#3782FF', '#FF9A1E', '#A855F7', '#06B6D4',
+  '#EAB308', '#F97316', '#EC4899', '#84CC16', '#6366F1',
+]
 
 type Range = '7d' | '30d' | '90d'
 
@@ -206,6 +215,33 @@ export function EquityDashboard() {
       }
     })
 
+    // Daily flow: one row per day, one numeric key per agent. Used to
+    // feed a stacked bar chart that shows who gets leads when.
+    const days = eachDayOfInterval({
+      start: subDays(new Date(), RANGE_DAYS[range] - 1),
+      end: new Date(),
+    })
+    const flow: Array<Record<string, number | string>> = days.map(d => ({
+      day: format(d, 'dd/MM'),
+      _total: 0,
+    }))
+    const dayIndex = new Map(flow.map((row, i) => [row.day as string, i]))
+    for (const a of agentArr) {
+      for (const row of flow) row[a.name] = 0
+    }
+    for (const ev of data.events) {
+      const m = ev.metadata ?? {}
+      const toAgent = m.to_agent_id ?? ev.agent_id
+      if (!toAgent) continue
+      const a = agentMap.get(toAgent)
+      if (!a) continue
+      const day = format(new Date(ev.created_at), 'dd/MM')
+      const idx = dayIndex.get(day)
+      if (idx === undefined) continue
+      flow[idx][a.name] = ((flow[idx][a.name] as number) ?? 0) + 1
+      flow[idx]._total = ((flow[idx]._total as number) ?? 0) + 1
+    }
+
     return {
       agents: agentArr,
       receptions: receptionArr,
@@ -213,8 +249,9 @@ export function EquityDashboard() {
       mean,
       stddev,
       userById,
+      flow,
     }
-  }, [data])
+  }, [data, range])
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-64" />
   if (!summary) return null
@@ -266,6 +303,60 @@ export function EquityDashboard() {
           hint="hors mode manuel"
         />
       </div>
+
+      {/* Flux: leads par jour, empilé par agent */}
+      {summary.agents.length > 0 && summary.flow.length > 0 && (
+        <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-4">
+          <div className="mb-2 flex items-baseline justify-between">
+            <h3 className="text-sm font-semibold text-immo-text-primary">
+              Flux réception → agent ({RANGE_LABELS[range].toLowerCase()})
+            </h3>
+            <span className="text-[11px] text-immo-text-muted">
+              {summary.total} lead(s) attribué(s)
+            </span>
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={summary.flow} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" />
+              <XAxis
+                dataKey="day"
+                tick={{ fill: '#8A8D93', fontSize: 10 }}
+                tickLine={false}
+                axisLine={{ stroke: '#ffffff20' }}
+              />
+              <YAxis
+                tick={{ fill: '#8A8D93', fontSize: 10 }}
+                tickLine={false}
+                axisLine={{ stroke: '#ffffff20' }}
+                allowDecimals={false}
+              />
+              <Tooltip
+                cursor={{ fill: '#ffffff08' }}
+                contentStyle={{
+                  backgroundColor: '#1a1d21',
+                  border: '1px solid #ffffff20',
+                  borderRadius: 8,
+                  fontSize: 11,
+                }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
+                iconType="circle"
+                iconSize={8}
+              />
+              {summary.agents.map((a, i) => (
+                <Bar
+                  key={a.id}
+                  dataKey={a.name}
+                  stackId="leads"
+                  fill={AGENT_COLORS[i % AGENT_COLORS.length]}
+                  radius={i === summary.agents.length - 1 ? [4, 4, 0, 0] : 0}
+                />
+              ))}
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
 
       {/* Warnings */}
       {(outliers.length > 0 || favoritism.length > 0) && (

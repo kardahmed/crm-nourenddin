@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { UserPlus, CalendarCheck, Users, Inbox, Scale } from 'lucide-react'
+import { UserPlus, CalendarCheck, Users, Inbox, Scale, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { KPICard, LoadingSpinner } from '@/components/common'
 import { NewContactForm } from './components/NewContactForm'
@@ -8,10 +8,11 @@ import { TodayVisitsList } from './components/TodayVisitsList'
 import { UnassignedQueue } from './components/UnassignedQueue'
 import { AgentsDirectory } from './components/AgentsDirectory'
 import { EquityDashboard } from './components/EquityDashboard'
+import { ReceptionJournal } from './components/ReceptionJournal'
 import { useReceptionSettings, MODE_LABELS } from '@/hooks/useReceptionAssignment'
 import { usePermissions } from '@/hooks/usePermissions'
 
-type TabKey = 'new' | 'visits' | 'unassigned' | 'directory' | 'equity'
+type TabKey = 'new' | 'visits' | 'unassigned' | 'directory' | 'journal' | 'equity'
 
 export function ReceptionPage() {
   const [tab, setTab] = useState<TabKey>('new')
@@ -63,6 +64,7 @@ export function ReceptionPage() {
       { key: 'directory' as TabKey, label: 'Agents', icon: Users, count: metrics?.activeAgents },
     ]
     if (isAdmin) {
+      base.push({ key: 'journal' as TabKey, label: 'Journal', icon: FileText })
       base.push({ key: 'equity' as TabKey, label: 'Équité', icon: Scale })
     }
     return base
@@ -153,6 +155,7 @@ export function ReceptionPage() {
       {tab === 'visits' && <TodayVisitsList />}
       {tab === 'unassigned' && <UnassignedQueue />}
       {tab === 'directory' && <AgentsDirectory />}
+      {tab === 'journal' && isAdmin && <ReceptionJournal />}
       {tab === 'equity' && isAdmin && <EquityDashboard />}
     </div>
   )

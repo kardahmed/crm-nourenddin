@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { blocksToHtml, sanitizeTextHtml, STARTER_BLOCKS } from '@/lib/blocksToHtml'
+import { validateFile } from '@/lib/fileValidation'
 import type { EmailBlock } from '@/lib/blocksToHtml'
 import { useSaveTemplate } from '@/hooks/useEmailMarketing'
 import { DragDropZone } from '@/components/common/DragDropZone'
@@ -103,9 +104,12 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
   const handleImageUpload = async (files: File[], blockId: string) => {
     const file = files[0]
     if (!file) return
-    const ext = file.name.split('.').pop()
-    const path = `email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
-    const { error } = await supabase.storage.from('email-assets').upload(path, file)
+    const check = await validateFile(file, { maxSizeMB: 5, allowedMimes: ['image/*'] })
+    if (!check.ok) { toast.error(`Image refusée: ${check.reason}`); return }
+    const path = `email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${check.detected.ext}`
+    const { error } = await supabase.storage
+      .from('email-assets')
+      .upload(path, file, { contentType: check.detected.mime })
     if (error) { toast.error('Erreur upload'); return }
     const { data: urlData } = supabase.storage.from('email-assets').getPublicUrl(path)
     updateBlock(blockId, { content: { src: urlData.publicUrl } })

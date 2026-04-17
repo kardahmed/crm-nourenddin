@@ -1,6 +1,7 @@
 // Admin-only edge function: creates a user in auth.users + public.users
-// Uses the service role key, so it bypasses client signup rate limits and
-// can auto-confirm emails. The caller must already be an authenticated admin.
+// Sends an invitation email so the new user sets their own password — no
+// temp password needs to be shared manually. Uses the service role key,
+// bypasses signup rate limits, auto-confirms email. Caller must be admin.
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -21,10 +22,10 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const siteUrl = Deno.env.get('SITE_URL') ?? Deno.env.get('PUBLIC_SITE_URL') ?? ''
 
     // 1. Verify the caller is an authenticated admin
     const authHeader = req.headers.get('Authorization')
-    console.log('[create-user] Authorization header present:', !!authHeader)
     if (!authHeader) return json({ error: 'Session manquante — reconnectez-vous.' }, 401)
 
     const userClient = createClient(supabaseUrl, serviceKey, {
@@ -33,7 +34,6 @@ Deno.serve(async (req: Request) => {
     const token = authHeader.replace(/^Bearer\s+/i, '')
     const { data: callerData, error: callerErr } = await userClient.auth.getUser(token)
     if (callerErr || !callerData?.user) {
-      console.warn('[create-user] Token invalid:', callerErr?.message)
       return json({ error: 'Session expirée — déconnectez-vous et reconnectez-vous.' }, 401)
     }
 
@@ -43,10 +43,8 @@ Deno.serve(async (req: Request) => {
       .eq('id', callerData.user.id)
       .single()
     if (!callerRow || (callerRow as { role: string }).role !== 'admin') {
-      console.warn('[create-user] Caller is not admin:', callerData.user.id)
       return json({ error: 'Seul un administrateur peut créer des comptes.' }, 403)
     }
-    console.log('[create-user] Caller admin verified:', callerData.user.email)
 
     // 2. Parse payload
     const { email, first_name, last_name, phone, role, permission_profile_id } =
@@ -71,55 +69,51 @@ Deno.serve(async (req: Request) => {
     // scope is fixed by the RECEPTION_PERMISSIONS set in the client.
     const profileId = role === 'reception' ? null : (permission_profile_id ?? null)
 
-    // 3. Generate a strong temporary password
-    const tempPassword = `Immo${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}!Aa1`
-
     const admin = createClient(supabaseUrl, serviceKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     })
 
-    // 4. Check if an auth user with this email already exists (orphan from
-    //    failed previous attempts) and reuse / clean it up to avoid errors.
+    // 3. Check for an orphan auth user (e.g. failed previous attempt) and
+    //    reuse its id rather than 422-ing on duplicate email.
     let authUserId: string | null = null
-    {
-      const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
-      const existing = existingList?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase())
-      if (existing) {
-        // Is there already a public.users row for this id? If yes, refuse.
-        const { data: existingProfile } = await admin
-          .from('users')
-          .select('id')
-          .eq('id', existing.id)
-          .maybeSingle()
-        if (existingProfile) {
-          return json({ error: 'Un utilisateur avec cet email existe déjà.' }, 409)
-        }
-        // Orphan auth user (no profile): reset its password, reuse the id.
-        const { error: updErr } = await admin.auth.admin.updateUserById(existing.id, {
-          password: tempPassword,
-          email_confirm: true,
-          user_metadata: { first_name, last_name },
-        })
-        if (updErr) return json({ error: `Réinitialisation échouée: ${updErr.message}` }, 400)
-        authUserId = existing.id
-      }
-    }
+    let invitationSent = false
 
-    // 5. Create the auth user if no orphan found
-    if (!authUserId) {
-      const { data: created, error: createErr } = await admin.auth.admin.createUser({
-        email,
-        password: tempPassword,
-        email_confirm: true,
-        user_metadata: { first_name, last_name },
+    const { data: existingList } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 })
+    const existing = existingList?.users?.find((u) => u.email?.toLowerCase() === email.toLowerCase())
+
+    if (existing) {
+      const { data: existingProfile } = await admin
+        .from('users')
+        .select('id')
+        .eq('id', existing.id)
+        .maybeSingle()
+      if (existingProfile) {
+        return json({ error: 'Un utilisateur avec cet email existe déjà.' }, 409)
+      }
+      // Orphan: re-send a recovery email so the user can set a password
+      authUserId = existing.id
+      try {
+        await admin.auth.admin.generateLink({ type: 'recovery', email })
+        invitationSent = true
+      } catch (linkErr) {
+        console.warn('[create-user] Recovery link failed for orphan:', linkErr)
+      }
+    } else {
+      // 4. Send an invitation email — Supabase creates the auth user with
+      //    no password and emails them a link to set one.
+      const redirectTo = siteUrl ? `${siteUrl}/auth/accept-invite` : undefined
+      const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(email, {
+        data: { first_name, last_name },
+        redirectTo,
       })
-      if (createErr || !created?.user) {
-        return json({ error: createErr?.message ?? 'Auth user creation failed' }, 400)
+      if (inviteErr || !invited?.user) {
+        return json({ error: inviteErr?.message ?? "Échec de l'envoi de l'invitation" }, 400)
       }
-      authUserId = created.user.id
+      authUserId = invited.user.id
+      invitationSent = true
     }
 
-    // 6. Insert into public.users
+    // 5. Insert into public.users
     const { error: insertErr } = await admin.from('users').insert({
       id: authUserId,
       first_name,
@@ -132,30 +126,16 @@ Deno.serve(async (req: Request) => {
     } as never)
 
     if (insertErr) {
-      // Rollback auth.user if the profile insert failed
-      await admin.auth.admin.deleteUser(authUserId).catch(() => {})
+      // Rollback auth.user if the profile insert failed and we just created it
+      if (!existing) {
+        await admin.auth.admin.deleteUser(authUserId).catch(() => {})
+      }
       return json({ error: insertErr.message }, 400)
-    }
-
-    // Email d'invitation : Supabase enverra un email de bienvenue/récupération
-    // via le SMTP configuré (Hostinger) — on utilise generateLink pour obtenir
-    // un magic link que l'on joint à l'email standard. Les admins peuvent aussi
-    // partager le mot de passe temporaire retourné par cette fonction.
-    let invitationSent = false
-    try {
-      const { data: linkData } = await admin.auth.admin.generateLink({
-        type: 'recovery',
-        email,
-      })
-      invitationSent = !!linkData
-    } catch (linkErr) {
-      console.warn('[create-user] Unable to generate invitation link:', linkErr)
     }
 
     return json({
       success: true,
       user_id: authUserId,
-      temp_password: tempPassword,
       invitation_sent: invitationSent,
     })
   } catch (err) {

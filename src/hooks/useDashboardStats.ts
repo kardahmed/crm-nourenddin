@@ -28,6 +28,7 @@ interface AgentPerformance {
   id: string
   first_name: string
   last_name: string
+  avatar_url: string | null
   reservations_count: number
   sales_count: number
   revenue: number
@@ -89,7 +90,7 @@ export interface DashboardStats {
 interface UnitRow { id: string; status: string; project_id: string; agent_id: string | null }
 interface SaleRow { final_price: number; agent_id: string; created_at: string }
 interface ProjectRow { id: string; name: string; code: string; status: string }
-interface AgentRow { id: string; first_name: string; last_name: string; last_activity: string | null }
+interface AgentRow { id: string; first_name: string; last_name: string; avatar_url: string | null; last_activity: string | null }
 interface ReservationRow { agent_id: string }
 interface HistoryRow { id: string; type: string; title: string; created_at: string; clients: { full_name: string } | null; users: { first_name: string; last_name: string } | null }
 
@@ -123,7 +124,7 @@ export function useDashboardStats() {
           return q
         })(),
         supabase.from('history').select('id, type, title, created_at, clients(full_name), users!history_agent_id_fkey(first_name, last_name)').order('created_at', { ascending: false }).limit(10),
-        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('users').select('id, first_name, last_name, last_activity').eq('role', 'agent').eq('status', 'active'),
+        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('users').select('id, first_name, last_name, avatar_url, last_activity').eq('role', 'agent').eq('status', 'active'),
         isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('reservations').select('agent_id').eq('status', 'active').gte('created_at', monthStart),
         isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('sales').select('agent_id, final_price').eq('status', 'active').gte('created_at', monthStart),
         // New: clients for pipeline funnel + at-risk
@@ -186,7 +187,7 @@ export function useDashboardStats() {
 
       // Agent performance
       const agentPerformance: AgentPerformance[] = agents.map(a => ({
-        id: a.id, first_name: a.first_name, last_name: a.last_name,
+        id: a.id, first_name: a.first_name, last_name: a.last_name, avatar_url: a.avatar_url,
         reservations_count: monthReservations.filter(r => r.agent_id === a.id).length,
         sales_count: monthSales.filter(s => s.agent_id === a.id).length,
         revenue: monthSales.filter(s => s.agent_id === a.id).reduce((sum, s) => sum + (s.final_price ?? 0), 0),

@@ -8,6 +8,7 @@ import { useBranding } from '@/hooks/useBranding'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { Input } from '@/components/ui/input'
 import { LanguageSwitch } from '@/components/common/LanguageSwitch'
+import { UserAvatar } from '@/components/common'
 import { NotificationBell } from '@/components/common/NotificationBell'
 import { supabase } from '@/lib/supabase'
 
@@ -95,10 +96,13 @@ export function Topbar({ title, subtitle }: TopbarProps) {
         <NotificationBell />
 
         {/* Avatar */}
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-immo-accent-blue/15 text-xs font-semibold text-immo-accent-blue">
-          {userProfile?.first_name?.[0]}
-          {userProfile?.last_name?.[0]}
-        </div>
+        <UserAvatar
+          firstName={userProfile?.first_name}
+          lastName={userProfile?.last_name}
+          avatarUrl={userProfile?.avatar_url}
+          size="sm"
+          className="h-9 w-9"
+        />
       </div>
     </header>
   )

@@ -49,6 +49,8 @@ export type Database = {
           role: UserRole
           status: UserStatus
           last_activity: string | null
+          avatar_url: string | null
+          must_change_password: boolean
           created_at: string
         }
         Insert: {
@@ -60,6 +62,8 @@ export type Database = {
           role?: UserRole
           status?: UserStatus
           last_activity?: string | null
+          avatar_url?: string | null
+          must_change_password?: boolean
           created_at?: string
         }
         Update: {
@@ -71,6 +75,8 @@ export type Database = {
           role?: UserRole
           status?: UserStatus
           last_activity?: string | null
+          avatar_url?: string | null
+          must_change_password?: boolean
           created_at?: string
         }
         Relationships: []

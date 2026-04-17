@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette, Sparkles, MessageCircle, Calendar, ToggleLeft, UserPlus } from 'lucide-react'
+import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette, Sparkles, MessageCircle, Calendar, ToggleLeft, UserPlus, UserCircle } from 'lucide-react'
 import {
   CompanySection,
   PipelineSection,
   BrandingSection,
   ReceptionSection,
+  ProfileSection,
   ReservationsSection,
   TemplatesSection,
   NotificationsSection,
@@ -19,9 +20,10 @@ import { VisitScheduleSection } from './sections/VisitScheduleSection'
 import { PermissionProfilesSection } from './sections/PermissionProfilesSection'
 import { FeaturesSection } from './sections/FeaturesSection'
 
-type Section = 'company' | 'pipeline' | 'reception' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'features' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
+type Section = 'profile' | 'company' | 'pipeline' | 'reception' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'features' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
 
 const SECTION_ICONS: Record<Section, typeof Building2> = {
+  profile: UserCircle,
   company: Building2,
   pipeline: GitBranch,
   reception: UserPlus,
@@ -39,9 +41,10 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   security: Shield,
 }
 
-const SECTION_KEYS: Section[] = ['company', 'pipeline', 'reception', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
+const SECTION_KEYS: Section[] = ['profile', 'company', 'pipeline', 'reception', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
+  profile: 'Mon profil',
   company: 'Agence',
   pipeline: 'Pipeline',
   reception: 'Réception',
@@ -61,7 +64,7 @@ const SECTION_LABELS: Record<Section, string> = {
 
 export function SettingsPage() {
   const { t } = useTranslation()
-  const [section, setSection] = useState<Section>('company')
+  const [section, setSection] = useState<Section>('profile')
 
   return (
     <div className="flex gap-6">
@@ -88,6 +91,7 @@ export function SettingsPage() {
 
       {/* Content */}
       <div className="min-w-0 flex-1">
+        {section === 'profile' && <ProfileSection />}
         {section === 'company' && <CompanySection />}
         {section === 'pipeline' && <PipelineSection />}
         {section === 'reception' && <ReceptionSection />}

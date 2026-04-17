@@ -9,7 +9,7 @@ import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
-  KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal,
+  KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, UserAvatar,
 } from '@/components/common'
 import { TransferAgentModal } from './components/TransferAgentModal'
 import { Button } from '@/components/ui/button'
@@ -37,15 +37,9 @@ interface AgentRow {
   status: string
   last_activity: string | null
   archived_at: string | null
+  avatar_url: string | null
   clients_count: number
   sales_count: number
-}
-
-function nameToColor(name: string): string {
-  const C = ['#00D4A0', '#3782FF', '#FF9A1E', '#A855F7', '#06B6D4', '#EAB308', '#F97316', '#EC4899']
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
-  return C[Math.abs(h) % C.length]
 }
 
 export function AgentsPage() {
@@ -66,7 +60,7 @@ export function AgentsPage() {
     queryFn: async () => {
       const { data: users, error } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at')
+        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url')
         .order('first_name')
       if (error) { handleSupabaseError(error); throw error }
 
@@ -212,17 +206,18 @@ export function AgentsPage() {
             <tbody className="divide-y divide-immo-border-default">
               {filtered.map(a => {
                 const fullName = `${a.first_name} ${a.last_name}`
-                const color = nameToColor(fullName)
-                const initials = `${a.first_name[0]}${a.last_name[0]}`.toUpperCase()
                 const inactiveLong = a.last_activity && (Date.now() - new Date(a.last_activity).getTime()) > 7 * 86400000
 
                 return (
                   <tr key={a.id} className="bg-immo-bg-card transition-colors hover:bg-immo-bg-card-hover">
                     <td className="whitespace-nowrap px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: color + '20', color }}>
-                          {initials}
-                        </div>
+                        <UserAvatar
+                          firstName={a.first_name}
+                          lastName={a.last_name}
+                          avatarUrl={a.avatar_url}
+                          size="sm"
+                        />
                         <span className="text-sm font-medium text-immo-text-primary">{fullName}</span>
                       </div>
                     </td>
@@ -372,17 +367,19 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         }
         throw error
       }
-      const payload = data as { error?: string; user_id?: string; temp_password?: string }
+      const payload = data as { error?: string; user_id?: string; invitation_sent?: boolean }
       if (payload?.error) throw new Error(payload.error)
-      if (!payload?.temp_password) throw new Error('Réponse serveur invalide')
-      return payload as { user_id: string; temp_password: string }
+      if (!payload?.user_id) throw new Error('Réponse serveur invalide')
+      return payload as { user_id: string; invitation_sent: boolean }
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
       const roleLabel = role === 'reception' ? 'Compte réception' : role === 'admin' ? 'Admin' : 'Agent'
       toast.success(
-        `${roleLabel} créé. Mot de passe temporaire : ${data.temp_password} — à partager par WhatsApp/SMS.`,
-        { duration: 25000 },
+        data.invitation_sent
+          ? `${roleLabel} créé. Email d'invitation envoyé à ${email} — il définira son mot de passe en cliquant sur le lien.`
+          : `${roleLabel} créé, mais l'envoi de l'email d'invitation a échoué. Demandez-lui d'utiliser "Mot de passe oublié" sur la page de connexion.`,
+        { duration: 15000 },
       )
       resetAndClose()
     },

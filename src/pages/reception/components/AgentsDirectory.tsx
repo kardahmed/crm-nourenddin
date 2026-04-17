@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { supabase } from '@/lib/supabase'
-import { LoadingSpinner } from '@/components/common'
+import { LoadingSpinner, UserAvatar } from '@/components/common'
 import { useReceptionSettings, useAgentLoads } from '@/hooks/useReceptionAssignment'
 
 interface AgentContact {
@@ -13,6 +13,7 @@ interface AgentContact {
   phone: string | null
   email: string | null
   last_activity: string | null
+  avatar_url: string | null
 }
 
 export function AgentsDirectory() {
@@ -24,7 +25,7 @@ export function AgentsDirectory() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('users')
-        .select('id, first_name, last_name, phone, email, last_activity')
+        .select('id, first_name, last_name, phone, email, last_activity, avatar_url')
         .eq('role', 'agent')
         .eq('status', 'active')
         .order('first_name')
@@ -59,10 +60,12 @@ export function AgentsDirectory() {
             key={a.id}
             className="flex items-center gap-4 rounded-xl border border-immo-border-default bg-immo-bg-card p-4"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-immo-accent-green/10 text-sm font-semibold text-immo-accent-green">
-              {a.first_name[0]}
-              {a.last_name[0]}
-            </div>
+            <UserAvatar
+              firstName={a.first_name}
+              lastName={a.last_name}
+              avatarUrl={a.avatar_url}
+              size="md"
+            />
 
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">

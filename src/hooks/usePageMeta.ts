@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 const PAGE_KEYS: Record<string, { titleKey: string; subtitleKey: string }> = {
   '/dashboard': { titleKey: 'nav.dashboard', subtitleKey: 'page.dashboard_subtitle' },
+  '/today': { titleKey: 'nav.today', subtitleKey: 'page.today_subtitle' },
   '/projects': { titleKey: 'nav.projects', subtitleKey: 'page.projects_subtitle' },
   '/pipeline': { titleKey: 'nav.pipeline', subtitleKey: 'page.pipeline_subtitle' },
   '/planning': { titleKey: 'nav.planning', subtitleKey: 'page.planning_subtitle' },

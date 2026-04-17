@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar, MobileSidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { OnboardingWizard } from '@/components/common/OnboardingWizard'
+import { CommandPalette } from '@/components/CommandPalette'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -29,6 +30,7 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+      <CommandPalette />
     </div>
   )
 }

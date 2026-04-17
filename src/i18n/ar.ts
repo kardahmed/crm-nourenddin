@@ -2,6 +2,7 @@ export const ar = {
   // Navigation
   nav: {
     reception: 'الاستقبال',
+    today: 'اليوم',
     dashboard: 'لوحة التحكم',
     projects: 'المشاريع',
     pipeline: 'مسار العملاء',
@@ -20,6 +21,7 @@ export const ar = {
   // Page meta
   page: {
     dashboard_subtitle: 'نظرة عامة على نشاطك',
+    today_subtitle: 'زياراتك ومهامك ومتابعاتك لهذا اليوم',
     projects_subtitle: 'إدارة البرامج العقارية',
     pipeline_subtitle: 'متابعة العملاء حسب المرحلة',
     planning_subtitle: 'الزيارات والمواعيد',

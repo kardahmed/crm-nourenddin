@@ -40,6 +40,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
 // Map nav path → i18n key
 const NAV_KEYS: Record<string, string> = {
   '/reception': 'nav.reception',
+  '/today': 'nav.today',
   '/dashboard': 'nav.dashboard',
   '/projects': 'nav.projects',
   '/pipeline': 'nav.pipeline',

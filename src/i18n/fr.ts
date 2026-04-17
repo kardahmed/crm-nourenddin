@@ -2,6 +2,7 @@ export const fr = {
   // Navigation
   nav: {
     reception: 'Réception',
+    today: "À faire",
     dashboard: 'Dashboard',
     projects: 'Projets',
     pipeline: 'Pipeline',
@@ -20,6 +21,7 @@ export const fr = {
   // Page meta
   page: {
     dashboard_subtitle: "Vue d'ensemble de votre activité",
+    today_subtitle: "Tes visites, tâches et relances du jour",
     projects_subtitle: 'Gestion des programmes immobiliers',
     pipeline_subtitle: 'Suivi des clients par étape',
     planning_subtitle: 'Visites et rendez-vous',

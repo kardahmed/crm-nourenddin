@@ -15,6 +15,7 @@ export interface NavItem {
 // /reception hub plus a read-only view of projects for phone answers.
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Reception', path: '/reception', icon: 'UserPlus', roles: ['reception', 'admin'] },
+  { label: "À faire", path: '/today', icon: 'CheckSquare', roles: ['agent', 'admin'] },
   { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard', roles: 'all', requiredPermission: 'dashboard.view' },
   { label: 'Projets', path: '/projects', icon: 'Building2', roles: ['agent', 'admin', 'reception'], requiredPermission: 'projects.view' },
   { label: 'Pipeline', path: '/pipeline', icon: 'GitBranch', roles: 'all', requiredPermission: 'pipeline.view_own' },

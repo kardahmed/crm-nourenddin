@@ -30,6 +30,7 @@ const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ defa
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage').then(m => ({ default: m.TasksPage })))
 const MarketingROIPage = lazy(() => import('@/pages/marketing-roi/MarketingROIPage').then(m => ({ default: m.MarketingROIPage })))
 const ReceptionPage = lazy(() => import('@/pages/reception/ReceptionPage').then(m => ({ default: m.ReceptionPage })))
+const TodayPage = lazy(() => import('@/pages/today/TodayPage').then(m => ({ default: m.TodayPage })))
 
 
 function PageLoader() {
@@ -68,6 +69,7 @@ function App() {
           <Route element={<AppLayout />}>
             {/* Accessible to all authenticated users */}
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/today" element={<TodayPage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
             <Route path="/pipeline" element={<PipelinePage />} />

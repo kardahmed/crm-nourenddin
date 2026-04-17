@@ -28,6 +28,7 @@ interface CandidateAgent {
   id: string
   first_name: string
   last_name: string
+  role: 'agent' | 'admin'
   clients_count: number
 }
 
@@ -79,22 +80,29 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
       const [usersRes, clientsRes] = await Promise.all([
         supabase
           .from('users')
-          .select('id, first_name, last_name')
-          .eq('role', 'agent')
+          .select('id, first_name, last_name, role')
+          .in('role', ['agent', 'admin'])
           .eq('status', 'active')
           .neq('id', agentId!)
+          .order('role', { ascending: true })
           .order('first_name'),
         supabase.from('clients').select('agent_id').not('agent_id', 'is', null),
       ])
       if (usersRes.error) throw usersRes.error
       if (clientsRes.error) throw clientsRes.error
-      const agents = (usersRes.data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
+      const users = (usersRes.data ?? []) as Array<{
+        id: string
+        first_name: string
+        last_name: string
+        role: 'agent' | 'admin'
+      }>
       const rows = (clientsRes.data ?? []) as Array<{ agent_id: string }>
-      return agents.map(a => ({
-        id: a.id,
-        first_name: a.first_name,
-        last_name: a.last_name,
-        clients_count: rows.filter(r => r.agent_id === a.id).length,
+      return users.map(u => ({
+        id: u.id,
+        first_name: u.first_name,
+        last_name: u.last_name,
+        role: u.role,
+        clients_count: rows.filter(r => r.agent_id === u.id).length,
       })) as CandidateAgent[]
     },
   })
@@ -225,6 +233,12 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
             </div>
           </div>
 
+          {candidates.length === 0 && (
+            <div className="rounded-lg border border-immo-status-red/40 bg-immo-status-red/5 p-3 text-[12px] text-immo-text-primary">
+              Aucun agent ou admin actif disponible comme cible. Crée d'abord un nouveau compte actif, puis relance ce transfert.
+            </div>
+          )}
+
           {/* Bulk action */}
           <div className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3">
             <Label className="text-[11px] font-medium text-immo-text-muted">
@@ -239,7 +253,8 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
                 <option value="">— Choisir un agent cible —</option>
                 {candidates.map(a => (
                   <option key={a.id} value={a.id}>
-                    {a.first_name} {a.last_name} ({a.clients_count} clients)
+                    {a.first_name} {a.last_name}
+                    {a.role === 'admin' ? ' (admin, temporaire)' : ` (${a.clients_count} clients)`}
                   </option>
                 ))}
               </select>
@@ -304,6 +319,7 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
                           {candidates.map(a => (
                             <option key={a.id} value={a.id}>
                               {a.first_name} {a.last_name}
+                              {a.role === 'admin' ? ' (admin)' : ''}
                             </option>
                           ))}
                         </select>

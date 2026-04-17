@@ -27,9 +27,12 @@ export function useAuth() {
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, s) => {
-        // IMPORTANT: only set session state here, NO async work
         setSession(s)
-        if (!s) reset()
+        if (s) {
+          setLoading(true)
+        } else {
+          reset()
+        }
       },
     )
 

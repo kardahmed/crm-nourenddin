@@ -8,12 +8,15 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 // native <select> used instead of base-ui Select
 import { StatusBadge, EmptyState, Modal } from '@/components/common'
 import { ClientDocuments } from '../ClientDocuments'
+import { NewSaleModal } from '../modals/NewSaleModal'
+import type { PipelineStage } from '@/types'
 
 function ClientDocumentsWrapper({ clientId }: { clientId: string }) {
   return <ClientDocuments clientId={clientId} />
@@ -63,6 +66,9 @@ export function ReservationTab({ clientId }: { clientId: string }) {
 /* ═══ Sale ═══ */
 export function SaleTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
+  const { can } = usePermissions()
+  const [showCreate, setShowCreate] = useState(false)
+
   const { data: sales = [] } = useQuery({
     queryKey: ['client-sales', clientId],
     queryFn: async () => {
@@ -72,21 +78,60 @@ export function SaleTab({ clientId }: { clientId: string }) {
     },
   })
 
-  if (sales.length === 0) return <EmptyState icon={<DollarSign className="h-10 w-10" />} title={t('common.no_data')} />
+  const { data: client } = useQuery({
+    queryKey: ['client-info-sale', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name, phone, nin_cin, pipeline_stage')
+        .eq('id', clientId)
+        .single()
+      if (error) { handleSupabaseError(error); throw error }
+      return data as unknown as {
+        id: string; full_name: string; phone: string; nin_cin: string | null; pipeline_stage: PipelineStage
+      }
+    },
+  })
+
+  const canCreate = can('sales.create')
 
   return (
-    <div className="space-y-2">
-      {sales.map((s) => (
-        <div key={s.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-immo-text-primary">{(s.units as { code: string })?.code} — {(s.projects as { name: string })?.name}</p>
-              <p className="text-xs text-immo-text-muted">{t('field.price')} : {formatPrice(s.final_price as number)} · {s.financing_mode as string}</p>
-            </div>
-            <StatusBadge label={s.status === 'active' ? t('status.active') : t('status.cancelled')} type={s.status === 'active' ? 'green' : 'red'} />
-          </div>
+    <div className="space-y-4">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCreate(true)}
+            disabled={!client}
+            className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> {t('action.add')}
+          </Button>
         </div>
-      ))}
+      )}
+
+      {sales.length === 0 ? (
+        <EmptyState icon={<DollarSign className="h-10 w-10" />} title={t('common.no_data')} />
+      ) : (
+        <div className="space-y-2">
+          {sales.map((s) => (
+            <div key={s.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-immo-text-primary">{(s.units as { code: string })?.code} — {(s.projects as { name: string })?.name}</p>
+                  <p className="text-xs text-immo-text-muted">{t('field.price')} : {formatPrice(s.final_price as number)} · {s.financing_mode as string}</p>
+                </div>
+                <StatusBadge label={s.status === 'active' ? t('status.active') : t('status.cancelled')} type={s.status === 'active' ? 'green' : 'red'} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <NewSaleModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        client={client ?? null}
+      />
     </div>
   )
 }

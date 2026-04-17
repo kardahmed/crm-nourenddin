@@ -47,17 +47,15 @@ export function NotificationBell() {
   const { data: notifications = [] } = useQuery({
     queryKey: ['tenant-notifications'],
     queryFn: async () => {
-      return
       const { data } = await supabase
         .from('notifications')
         .select('id, type, title, message, read, created_at')
-        
         .order('created_at', { ascending: false })
         .limit(20)
       return (data ?? []) as Notification[]
     },
-    enabled: true,
-    refetchInterval: 60_000,
+    enabled: open,
+    refetchOnWindowFocus: false,
   })
 
   const unread = notifications.filter(n => !n.read).length

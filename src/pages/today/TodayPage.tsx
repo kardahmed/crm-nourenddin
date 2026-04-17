@@ -78,7 +78,8 @@ export function TodayPage() {
           .from('clients')
           .select('id, full_name, phone, pipeline_stage, confirmed_budget, nin_cin, cin_verified, last_contact_at')
           .eq('agent_id', userId)
-          .not('pipeline_stage', 'in', '(vente,perdue)'),
+          .not('pipeline_stage', 'in', '(vente,perdue)')
+          .limit(500),
       ])
 
       const visits = (visitsRes.data ?? []) as VisitRow[]

@@ -114,8 +114,8 @@ export function useDashboardStats() {
         agentReservationsRes, agentSalesRes,
         clientsRes, overdueRes, visitsRes, tasksRes, allSalesRes,
       ] = await Promise.all([
-        supabase.from('projects').select('id, name, code, status').eq('status', 'active'),
-        supabase.from('units').select('id, status, project_id, agent_id'),
+        supabase.from('projects').select('id, name, code, status').eq('status', 'active').limit(200),
+        supabase.from('units').select('id, status, project_id, agent_id').limit(5000),
         (() => {
           let q = supabase.from('sales').select('final_price, agent_id, created_at').eq('status', 'active')
           if (isAgent && userId) q = q.eq('agent_id', userId)
@@ -126,7 +126,7 @@ export function useDashboardStats() {
         isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('reservations').select('agent_id').eq('status', 'active').gte('created_at', monthStart),
         isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('sales').select('agent_id, final_price').eq('status', 'active').gte('created_at', monthStart),
         // New: clients for pipeline funnel + at-risk
-        supabase.from('clients').select('id, full_name, phone, pipeline_stage, last_contact_at, source, agent_id, users!clients_agent_id_fkey(first_name, last_name)'),
+        supabase.from('clients').select('id, full_name, phone, pipeline_stage, last_contact_at, source, agent_id, users!clients_agent_id_fkey(first_name, last_name)').limit(5000),
         // New: overdue payments
         supabase.from('payment_schedules').select('amount').eq('status', 'late'),
         // New: today's visits

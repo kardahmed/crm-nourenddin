@@ -9,8 +9,9 @@ import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
-  KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, ConfirmDialog,
+  KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal,
 } from '@/components/common'
+import { TransferAgentModal } from './components/TransferAgentModal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -49,7 +50,6 @@ function nameToColor(name: string): string {
 export function AgentsPage() {
   const navigate = useNavigate()
   const { canManageAgents } = usePermissions()
-  const qc = useQueryClient()
 
   const [activeTab, setActiveTab] = useState<'agents' | 'permissions'>('agents')
   const [search, setSearch] = useState('')
@@ -93,17 +93,10 @@ export function AgentsPage() {
   })
 
   // Deactivate agent
-  const deactivate = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('users').update({ status: 'inactive' } as never).eq('id', id)
-      if (error) { handleSupabaseError(error); throw error }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['agents-list'] })
-      toast.success('Agent désactivé')
-      setDeactivateId(null)
-    },
-  })
+  const deactivateAgent = useMemo(
+    () => agents.find(a => a.id === deactivateId) ?? null,
+    [agents, deactivateId],
+  )
 
   // KPIs
   const total = agents.length
@@ -235,16 +228,12 @@ export function AgentsPage() {
       {/* Create modal */}
       <CreateAgentModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
 
-      {/* Deactivate confirm */}
-      <ConfirmDialog
+      {/* Transfer + deactivate */}
+      <TransferAgentModal
         isOpen={!!deactivateId}
         onClose={() => setDeactivateId(null)}
-        onConfirm={() => deactivateId && deactivate.mutate(deactivateId)}
-        title="Désactiver cet agent ?"
-        description="L'agent ne pourra plus se connecter. Ses données seront conservées."
-        confirmLabel="Désactiver"
-        confirmVariant="danger"
-        loading={deactivate.isPending}
+        agentId={deactivateId}
+        agentName={deactivateAgent ? `${deactivateAgent.first_name} ${deactivateAgent.last_name}` : ''}
       />
       </>
       )}

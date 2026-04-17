@@ -55,13 +55,21 @@ Deno.serve(async (req: Request) => {
         first_name: string
         last_name: string
         phone?: string | null
-        role: 'admin' | 'agent'
+        role: 'admin' | 'agent' | 'reception'
         permission_profile_id?: string | null
       }
 
     if (!email || !first_name || !last_name || !role) {
       return json({ error: 'Missing required fields' }, 400)
     }
+
+    if (!['admin', 'agent', 'reception'].includes(role)) {
+      return json({ error: `Rôle invalide: ${role}` }, 400)
+    }
+
+    // Reception accounts never carry a permission_profile_id — their
+    // scope is fixed by the RECEPTION_PERMISSIONS set in the client.
+    const profileId = role === 'reception' ? null : (permission_profile_id ?? null)
 
     // 3. Generate a strong temporary password
     const tempPassword = `Immo${crypto.randomUUID().replace(/-/g, '').slice(0, 12)}!Aa1`
@@ -120,7 +128,7 @@ Deno.serve(async (req: Request) => {
       phone: phone ?? null,
       role,
       status: 'active',
-      permission_profile_id: permission_profile_id ?? null,
+      permission_profile_id: profileId,
     } as never)
 
     if (insertErr) {

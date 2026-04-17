@@ -260,7 +260,7 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [role, setRole] = useState<'admin' | 'agent'>('agent')
+  const [role, setRole] = useState<'admin' | 'agent' | 'reception'>('agent')
 
   const create = useMutation({
     mutationFn: async () => {
@@ -290,8 +290,9 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
+      const roleLabel = role === 'reception' ? 'Compte réception' : role === 'admin' ? 'Admin' : 'Agent'
       toast.success(
-        `Agent créé. Mot de passe temporaire : ${data.temp_password} — à partager par WhatsApp/SMS.`,
+        `${roleLabel} créé. Mot de passe temporaire : ${data.temp_password} — à partager par WhatsApp/SMS.`,
         { duration: 25000 },
       )
       resetAndClose()
@@ -302,12 +303,12 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   })
 
   function resetAndClose() {
-    setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setRole('agent')
+    setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setRole('agent' as 'admin' | 'agent' | 'reception')
     onClose()
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={resetAndClose} title="Ajouter un agent" subtitle="Créer un nouveau compte agent" size="sm">
+    <Modal isOpen={isOpen} onClose={resetAndClose} title="Ajouter un utilisateur" subtitle="Créer un compte agent, réception ou administrateur" size="sm">
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -329,10 +330,16 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
         </div>
         <div>
           <Label className="text-[11px] font-medium text-immo-text-muted">Rôle *</Label>
-          <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'agent')} className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
+          <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'agent' | 'reception')} className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
             <option value="agent">Agent commercial</option>
+            <option value="reception">Réception</option>
             <option value="admin">Administrateur</option>
           </select>
+          {role === 'reception' && (
+            <p className="mt-1 text-[11px] text-immo-text-muted">
+              Accès limité à la réception: saisie de leads, accueil des visites, assignation aux agents. Ne voit pas les ventes, réservations ni le pipeline commercial.
+            </p>
+          )}
         </div>
         <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
           <Button variant="ghost" onClick={resetAndClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">Annuler</Button>

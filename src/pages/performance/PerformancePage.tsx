@@ -10,8 +10,6 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
-import { usePermissions } from '@/hooks/usePermissions'
 import { KPICard, FilterDropdown, LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PIPELINE_STAGES, SOURCE_LABELS } from '@/types'
@@ -55,9 +53,6 @@ function getPeriodRange(key: PeriodKey) {
 /* ═══ Component ═══ */
 
 export function PerformancePage() {
-  const {} = useAuthStore()
-  const { isAgent } = usePermissions()
-  const userId = useAuthStore((s) => s.session?.user?.id)
   const qc = useQueryClient()
 
   const [period, setPeriod] = useState<PeriodKey>('month')
@@ -85,7 +80,9 @@ export function PerformancePage() {
     queryFn: async () => {
       
 
-      const agentEq = isAgent && userId ? userId : agentFilter !== 'all' ? agentFilter : null
+      // This page is admin-only (<RoleRoute allowedRoles={['admin']}/>),
+      // so we only apply the dropdown filter.
+      const agentEq = agentFilter !== 'all' ? agentFilter : null
 
       // Build queries with optional agent filter
       function withAgent<T>(q: T & { eq: (col: string, val: string) => T }) {
@@ -223,7 +220,7 @@ export function PerformancePage() {
             </button>
           ))}
         </div>
-        {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
+        <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -250,7 +247,7 @@ export function PerformancePage() {
       </div>
 
       {/* Inactive alert */}
-      {showAlert && inactiveAgents.length > 0 && !isAgent && (
+      {showAlert && inactiveAgents.length > 0 && (
         <div className="flex items-center gap-3 rounded-xl border border-immo-status-orange/30 bg-immo-status-orange-bg px-4 py-3">
           <AlertTriangle className="h-4 w-4 shrink-0 text-immo-status-orange" />
           <div className="flex-1 text-xs text-immo-status-orange">

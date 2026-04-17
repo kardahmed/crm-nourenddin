@@ -124,6 +124,10 @@ export const HISTORY_TYPE_LABELS: Record<HistoryType, { label: string; icon: str
   document: { label: 'Document', icon: 'FileText' },
   note: { label: 'Note', icon: 'StickyNote' },
   ai_task: { label: 'Tâche IA', icon: 'Bot' },
+  client_created: { label: 'Client créé', icon: 'UserPlus' },
+  reassignment: { label: 'Réassignation', icon: 'UserCheck' },
+  priority_change: { label: 'Priorité', icon: 'Star' },
+  budget_change: { label: 'Budget mis à jour', icon: 'DollarSign' },
 }
 
 // ─── Visit Status ───

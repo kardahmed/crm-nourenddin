@@ -11,8 +11,6 @@ import {
 } from 'recharts'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
-import { usePermissions } from '@/hooks/usePermissions'
 import {
   KPICard, FilterDropdown, LoadingSpinner,
 } from '@/components/common'
@@ -78,8 +76,6 @@ const PAGE_SIZE = 25
 
 export function ReportsPage() {
   const navigate = useNavigate()
-  const userId = useAuthStore((s) => s.session?.user?.id)
-  const { isAgent } = usePermissions()
 
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [agentFilter, setAgentFilter] = useState('all')
@@ -141,11 +137,11 @@ export function ReportsPage() {
   })
 
 
-  // Team view data
+  // Team view data — this page is admin-only (<RoleRoute allowedRoles={['admin']}/>),
+  // so we always show the full team. If the route is ever reclassified, add an
+  // agent-scoped filter here.
   const teamData = useMemo(() => {
-    const filteredAgents = isAgent && userId ? agents.filter(a => a.id === userId) : agents
-
-    return filteredAgents.map(a => {
+    return agents.map(a => {
       const agentHistory = allHistory.filter(h => h.agent_id === a.id)
       const countType = (type: string) => agentHistory.filter(h => h.type === type).length
       const inactiveDays = a.last_activity ? Math.floor((Date.now() - new Date(a.last_activity).getTime()) / 86400000) : 999
@@ -168,7 +164,7 @@ export function ReportsPage() {
         new_clients: newClientsMap.get(a.id) ?? 0,
       }
     })
-  }, [agents, allHistory, newClientsMap, isAgent, userId])
+  }, [agents, allHistory, newClientsMap])
 
   // Team totals
   const totals = useMemo(() => {
@@ -231,7 +227,7 @@ export function ReportsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <FilterDropdown label="Période" options={periodOptions} value={period} onChange={(v) => setPeriod(v as PeriodKey)} />
-        {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
+        <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />
         <Button variant="ghost" size="sm" onClick={() => exportToCsv('rapports', allHistory, [
           { header: 'Date', value: r => r.created_at },
           { header: 'Type', value: r => HISTORY_TYPE_LABELS[r.type as HistoryType]?.label ?? r.type },

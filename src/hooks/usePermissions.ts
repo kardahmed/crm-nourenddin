@@ -69,7 +69,11 @@ export function usePermissions(): Permissions {
 
     return {
       can,
-      canManageAgents: can('agents.edit'),
+      // Managing agents (create/deactivate, edit role) is admin-only and
+      // must match the router guard `<RoleRoute allowedRoles={['admin']}>`.
+      // Using a permission key here would let an admin with a restrictive
+      // custom profile lose access to a page the router still opens.
+      canManageAgents: isAdm,
       canManageSettings: can('settings.edit'),
       canViewAllClients: can('pipeline.view_all'),
       canViewAllAgents: can('agents.view'),

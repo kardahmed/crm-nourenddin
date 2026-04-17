@@ -44,7 +44,7 @@ export function TasksPage() {
   const navigate = useNavigate()
   const {} = useAuthStore()
   const userId = useAuthStore(s => s.session?.user?.id)
-  const { isAgent } = usePermissions()
+  const { isAgent, isAdmin } = usePermissions()
   const qc = useQueryClient()
 
   const [tab, setTab] = useState<TabKey>('today')
@@ -247,13 +247,18 @@ export function TasksPage() {
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 
+  // The "messages" and "config" tabs mutate catalog tables (message_templates,
+  // task_configs) that are shared across the tenant. Hide them from agents —
+  // RLS blocks the writes anyway, but the UI should not invite a failing call.
   const TABS: Array<{ key: TabKey; label: string; count: number; icon: typeof Clock }> = [
     { key: 'today', label: t('tasks_page.tab_today'), count: todayCount, icon: Calendar },
     { key: 'overdue', label: t('tasks_page.tab_overdue'), count: overdueCount, icon: AlertTriangle },
     { key: 'upcoming', label: t('tasks_page.tab_upcoming'), count: upcomingCount, icon: Clock },
     { key: 'completed', label: t('tasks_page.tab_completed'), count: completedCount, icon: CheckCircle },
-    { key: 'messages', label: t('tasks_page.tab_messages'), count: 0, icon: FileText },
-    { key: 'config', label: t('tasks_page.tab_config'), count: 0, icon: Settings },
+    ...(isAdmin ? [
+      { key: 'messages' as TabKey, label: t('tasks_page.tab_messages'), count: 0, icon: FileText },
+      { key: 'config' as TabKey, label: t('tasks_page.tab_config'), count: 0, icon: Settings },
+    ] : []),
   ]
 
   const agentOptions = [{ value: 'all', label: t('tasks_page.all_agents') }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
@@ -293,11 +298,11 @@ export function TasksPage() {
         )}
       </div>
 
-      {/* Config tab */}
-      {tab === 'config' && <TaskConfigSection />}
+      {/* Config tab — admin only */}
+      {tab === 'config' && isAdmin && <TaskConfigSection />}
 
-      {/* Messages tab */}
-      {tab === 'messages' && <MessagesTemplateTab />}
+      {/* Messages tab — admin only (mutates shared catalog) */}
+      {tab === 'messages' && isAdmin && <MessagesTemplateTab />}
 
       {/* Task list */}
       {!['config', 'messages'].includes(tab) && (

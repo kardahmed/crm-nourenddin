@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { RoleRoute } from '@/components/auth/RoleRoute'
+import { GuestOnlyRoute } from '@/components/auth/GuestOnlyRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 
@@ -50,10 +51,12 @@ function App() {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         <Route path="/" element={<HomeRedirect />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route element={<GuestOnlyRoute />}>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+        </Route>
 
         {/* App routes — /dashboard, /pipeline, etc. */}
         <Route element={<ProtectedRoute />}>

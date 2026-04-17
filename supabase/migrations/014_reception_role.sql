@@ -1,12 +1,13 @@
 -- ================================================
--- CRM NOUREDDINE — File 13/N
--- Add the `reception` user role.
+-- CRM NOUREDDINE — File 14/N
+-- Reception role: helpers, policies, triggers, assignment RPC.
 --
--- The receptionist is the agency's front desk: she creates new
--- clients (walk-ins, incoming calls), assigns them to commercial
--- agents, and welcomes clients arriving for scheduled visits.
+-- Depends on migration 013 which adds the 'reception' enum value.
+-- Postgres forbids referencing a newly-added enum value in the same
+-- transaction that creates it (SQLSTATE 55P04), hence the two-file
+-- split — Supabase CLI runs each file in its own transaction.
 --
--- What she can do:
+-- What reception can do:
 --   * SELECT on clients           — see the whole book to dispatch.
 --   * INSERT on clients           — register a new lead.
 --   * UPDATE on clients           — reassign + edit contact info.
@@ -18,7 +19,7 @@
 --   * SELECT on users             — list agents for the assignment UI.
 --   * SELECT on history           — audit her own dispatches.
 --
--- What she cannot do:
+-- What reception cannot do:
 --   * Touch sales, reservations, payments, charges, goals.
 --   * Delete anything.
 --   * Change a client's pipeline stage, budget, or ID documents.
@@ -26,21 +27,14 @@
 -- Assignment policy is centralised in `app_settings`:
 --   * reception_assignment_mode     — manual | round_robin |
 --                                     load_balanced | leads_today
---   * reception_max_leads_per_day   — hard cap per agent to prevent
---                                     favoritism even in manual mode.
+--   * reception_max_leads_per_day   — hard cap per agent.
 --   * reception_override_requires_reason — force a motif when the
 --                                          receptionist bypasses the
 --                                          suggested agent.
 -- ================================================
 
 
--- ─── 1. Extend user_role enum ───
-DO $$ BEGIN
-  ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'reception';
-EXCEPTION WHEN others THEN NULL; END $$;
-
-
--- ─── 2. Helper: is_reception() ───
+-- ─── 1. Helper: is_reception() ───
 -- Mirrors the shape of is_admin(); SECURITY DEFINER so RLS policies
 -- can invoke it without the caller needing SELECT on users.
 CREATE OR REPLACE FUNCTION public.is_reception()
@@ -52,7 +46,7 @@ RETURNS BOOLEAN AS $$
 $$ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public;
 
 
--- ─── 3. app_settings: assignment policy columns ───
+-- ─── 2. app_settings: assignment policy columns ───
 ALTER TABLE app_settings
   ADD COLUMN IF NOT EXISTS reception_assignment_mode TEXT
     NOT NULL DEFAULT 'manual'
@@ -64,7 +58,7 @@ ALTER TABLE app_settings
     NOT NULL DEFAULT TRUE;
 
 
--- ─── 4. RLS: clients ───
+-- ─── 3. RLS: clients ───
 -- Replace SELECT/INSERT/UPDATE policies so reception is included.
 -- DELETE stays admin-only.
 DROP POLICY IF EXISTS "clients_select" ON clients;
@@ -97,7 +91,7 @@ CREATE POLICY "clients_update" ON clients FOR UPDATE TO authenticated
   );
 
 
--- ─── 5. Column-level guard for reception UPDATE ───
+-- ─── 4. Column-level guard for reception UPDATE ───
 -- RLS cannot restrict individual columns; a BEFORE UPDATE trigger
 -- reverts commercial fields if a non-admin reception user tries to
 -- modify them. Keeps the contract enforceable even if the UI gets
@@ -127,7 +121,7 @@ CREATE TRIGGER trg_enforce_reception_client_update
   FOR EACH ROW EXECUTE FUNCTION public.enforce_reception_client_update();
 
 
--- ─── 6. RLS: visits (read-only for reception) ───
+-- ─── 5. RLS: visits (read-only for reception) ───
 DROP POLICY IF EXISTS "visits_select" ON visits;
 CREATE POLICY "visits_select" ON visits FOR SELECT TO authenticated
   USING (
@@ -138,7 +132,7 @@ CREATE POLICY "visits_select" ON visits FOR SELECT TO authenticated
   );
 
 
--- ─── 7. RLS: users (reception sees agent roster for assignment) ───
+-- ─── 6. RLS: users (reception sees agent roster for assignment) ───
 -- The existing policy likely already allows authenticated users to
 -- read the user list; we tighten it here to explicitly include
 -- reception if a future migration locks it down.
@@ -151,7 +145,7 @@ CREATE POLICY "users_select_for_reception" ON users FOR SELECT TO authenticated
   );
 
 
--- ─── 8. RLS: history (reception reads reassignment/creation trail) ───
+-- ─── 7. RLS: history (reception reads reassignment/creation trail) ───
 DROP POLICY IF EXISTS "history_select" ON history;
 CREATE POLICY "history_select" ON history FOR SELECT TO authenticated
   USING (
@@ -162,7 +156,7 @@ CREATE POLICY "history_select" ON history FOR SELECT TO authenticated
   );
 
 
--- ─── 9. Assignment helpers ───
+-- ─── 8. Assignment helpers ───
 -- Return the next agent to receive a lead, respecting the configured
 -- mode and the daily cap. NULL when every agent has hit the cap.
 --
@@ -245,6 +239,6 @@ END;
 $$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public;
 
 
--- ─── 10. Grant execute on helpers ───
+-- ─── 9. Grant execute on helpers ───
 GRANT EXECUTE ON FUNCTION public.is_reception() TO authenticated;
 GRANT EXECUTE ON FUNCTION public.pick_agent_for_assignment() TO authenticated;

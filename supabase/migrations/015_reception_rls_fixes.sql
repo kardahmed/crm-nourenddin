@@ -1,6 +1,6 @@
 -- ================================================
--- CRM NOUREDDINE — File 14/N
--- Fix two RLS gaps discovered after migration 013:
+-- CRM NOUREDDINE — File 15/N
+-- Fix two RLS gaps discovered after migration 014:
 --
 --   1. visits UPDATE — migration 006 set `is_admin() OR agent_id = auth.uid()`
 --      for every row. Reception users check clients in for their visits by
@@ -45,10 +45,8 @@ BEGIN
     NEW.agent_id      := OLD.agent_id;
     NEW.client_id     := OLD.client_id;
     NEW.project_id    := OLD.project_id;
-    NEW.unit_id       := OLD.unit_id;
     NEW.scheduled_at  := OLD.scheduled_at;
     NEW.visit_type    := OLD.visit_type;
-    NEW.feedback      := OLD.feedback;
   END IF;
   RETURN NEW;
 END;

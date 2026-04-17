@@ -1,22 +1,40 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { renderTemplate } from '../_shared/email-templates.ts'
 import type { TemplateName } from '../_shared/email-templates.ts'
+import { authenticate } from '../_shared/auth.ts'
+import { rateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const auth = await authenticate(req, { allowService: true, requireAdmin: true, corsHeaders })
+  if (!auth.ok) return auth.response
+  const { principal, supabase } = auth
+
+  // Per-user / per-IP rate limit (user JWT callers only; service calls skip).
+  if (principal.kind === 'user') {
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || principal.userId
+    const rl = rateLimit(`send-email:${principal.userId}:${ip}`, 60, 60_000)
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) },
+      })
+    }
+  }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
-    const supabase = createClient(supabaseUrl, serviceKey)
-
     const { type, to, subject, body, template, template_data, client_id, metadata } = await req.json()
 
     // Resolve email content: template or raw body
@@ -67,16 +85,19 @@ serve(async (req: Request) => {
 
     // Legacy body wrapping (no template)
     if (!template && body) {
+      const escape = (s: string) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+      const safeFromName = escape(fromName)
+      const safeBody = escape(body).replace(/\n/g, '<br>')
       emailHtml = `
         <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 24px;">
-            <h1 style="color: #0579DA; font-size: 20px; margin: 0;">${fromName}</h1>
+            <h1 style="color: #0579DA; font-size: 20px; margin: 0;">${safeFromName}</h1>
           </div>
           <div style="background: #ffffff; border: 1px solid #E3E8EF; border-radius: 12px; padding: 24px;">
-            ${body.replace(/\n/g, '<br>')}
+            ${safeBody}
           </div>
           <p style="text-align: center; color: #8898AA; font-size: 11px; margin-top: 20px;">
-            ${fromName} — CRM Immobilier
+            ${safeFromName} — CRM Immobilier
           </p>
         </div>`
     }
@@ -145,7 +166,8 @@ serve(async (req: Request) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
-    return new Response(JSON.stringify({ error: (error as Error).message }), {
+    console.error('send-email error:', error)
+    return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

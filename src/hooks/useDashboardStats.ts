@@ -102,6 +102,7 @@ export function useDashboardStats() {
 
   return useQuery({
     queryKey: ['dashboard-stats', role, userId],
+    enabled: !isAgent && !!role,
     queryFn: async (): Promise<DashboardStats> => {
 
       const now = new Date()

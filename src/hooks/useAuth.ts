@@ -26,11 +26,11 @@ export function useAuth() {
 
     // Listen for changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, s) => {
+      (event, s) => {
         setSession(s)
-        if (s) {
+        if (event === 'SIGNED_IN') {
           setLoading(true)
-        } else {
+        } else if (event === 'SIGNED_OUT') {
           reset()
         }
       },

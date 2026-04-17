@@ -1,19 +1,22 @@
 import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { UserPlus, CalendarCheck, Users, Inbox } from 'lucide-react'
+import { UserPlus, CalendarCheck, Users, Inbox, Scale } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { KPICard, LoadingSpinner } from '@/components/common'
 import { NewContactForm } from './components/NewContactForm'
 import { TodayVisitsList } from './components/TodayVisitsList'
 import { UnassignedQueue } from './components/UnassignedQueue'
 import { AgentsDirectory } from './components/AgentsDirectory'
+import { EquityDashboard } from './components/EquityDashboard'
 import { useReceptionSettings, MODE_LABELS } from '@/hooks/useReceptionAssignment'
+import { usePermissions } from '@/hooks/usePermissions'
 
-type TabKey = 'new' | 'visits' | 'unassigned' | 'directory'
+type TabKey = 'new' | 'visits' | 'unassigned' | 'directory' | 'equity'
 
 export function ReceptionPage() {
   const [tab, setTab] = useState<TabKey>('new')
   const { data: settings } = useReceptionSettings()
+  const { isAdmin } = usePermissions()
 
   // Header metrics — kept lightweight so the hub loads fast.
   const { data: metrics, isLoading } = useQuery({
@@ -52,12 +55,18 @@ export function ReceptionPage() {
     staleTime: 30_000,
   })
 
-  const TABS = useMemo(() => [
-    { key: 'new' as TabKey, label: 'Nouveau contact', icon: UserPlus },
-    { key: 'visits' as TabKey, label: 'Visites du jour', icon: CalendarCheck, count: metrics?.visitsToday },
-    { key: 'unassigned' as TabKey, label: 'Non-assignés', icon: Inbox, count: metrics?.unassigned },
-    { key: 'directory' as TabKey, label: 'Agents', icon: Users, count: metrics?.activeAgents },
-  ], [metrics])
+  const TABS = useMemo(() => {
+    const base = [
+      { key: 'new' as TabKey, label: 'Nouveau contact', icon: UserPlus },
+      { key: 'visits' as TabKey, label: 'Visites du jour', icon: CalendarCheck, count: metrics?.visitsToday },
+      { key: 'unassigned' as TabKey, label: 'Non-assignés', icon: Inbox, count: metrics?.unassigned },
+      { key: 'directory' as TabKey, label: 'Agents', icon: Users, count: metrics?.activeAgents },
+    ]
+    if (isAdmin) {
+      base.push({ key: 'equity' as TabKey, label: 'Équité', icon: Scale })
+    }
+    return base
+  }, [metrics, isAdmin])
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 
@@ -144,6 +153,7 @@ export function ReceptionPage() {
       {tab === 'visits' && <TodayVisitsList />}
       {tab === 'unassigned' && <UnassignedQueue />}
       {tab === 'directory' && <AgentsDirectory />}
+      {tab === 'equity' && isAdmin && <EquityDashboard />}
     </div>
   )
 }

@@ -1,13 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useClients } from '@/hooks/useClients'
 import { useProjects } from '@/hooks/useProjects'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuthStore } from '@/store/authStore'
+import { useDuplicateCheck } from '@/hooks/useDuplicateCheck'
 import { Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -56,6 +58,8 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
   const { isAgent } = usePermissions()
   const currentUserId = useAuthStore(s => s.session?.user?.id)
 
+  const [dupDismissed, setDupDismissed] = useState(false)
+
   // Fetch agents
   const { data: agents = [] } = useQuery({
     queryKey: ['tenant-agents'],
@@ -101,6 +105,18 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
       notes: '',
     },
   })
+
+  const watchedPhone = watch('phone')
+  const watchedName = watch('full_name')
+  const { data: duplicates = [] } = useDuplicateCheck(
+    watchedName ?? '',
+    watchedPhone ?? '',
+    isOpen && !isEdit,
+  )
+
+  useEffect(() => {
+    if (isOpen) setDupDismissed(false)
+  }, [isOpen])
 
   // Populate form when editing
   useEffect(() => {
@@ -354,6 +370,40 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
             </Field>
           </div>
         </div>
+
+        {/* Duplicate warning */}
+        {!isEdit && duplicates.length > 0 && !dupDismissed && (
+          <div className="mt-4 rounded-lg border border-immo-status-orange/40 bg-immo-status-orange/5 p-3">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-immo-status-orange" />
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-immo-status-orange">
+                  Doublon détecté — ce client existe peut-être déjà
+                </p>
+                <ul className="mt-1.5 space-y-1">
+                  {duplicates.map((d) => (
+                    <li key={d.id} className="text-[11px] text-immo-text-secondary">
+                      <span className="font-medium text-immo-text-primary">{d.full_name}</span>
+                      {' — '}{d.phone}
+                      {d.agent_name && <span className="text-immo-text-muted"> · Agent: {d.agent_name}</span>}
+                      {' · '}<span className="text-immo-text-muted">{d.pipeline_stage}</span>
+                      {d.match_reason === 'exact_phone' && <span className="ml-1 rounded bg-immo-status-red/10 px-1 py-0.5 text-[10px] text-immo-status-red">Même tél.</span>}
+                      {d.match_reason === 'fuzzy_phone' && <span className="ml-1 rounded bg-immo-status-orange/10 px-1 py-0.5 text-[10px] text-immo-status-orange">Tél. similaire</span>}
+                      {d.match_reason === 'fuzzy_name' && <span className="ml-1 rounded bg-immo-accent-blue/10 px-1 py-0.5 text-[10px] text-immo-accent-blue">Nom similaire</span>}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setDupDismissed(true)}
+                  className="mt-2 text-[11px] font-medium text-immo-text-muted underline hover:text-immo-text-primary"
+                >
+                  Ignorer et continuer
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Footer */}
         <div className="mt-6 flex justify-end gap-3 border-t border-immo-border-default pt-4">

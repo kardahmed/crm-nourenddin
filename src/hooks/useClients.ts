@@ -66,7 +66,14 @@ export function useClients(filters?: ClientFilters) {
         .select()
         .single()
 
-      if (error) { handleSupabaseError(error); throw error }
+      if (error) {
+        if (error.code === '23505' && error.message?.includes('uq_clients_phone_normalized')) {
+          toast.error('Ce numéro de téléphone est déjà attribué à un autre client')
+          throw error
+        }
+        handleSupabaseError(error)
+        throw error
+      }
       return data
     },
     onSuccess: () => {
@@ -84,7 +91,14 @@ export function useClients(filters?: ClientFilters) {
         .select()
         .single()
 
-      if (error) { handleSupabaseError(error); throw error }
+      if (error) {
+        if (error.code === '23505' && error.message?.includes('uq_clients_phone_normalized')) {
+          toast.error('Ce numéro de téléphone est déjà attribué à un autre client')
+          throw error
+        }
+        handleSupabaseError(error)
+        throw error
+      }
       return data
     },
     onSuccess: () => {

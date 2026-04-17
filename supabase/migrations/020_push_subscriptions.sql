@@ -16,7 +16,6 @@
 CREATE TABLE IF NOT EXISTS public.push_subscriptions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
   endpoint TEXT NOT NULL UNIQUE,
   p256dh TEXT NOT NULL,
   auth TEXT NOT NULL,
@@ -26,7 +25,6 @@ CREATE TABLE IF NOT EXISTS public.push_subscriptions (
 );
 
 CREATE INDEX IF NOT EXISTS idx_push_subs_user ON public.push_subscriptions(user_id);
-CREATE INDEX IF NOT EXISTS idx_push_subs_tenant ON public.push_subscriptions(tenant_id);
 
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 

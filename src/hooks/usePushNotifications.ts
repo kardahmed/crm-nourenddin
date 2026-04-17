@@ -38,7 +38,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer | null): string {
 
 export function usePushNotifications() {
   const userId = useAuthStore(s => s.session?.user?.id)
-  const tenantId = useAuthStore(s => s.userProfile?.tenant_id)
   const [permission, setPermission] = useState<NotificationPermission>(() =>
     typeof Notification !== 'undefined' ? Notification.permission : 'denied',
   )
@@ -48,7 +47,7 @@ export function usePushNotifications() {
   const canWebPush = isSupported && 'serviceWorker' in navigator && 'PushManager' in window && !!VAPID_PUBLIC_KEY
 
   const subscribeWebPush = useCallback(async () => {
-    if (!canWebPush || !userId || !tenantId) return
+    if (!canWebPush || !userId) return
     try {
       const registration = await navigator.serviceWorker.ready
       let subscription = await registration.pushManager.getSubscription()
@@ -67,7 +66,6 @@ export function usePushNotifications() {
         .upsert(
           {
             user_id: userId,
-            tenant_id: tenantId,
             endpoint: subscription.endpoint,
             p256dh,
             auth,
@@ -81,7 +79,7 @@ export function usePushNotifications() {
       console.warn('Push subscription failed', err)
       setWebPushReady(false)
     }
-  }, [canWebPush, userId, tenantId])
+  }, [canWebPush, userId])
 
   const enablePush = useCallback(async () => {
     if (!isSupported) return 'denied' as NotificationPermission

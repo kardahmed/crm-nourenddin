@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -11,6 +11,8 @@ import {
 } from 'recharts'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
+import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
 import {
   KPICard, FilterDropdown, LoadingSpinner,
 } from '@/components/common'
@@ -76,38 +78,54 @@ const PAGE_SIZE = 25
 
 export function ReportsPage() {
   const navigate = useNavigate()
+  const { isAgent } = usePermissions()
+  const userId = useAuthStore((s) => s.session?.user?.id) ?? ''
 
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [agentFilter, setAgentFilter] = useState('all')
   const [_projectFilter] = useState('all')
-  const [view, setView] = useState<'team' | 'agent'>('team')
-  const [selectedAgent, setSelectedAgent] = useState('')
+  // Agents get the per-agent view, locked to themselves.
+  const [view, setView] = useState<'team' | 'agent'>(isAgent ? 'agent' : 'team')
+  const [selectedAgent, setSelectedAgent] = useState(isAgent ? userId : '')
   const [detailPage, setDetailPage] = useState(0)
+
+  // Keep the agent's selection locked to their own id if the store rehydrates.
+  useEffect(() => {
+    if (isAgent && userId && selectedAgent !== userId) {
+      setView('agent')
+      setSelectedAgent(userId)
+    }
+  }, [isAgent, userId, selectedAgent])
 
   const range = getPeriodRange(period)
   const rangeStart = format(range.start, "yyyy-MM-dd'T'HH:mm:ss")
   const rangeEnd = format(range.end, "yyyy-MM-dd'T'HH:mm:ss")
 
-  // Fetch agents
+  // Fetch agents — admins see the full team, agents get only their own row
+  // (used by the team table which is hidden for them anyway, but the shape
+  // stays consistent so the agent-view KPIs still resolve).
   const { data: agents = [] } = useQuery({
-    queryKey: ['report-agents'],
+    queryKey: ['report-agents', isAgent, userId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name, last_activity, status').in('role', ['agent', 'admin']).order('first_name')
+      let q = supabase.from('users').select('id, first_name, last_name, last_activity, status').in('role', ['agent', 'admin']).order('first_name')
+      if (isAgent && userId) q = q.eq('id', userId)
+      const { data } = await q
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; last_activity: string | null; status: string }>
     },
   })
 
-  // Fetch all history for period
+  // Fetch history for the period. Agents see only their own history.
   const { data: allHistory = [], isLoading } = useQuery({
-    queryKey: ['report-history', rangeStart, rangeEnd],
+    queryKey: ['report-history', rangeStart, rangeEnd, isAgent, userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('history')
         .select('id, type, title, description, agent_id, client_id, created_at, clients(full_name)')
-        
         .gte('created_at', rangeStart)
         .lte('created_at', rangeEnd)
         .order('created_at', { ascending: false })
+      if (isAgent && userId) q = q.eq('agent_id', userId)
+      const { data, error } = await q
       if (error) { handleSupabaseError(error); throw error }
       return (data ?? []).map((h: Record<string, unknown>) => ({
         id: h.id as string,
@@ -123,11 +141,13 @@ export function ReportsPage() {
     },
   })
 
-  // Fetch new clients count per agent
+  // Fetch new clients count per agent — scoped for agents.
   const { data: newClientsMap = new Map<string, number>() } = useQuery({
-    queryKey: ['report-new-clients', rangeStart, rangeEnd],
+    queryKey: ['report-new-clients', rangeStart, rangeEnd, isAgent, userId],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)
+      let q = supabase.from('clients').select('agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)
+      if (isAgent && userId) q = q.eq('agent_id', userId)
+      const { data } = await q
       const m = new Map<string, number>()
       for (const c of (data ?? []) as Array<{ agent_id: string | null }>) {
         if (c.agent_id) m.set(c.agent_id, (m.get(c.agent_id) ?? 0) + 1)
@@ -227,7 +247,7 @@ export function ReportsPage() {
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <FilterDropdown label="Période" options={periodOptions} value={period} onChange={(v) => setPeriod(v as PeriodKey)} />
-        <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />
+        {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
         <Button variant="ghost" size="sm" onClick={() => exportToCsv('rapports', allHistory, [
           { header: 'Date', value: r => r.created_at },
           { header: 'Type', value: r => HISTORY_TYPE_LABELS[r.type as HistoryType]?.label ?? r.type },
@@ -238,18 +258,20 @@ export function ReportsPage() {
           <Download className="mr-1 h-3.5 w-3.5" /> Exporter
         </Button>
 
-        <div className="ml-auto flex gap-1 rounded-lg border border-immo-border-default p-0.5">
-          <button onClick={() => setView('team')} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'team' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
-            Équipe
-          </button>
-          <button onClick={() => { setView('agent'); if (!selectedAgent && agents.length) setSelectedAgent(agents[0].id) }} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'agent' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
-            Agent
-          </button>
-        </div>
+        {!isAgent && (
+          <div className="ml-auto flex gap-1 rounded-lg border border-immo-border-default p-0.5">
+            <button onClick={() => setView('team')} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'team' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
+              Équipe
+            </button>
+            <button onClick={() => { setView('agent'); if (!selectedAgent && agents.length) setSelectedAgent(agents[0].id) }} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'agent' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
+              Agent
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* TEAM VIEW */}
-      {view === 'team' && (
+      {/* TEAM VIEW — admin only */}
+      {view === 'team' && !isAgent && (
         <div className="overflow-hidden rounded-xl border border-immo-border-default">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -303,13 +325,15 @@ export function ReportsPage() {
       {/* AGENT VIEW */}
       {view === 'agent' && (
         <div className="space-y-5">
-          {/* Agent selector */}
-          <FilterDropdown
-            label="Agent"
-            options={agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))}
-            value={selectedAgent}
-            onChange={(v) => { setSelectedAgent(v); setDetailPage(0) }}
-          />
+          {/* Agent selector — hidden for agents (locked to themselves) */}
+          {!isAgent && (
+            <FilterDropdown
+              label="Agent"
+              options={agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))}
+              value={selectedAgent}
+              onChange={(v) => { setSelectedAgent(v); setDetailPage(0) }}
+            />
+          )}
 
           {selectedAgent && (
             <>

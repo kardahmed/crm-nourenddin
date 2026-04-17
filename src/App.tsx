@@ -80,6 +80,8 @@ function App() {
             <Route path="/dossiers" element={<DossiersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/goals" element={<GoalsPage />} />
+            <Route path="/performance" element={<PerformancePage />} />
+            <Route path="/reports" element={<ReportsPage />} />
 
             {/* Reception + admin (front-desk hub) */}
             <Route element={<RoleRoute allowedRoles={['reception', 'admin']} />}>
@@ -88,10 +90,8 @@ function App() {
 
             {/* Admin only */}
             <Route element={<RoleRoute allowedRoles={['admin']} />}>
-              <Route path="/performance" element={<PerformancePage />} />
               <Route path="/agents" element={<AgentsPage />} />
               <Route path="/agents/:agentId" element={<AgentDetailPage />} />
-              <Route path="/reports" element={<ReportsPage />} />
               <Route path="/marketing-roi" element={<MarketingROIPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>

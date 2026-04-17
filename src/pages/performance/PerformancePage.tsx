@@ -10,6 +10,8 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
 } from 'recharts'
 import { supabase } from '@/lib/supabase'
+import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
 import { KPICard, FilterDropdown, LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { PIPELINE_STAGES, SOURCE_LABELS } from '@/types'
@@ -54,6 +56,8 @@ function getPeriodRange(key: PeriodKey) {
 
 export function PerformancePage() {
   const qc = useQueryClient()
+  const { isAgent } = usePermissions()
+  const userId = useAuthStore((s) => s.session?.user?.id) ?? null
 
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [agentFilter, setAgentFilter] = useState('all')
@@ -76,13 +80,12 @@ export function PerformancePage() {
 
   // Fetch all performance data
   const { data, isLoading } = useQuery({
-    queryKey: ['perf', rangeStart, rangeEnd, agentFilter, projectFilter],
+    queryKey: ['perf', rangeStart, rangeEnd, agentFilter, projectFilter, isAgent, userId],
     queryFn: async () => {
-      
-
-      // This page is admin-only (<RoleRoute allowedRoles={['admin']}/>),
-      // so we only apply the dropdown filter.
-      const agentEq = agentFilter !== 'all' ? agentFilter : null
+      // Agents can only see their own data — force the filter to their id
+      // regardless of the dropdown (which is hidden for them anyway).
+      // Admins use the dropdown filter (null = all).
+      const agentEq = isAgent ? userId : (agentFilter !== 'all' ? agentFilter : null)
 
       // Build queries with optional agent filter
       function withAgent<T>(q: T & { eq: (col: string, val: string) => T }) {
@@ -96,11 +99,18 @@ export function PerformancePage() {
 
         withAgent(supabase.from('visits').select('id, status, scheduled_at, agent_id').gte('scheduled_at', rangeStart).lte('scheduled_at', rangeEnd)) as unknown as Promise<{ data: Array<{ id: string; status: string; scheduled_at: string }> | null; error: unknown }>,
 
-        supabase.from('history').select('id, type, created_at').gte('created_at', rangeStart).lte('created_at', rangeEnd) as unknown as Promise<{ data: Array<{ id: string; type: string; created_at: string }> | null; error: unknown }>,
+        // Agents don't need global activity counts — skip the history fetch.
+        isAgent
+          ? Promise.resolve({ data: [] as Array<{ id: string; type: string; created_at: string }>, error: null })
+          : supabase.from('history').select('id, type, created_at').gte('created_at', rangeStart).lte('created_at', rangeEnd) as unknown as Promise<{ data: Array<{ id: string; type: string; created_at: string }> | null; error: unknown }>,
 
-        supabase.from('users').select('id, first_name, last_name, last_activity').eq('status', 'active').in('role', ['agent', 'admin']) as unknown as Promise<{ data: Array<{ id: string; first_name: string; last_name: string; last_activity: string | null }> | null; error: unknown }>,
+        // Agents don't need the agent list (no dropdown, no inactive alert).
+        isAgent
+          ? Promise.resolve({ data: [] as Array<{ id: string; first_name: string; last_name: string; last_activity: string | null }>, error: null })
+          : supabase.from('users').select('id, first_name, last_name, last_activity').eq('status', 'active').in('role', ['agent', 'admin']) as unknown as Promise<{ data: Array<{ id: string; first_name: string; last_name: string; last_activity: string | null }> | null; error: unknown }>,
 
-        supabase.from('clients').select('id, pipeline_stage') as unknown as Promise<{ data: Array<{ id: string; pipeline_stage: PipelineStage }> | null; error: unknown }>,
+        // Pipeline funnel — scope to the agent's own clients when applicable.
+        withAgent(supabase.from('clients').select('id, pipeline_stage, agent_id')) as unknown as Promise<{ data: Array<{ id: string; pipeline_stage: PipelineStage }> | null; error: unknown }>,
       ])
 
       return {
@@ -220,7 +230,7 @@ export function PerformancePage() {
             </button>
           ))}
         </div>
-        <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />
+        {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -246,8 +256,8 @@ export function PerformancePage() {
         </div>
       </div>
 
-      {/* Inactive alert */}
-      {showAlert && inactiveAgents.length > 0 && (
+      {/* Inactive alert — admin only */}
+      {!isAgent && showAlert && inactiveAgents.length > 0 && (
         <div className="flex items-center gap-3 rounded-xl border border-immo-status-orange/30 bg-immo-status-orange-bg px-4 py-3">
           <AlertTriangle className="h-4 w-4 shrink-0 text-immo-status-orange" />
           <div className="flex-1 text-xs text-immo-status-orange">

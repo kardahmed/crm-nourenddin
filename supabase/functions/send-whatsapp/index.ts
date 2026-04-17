@@ -70,12 +70,12 @@ Deno.serve(async (req) => {
         return json({ error: 'Invalid client_id' }, 400)
       }
       const [{ data: callerRow }, { data: clientRow }] = await Promise.all([
-        supabase.from('users').select('role, is_active').eq('id', user.id).single(),
+        supabase.from('users').select('role, status').eq('id', user.id).single(),
         supabase.from('clients').select('agent_id').eq('id', client_id).single(),
       ])
-      const role = (callerRow as { role: string; is_active: boolean } | null)?.role
-      const active = (callerRow as { role: string; is_active: boolean } | null)?.is_active ?? false
-      if (!active) return json({ error: 'Inactive user' }, 403)
+      const caller = callerRow as { role: string; status: string } | null
+      if (!caller || caller.status !== 'active') return json({ error: 'Inactive user' }, 403)
+      const role = caller.role
       const ownerId = (clientRow as { agent_id: string | null } | null)?.agent_id ?? null
       if (role !== 'admin' && ownerId !== user.id) {
         return json({ error: 'Forbidden: not your client' }, 403)

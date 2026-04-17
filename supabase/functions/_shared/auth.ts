@@ -6,7 +6,7 @@
 //     opts.allowService is true (used by cron / internal invocations).
 //   - Otherwise treats the token as a user JWT, verifies it with
 //     supabase.auth.getUser, and loads the user row from `users` to
-//     get role, is_active, and id.
+//     get role, status, and id.
 //   - If opts.requireAdmin, rejects non-admin / inactive users.
 //
 // Returns a 401/403 Response on failure, or the resolved principal.
@@ -97,14 +97,16 @@ export async function authenticate(
     }
   }
 
-  // Load role + active flag.
+  // Load role + active flag. The users table exposes `status` (enum
+  // 'active' | 'inactive'), not a boolean is_active column.
   const { data: row } = await supabase
     .from('users')
-    .select('id, role, is_active')
+    .select('id, role, status')
     .eq('id', userData.user.id)
     .maybeSingle()
 
-  if (!row || (row as { is_active?: boolean }).is_active === false) {
+  const userStatus = (row as { status?: string } | null)?.status
+  if (!row || userStatus !== 'active') {
     return {
       ok: false,
       response: new Response(JSON.stringify({ error: 'Inactive user' }), {

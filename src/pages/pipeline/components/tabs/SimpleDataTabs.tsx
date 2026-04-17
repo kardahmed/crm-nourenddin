@@ -20,7 +20,9 @@ function ClientDocumentsWrapper({ clientId }: { clientId: string }) {
 }
 import { formatPrice } from '@/lib/constants'
 import { PAYMENT_STATUS_LABELS } from '@/types'
-import type { PaymentStatus, TaskStatus } from '@/types'
+import type { PaymentStatus } from '@/types'
+
+type ClientTaskStatus = 'pending' | 'completed' | 'cancelled'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import { inputClass } from './shared'
@@ -359,7 +361,7 @@ export function TasksTab({ clientId }: { clientId: string }) {
   const { data: tasks = [] } = useQuery({
     queryKey: ['client-tasks', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('tasks').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
+      const { data, error } = await supabase.from('client_tasks').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
       if (error) { handleSupabaseError(error); throw error }
       return data as unknown as Array<Record<string, unknown>>
     },
@@ -367,7 +369,7 @@ export function TasksTab({ clientId }: { clientId: string }) {
 
   const createTask = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from('tasks').insert({  client_id: clientId, agent_id: userId, title, type: 'manual', due_at: dueAt || null } as never)
+      const { error } = await supabase.from('client_tasks').insert({ client_id: clientId, agent_id: userId, title, scheduled_at: dueAt ? new Date(dueAt).toISOString() : null } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {
@@ -378,8 +380,10 @@ export function TasksTab({ clientId }: { clientId: string }) {
   })
 
   const toggleStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
-      const { error } = await supabase.from('tasks').update({ status } as never).eq('id', id)
+    mutationFn: async ({ id, status }: { id: string; status: ClientTaskStatus }) => {
+      const patch: Record<string, unknown> = { status }
+      if (status === 'completed') patch.completed_at = new Date().toISOString()
+      const { error } = await supabase.from('client_tasks').update(patch as never).eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }),
@@ -398,22 +402,22 @@ export function TasksTab({ clientId }: { clientId: string }) {
       ) : (
         <div className="space-y-2">
           {tasks.map((task) => {
-            const nextStatus: TaskStatus = task.status === 'pending' ? 'done' : task.status === 'done' ? 'ignored' : 'pending'
+            const nextStatus: ClientTaskStatus = task.status === 'pending' ? 'completed' : task.status === 'completed' ? 'cancelled' : 'pending'
             return (
               <div key={task.id as string} className="flex items-center gap-3 rounded-lg border border-immo-border-default bg-immo-bg-card px-4 py-3">
                 <button onClick={() => toggleStatus.mutate({ id: task.id as string, status: nextStatus })}
-                  className={`h-5 w-5 shrink-0 rounded-full border-2 transition-colors ${task.status === 'done' ? 'border-immo-accent-green bg-immo-accent-green' : task.status === 'ignored' ? 'border-immo-text-muted bg-immo-text-muted/20' : 'border-immo-border-default hover:border-immo-accent-green'}`}>
-                  {task.status === 'done' && <CheckCircle className="h-full w-full text-immo-bg-primary" />}
+                  className={`h-5 w-5 shrink-0 rounded-full border-2 transition-colors ${task.status === 'completed' ? 'border-immo-accent-green bg-immo-accent-green' : task.status === 'cancelled' ? 'border-immo-text-muted bg-immo-text-muted/20' : 'border-immo-border-default hover:border-immo-accent-green'}`}>
+                  {task.status === 'completed' && <CheckCircle className="h-full w-full text-immo-bg-primary" />}
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className={`text-sm ${task.status === 'done' ? 'text-immo-text-muted line-through' : 'text-immo-text-primary'}`}>{task.title as string}</p>
+                  <p className={`text-sm ${task.status === 'completed' ? 'text-immo-text-muted line-through' : 'text-immo-text-primary'}`}>{task.title as string}</p>
                   <div className="flex items-center gap-2 text-[11px] text-immo-text-muted">
-                    {task.type === 'ai_generated' && <span className="flex items-center gap-0.5 text-purple-400"><Bot className="h-3 w-3" /> IA</span>}
-                    {typeof task.due_at === 'string' && <span>{format(new Date(task.due_at), 'dd/MM/yyyy')}</span>}
+                    {task.template_id != null && <span className="flex items-center gap-0.5 text-purple-400"><Bot className="h-3 w-3" /> IA</span>}
+                    {typeof task.scheduled_at === 'string' && <span>{format(new Date(task.scheduled_at), 'dd/MM/yyyy')}</span>}
                   </div>
                 </div>
-                <span className={`text-[11px] font-medium ${task.status === 'done' ? 'text-immo-accent-green' : task.status === 'ignored' ? 'text-immo-text-muted' : 'text-immo-status-orange'}`}>
-                  {task.status === 'done' ? t('status.completed') : task.status === 'ignored' ? t('status.cancelled') : t('status.pending')}
+                <span className={`text-[11px] font-medium ${task.status === 'completed' ? 'text-immo-accent-green' : task.status === 'cancelled' ? 'text-immo-text-muted' : 'text-immo-status-orange'}`}>
+                  {task.status === 'completed' ? t('status.completed') : task.status === 'cancelled' ? t('status.cancelled') : t('status.pending')}
                 </span>
               </div>
             )

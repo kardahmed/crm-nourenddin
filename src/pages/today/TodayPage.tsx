@@ -25,8 +25,8 @@ type VisitRow = {
 type TaskRow = {
   id: string
   title: string
-  due_at: string | null
-  type: string
+  scheduled_at: string | null
+  template_id: string | null
   status: string
   clients: { id: string; full_name: string; phone: string | null } | null
 }
@@ -69,11 +69,12 @@ export function TodayPage() {
           .lte('scheduled_at', dayEnd)
           .order('scheduled_at'),
         supabase
-          .from('tasks')
-          .select('id, title, due_at, type, status, clients(id, full_name, phone)')
+          .from('client_tasks')
+          .select('id, title, scheduled_at, template_id, status, clients(id, full_name, phone)')
           .eq('agent_id', userId)
-          .neq('status', 'done')
-          .order('due_at', { ascending: true, nullsFirst: false }),
+          .neq('status', 'completed')
+          .neq('status', 'cancelled')
+          .order('scheduled_at', { ascending: true, nullsFirst: false }),
         supabase
           .from('clients')
           .select('id, full_name, phone, pipeline_stage, confirmed_budget, nin_cin, cin_verified, last_contact_at')
@@ -87,13 +88,13 @@ export function TodayPage() {
       const clients = (clientsRes.data ?? []) as ClientRow[]
 
       const now = new Date()
-      const overdueTasks = tasks.filter(t => t.due_at && isBefore(new Date(t.due_at), now))
+      const overdueTasks = tasks.filter(t => t.scheduled_at && isBefore(new Date(t.scheduled_at), now))
       const todayTasks = tasks.filter(t => {
-        if (!t.due_at) return false
-        const d = new Date(t.due_at)
+        if (!t.scheduled_at) return false
+        const d = new Date(t.scheduled_at)
         return d >= startOfDay(now) && d <= endOfDay(now) && !isBefore(d, now)
       })
-      const undatedTasks = tasks.filter(t => !t.due_at).slice(0, 5)
+      const undatedTasks = tasks.filter(t => !t.scheduled_at).slice(0, 5)
 
       const budgetTbd = clients.filter(c => !c.confirmed_budget).slice(0, 10)
       const cinMissing = clients.filter(c => !c.nin_cin || !c.cin_verified).slice(0, 10)
@@ -122,12 +123,12 @@ export function TodayPage() {
 
   const completeTask = useMutation({
     mutationFn: async (taskId: string) => {
-      const { error } = await supabase.from('tasks').update({ status: 'done' }).eq('id', taskId)
+      const { error } = await supabase.from('client_tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId)
       if (error) throw error
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['today'] })
-      qc.invalidateQueries({ queryKey: ['tasks'] })
+      qc.invalidateQueries({ queryKey: ['client-tasks'] })
       toast.success('Tâche terminée')
     },
   })
@@ -379,8 +380,8 @@ function TaskLine({ task, onDone, overdue }: {
               {task.clients.full_name}
             </Link>
           ) : '—'}
-          {task.due_at && <> · {format(new Date(task.due_at), 'HH:mm')}</>}
-          <> · {task.type}</>
+          {task.scheduled_at && <> · {format(new Date(task.scheduled_at), 'HH:mm')}</>}
+          {task.template_id && <> · IA</>}
         </div>
       </div>
       {waHref && (

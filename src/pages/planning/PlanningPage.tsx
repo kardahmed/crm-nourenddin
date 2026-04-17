@@ -136,7 +136,7 @@ export function PlanningPage() {
   const { data: aiTasks = [] } = useQuery({
     queryKey: ['ai-tasks'],
     queryFn: async () => {
-      let q = supabase.from('tasks').select('*, clients(full_name)').eq('type', 'ai_generated').eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
+      let q = supabase.from('client_tasks').select('*, clients(full_name)').not('template_id', 'is', null).eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
       if (isAgent && userId) q = q.eq('agent_id', userId)
       const { data, error } = await q
       if (error) return []
@@ -261,7 +261,7 @@ export function PlanningPage() {
                 <p className="text-sm text-immo-text-primary">{t.title as string}</p>
                 <p className="mt-1 text-[11px] text-immo-text-muted">
                   {(t.clients as { full_name: string })?.full_name ?? '-'}
-                  {typeof t.due_at === 'string' && ` · ${format(new Date(t.due_at), 'dd/MM/yyyy')}`}
+                  {typeof t.scheduled_at === 'string' && ` · ${format(new Date(t.scheduled_at), 'dd/MM/yyyy')}`}
                 </p>
               </div>
             ))}

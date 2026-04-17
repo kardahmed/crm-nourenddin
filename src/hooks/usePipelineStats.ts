@@ -44,7 +44,7 @@ export function usePipelineStats() {
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
-        supabase.from('tasks').select('id').eq('status', 'pending')
+        supabase.from('client_tasks').select('id').eq('status', 'pending')
           .then(r => isAgent && userId ? { ...r, data: r.data } : r), // RLS handles filtering
       ])
 

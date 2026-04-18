@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 import type { User, UserRole } from '@/types'
 import type { PermissionProfile } from '@/types/permissions'
+import { SINGLE_TENANT_ID } from '@/lib/singleTenant'
 
 interface AuthState {
   session: Session | null

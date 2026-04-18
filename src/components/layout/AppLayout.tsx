@@ -11,6 +11,7 @@ import { useMobile } from '@/hooks/useMobile'
 export function AppLayout() {
   const { title, subtitle } = usePageMeta()
   const { isMobile } = useMobile()
+  const role = useAuthStore((s) => s.role)
   useKeyboardShortcuts()
   usePushNotifications()
 
@@ -24,7 +25,7 @@ export function AppLayout() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar title={title} subtitle={subtitle} />
         <main className="flex-1 overflow-y-auto p-3 md:p-6">
-          <OnboardingWizard />
+          {role === 'admin' && <OnboardingWizard />}
           <div className="animate-in fade-in duration-200">
             <Outlet />
           </div>

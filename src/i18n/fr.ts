@@ -119,6 +119,7 @@ export const fr = {
     super_admin: 'Super Admin',
     admin: 'Administrateur',
     agent: 'Agent commercial',
+    reception: 'Reception',
   },
 
   // Types d'unités

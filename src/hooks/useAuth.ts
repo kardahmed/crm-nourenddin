@@ -71,9 +71,9 @@ export function useAuth() {
 
         setUserProfile(profile)
 
-        // Load permission profile for agents
+        // Load permission profile for non-admin roles
         const profileId = (profile as unknown as { permission_profile_id: string | null }).permission_profile_id
-        if (profile.role === 'agent' && profileId) {
+        if (profile.role !== 'admin' && profile.role !== 'super_admin' && profileId) {
           const { data: permProfile } = await supabase
             .from('permission_profiles')
             .select('*')

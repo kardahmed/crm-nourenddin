@@ -119,6 +119,7 @@ export const ar = {
     super_admin: 'مدير عام',
     admin: 'مدير',
     agent: 'وكيل تجاري',
+    reception: 'استقبال',
   },
 
   // Types d'unités

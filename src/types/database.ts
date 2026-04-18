@@ -785,7 +785,7 @@ export type Database = {
 }
 
 // Enums
-export type UserRole = 'super_admin' | 'admin' | 'agent'
+export type UserRole = 'super_admin' | 'admin' | 'agent' | 'reception'
 export type UserStatus = 'active' | 'inactive'
 export type ProjectStatus = 'active' | 'inactive' | 'archived'
 export type UnitType = 'apartment' | 'local' | 'villa' | 'parking'

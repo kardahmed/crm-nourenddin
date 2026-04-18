@@ -15,10 +15,20 @@ function isInStandaloneMode() {
     (navigator as Navigator & { standalone?: boolean }).standalone === true
 }
 
+const DISMISS_KEY = 'pwa-install-dismissed-at'
+// Re-show the banner 3 days after a dismissal so users aren't pestered
+const DISMISS_COOLDOWN_MS = 1000 * 60 * 60 * 24 * 3
+
+function wasDismissedRecently() {
+  const at = Number(localStorage.getItem(DISMISS_KEY) || 0)
+  return at > 0 && Date.now() - at < DISMISS_COOLDOWN_MS
+}
+
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [isInstalled, setIsInstalled] = useState(false)
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false)
+  const [showIOSBanner, setShowIOSBanner] = useState(false)
+  const [showPromptBanner, setShowPromptBanner] = useState(false)
 
   useEffect(() => {
     if (isInStandaloneMode()) {
@@ -27,19 +37,20 @@ export function usePWAInstall() {
     }
 
     if (isIOS()) {
-      const dismissed = sessionStorage.getItem('pwa-ios-dismissed')
-      if (!dismissed) setShowIOSPrompt(true)
+      if (!wasDismissedRecently()) setShowIOSBanner(true)
       return
     }
 
     function onBeforeInstall(e: Event) {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
+      if (!wasDismissedRecently()) setShowPromptBanner(true)
     }
 
     function onInstalled() {
       setIsInstalled(true)
       setDeferredPrompt(null)
+      setShowPromptBanner(false)
     }
 
     window.addEventListener('beforeinstallprompt', onBeforeInstall)
@@ -55,20 +66,23 @@ export function usePWAInstall() {
     await deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
     setDeferredPrompt(null)
+    setShowPromptBanner(false)
     return outcome === 'accepted'
   }, [deferredPrompt])
 
-  const dismissIOSPrompt = useCallback(() => {
-    setShowIOSPrompt(false)
-    sessionStorage.setItem('pwa-ios-dismissed', '1')
+  const dismissBanner = useCallback(() => {
+    setShowIOSBanner(false)
+    setShowPromptBanner(false)
+    localStorage.setItem(DISMISS_KEY, String(Date.now()))
   }, [])
 
   return {
     canInstall: !!deferredPrompt && !isInstalled,
     isInstalled,
     isIOS: isIOS() && !isInStandaloneMode(),
-    showIOSPrompt,
-    dismissIOSPrompt,
+    showIOSBanner,
+    showPromptBanner,
+    dismissBanner,
     install,
   }
 }

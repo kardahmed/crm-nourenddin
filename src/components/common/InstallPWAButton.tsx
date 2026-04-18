@@ -9,7 +9,7 @@ interface InstallPWAButtonProps {
 }
 
 export function InstallPWAButton({ variant = 'icon', className = '' }: InstallPWAButtonProps) {
-  const { canInstall, isIOS, showIOSPrompt, dismissIOSPrompt, install } = usePWAInstall()
+  const { canInstall, isIOS, showIOSBanner, showPromptBanner, dismissBanner, install } = usePWAInstall()
   const [showIOSModal, setShowIOSModal] = useState(false)
 
   async function handleClick() {
@@ -21,7 +21,12 @@ export function InstallPWAButton({ variant = 'icon', className = '' }: InstallPW
     if (ok) toast.success('Application installée')
   }
 
-  if (!canInstall && !isIOS) return null
+  async function handleBannerInstall() {
+    const ok = await install()
+    if (ok) toast.success('Application installée')
+  }
+
+  const showTopbarButton = canInstall || isIOS
 
   const button = variant === 'full' ? (
     <button
@@ -43,19 +48,60 @@ export function InstallPWAButton({ variant = 'icon', className = '' }: InstallPW
 
   return (
     <>
-      {button}
+      {showTopbarButton && button}
 
-      {showIOSPrompt && (
-        <div className="fixed bottom-4 left-4 right-4 z-50 flex items-start gap-3 rounded-xl border border-immo-border-default bg-immo-bg-card p-4 shadow-lg">
-          <Download className="mt-0.5 h-5 w-5 shrink-0 text-immo-accent-green" />
+      {/* Chrome / Android / desktop: native install prompt available */}
+      {showPromptBanner && (
+        <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-xl border border-immo-accent-green/40 bg-immo-bg-card p-4 shadow-xl">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-immo-accent-green/10">
+            <Download className="h-5 w-5 text-immo-accent-green" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-immo-text-primary">Installer IMMO PRO-X</p>
+            <p className="mt-0.5 text-xs text-immo-text-muted">
+              Accès rapide, notifications, mode hors-ligne.
+            </p>
+            <div className="mt-3 flex gap-2">
+              <button
+                onClick={handleBannerInstall}
+                className="rounded-lg bg-immo-accent-green px-3 py-1.5 text-xs font-semibold text-white hover:bg-immo-accent-green/90"
+              >
+                Installer
+              </button>
+              <button
+                onClick={dismissBanner}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-immo-text-muted hover:text-immo-text-primary"
+              >
+                Plus tard
+              </button>
+            </div>
+          </div>
+          <button onClick={dismissBanner} className="shrink-0 rounded-lg p-1 text-immo-text-muted hover:bg-immo-bg-card-hover">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* iOS Safari: no beforeinstallprompt, must guide user */}
+      {showIOSBanner && (
+        <div className="fixed bottom-4 left-4 right-4 z-50 mx-auto flex max-w-md items-start gap-3 rounded-xl border border-immo-accent-green/40 bg-immo-bg-card p-4 shadow-xl">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-immo-accent-green/10">
+            <Download className="h-5 w-5 text-immo-accent-green" />
+          </div>
           <div className="flex-1">
             <p className="text-sm font-semibold text-immo-text-primary">Installer IMMO PRO-X</p>
             <p className="mt-0.5 text-xs text-immo-text-muted">
               Appuyez sur <Share className="inline h-3.5 w-3.5 -translate-y-px" /> puis
               <span className="font-medium text-immo-text-primary"> « Sur l'écran d'accueil »</span>
             </p>
+            <button
+              onClick={() => setShowIOSModal(true)}
+              className="mt-2 text-xs font-semibold text-immo-accent-green hover:underline"
+            >
+              Voir les étapes →
+            </button>
           </div>
-          <button onClick={dismissIOSPrompt} className="shrink-0 rounded-lg p-1 text-immo-text-muted hover:bg-immo-bg-card-hover">
+          <button onClick={dismissBanner} className="shrink-0 rounded-lg p-1 text-immo-text-muted hover:bg-immo-bg-card-hover">
             <X className="h-4 w-4" />
           </button>
         </div>

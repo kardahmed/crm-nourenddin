@@ -1,7 +1,18 @@
 import { authenticate } from '../_shared/auth.ts'
 import { rateLimit } from '../_shared/rateLimit.ts'
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')
+// Read the Anthropic API key either from app_secrets (admin-managed via the
+// UI) or — as a fallback — from the ANTHROPIC_API_KEY env var. The DB value
+// takes priority so rotating the key doesn't require a redeploy.
+async function resolveAnthropicKey(supabase: SupabaseClient): Promise<string | null> {
+  try {
+    const { data } = await supabase.from('app_secrets').select('anthropic_api_key').limit(1).maybeSingle()
+    const dbKey = (data as { anthropic_api_key: string | null } | null)?.anthropic_api_key
+    if (dbKey && dbKey.length > 0) return dbKey
+  } catch { /* fall through */ }
+  return Deno.env.get('ANTHROPIC_API_KEY') ?? null
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -176,7 +187,8 @@ Deno.serve(async (req) => {
       .limit(1)
       .maybeSingle()
 
-    // 5. If no AI key, return template
+    // 5. Resolve the Anthropic key (DB first, env fallback). If none, return template.
+    const anthropicKey = await resolveAnthropicKey(supabase)
     if (!anthropicKey) {
       const { data: defaultScript } = await supabase
         .from('call_scripts')

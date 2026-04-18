@@ -1,7 +1,16 @@
 import { authenticate } from '../_shared/auth.ts'
 import { rateLimit } from '../_shared/rateLimit.ts'
+import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')!
+// Key priority: admin-managed DB row → env fallback. See call-script for rationale.
+async function resolveAnthropicKey(supabase: SupabaseClient): Promise<string | null> {
+  try {
+    const { data } = await supabase.from('app_secrets').select('anthropic_api_key').limit(1).maybeSingle()
+    const dbKey = (data as { anthropic_api_key: string | null } | null)?.anthropic_api_key
+    if (dbKey && dbKey.length > 0) return dbKey
+  } catch { /* fall through */ }
+  return Deno.env.get('ANTHROPIC_API_KEY') ?? null
+}
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -38,7 +47,7 @@ Deno.serve(async (req) => {
 
   const auth = await authenticate(req, { corsHeaders })
   if (!auth.ok) return auth.response
-  const { principal } = auth
+  const { principal, supabase } = auth
   if (principal.kind !== 'user') {
     return new Response(JSON.stringify({ error: 'User required' }), {
       status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -77,6 +86,13 @@ Deno.serve(async (req) => {
 
     const safeProfile = sanitizeForPrompt(clientProfile)
     const safeUnits = sanitizeForPrompt(unitsList)
+
+    const anthropicKey = await resolveAnthropicKey(supabase)
+    if (!anthropicKey) {
+      return new Response(JSON.stringify({ error: 'Anthropic API key not configured' }), {
+        status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
 
     // 3. Call Anthropic API server-side
     const response = await fetch('https://api.anthropic.com/v1/messages', {

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette, Sparkles, MessageCircle, Calendar, ToggleLeft, UserPlus } from 'lucide-react'
+import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette, Sparkles, MessageCircle, Calendar, ToggleLeft, UserPlus, KeyRound } from 'lucide-react'
 import {
   CompanySection,
   PipelineSection,
@@ -18,8 +18,10 @@ import { WhatsAppSection } from './sections/WhatsAppSection'
 import { VisitScheduleSection } from './sections/VisitScheduleSection'
 import { PermissionProfilesSection } from './sections/PermissionProfilesSection'
 import { FeaturesSection } from './sections/FeaturesSection'
+import { AiKeySection } from './sections/AiKeySection'
+import { useAuthStore } from '@/store/authStore'
 
-type Section = 'company' | 'pipeline' | 'reception' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'features' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
+type Section = 'company' | 'pipeline' | 'reception' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'features' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security' | 'ai_key'
 
 const SECTION_ICONS: Record<Section, typeof Building2> = {
   company: Building2,
@@ -37,9 +39,8 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   notifications: Bell,
   language: Globe,
   security: Shield,
+  ai_key: KeyRound,
 }
-
-const SECTION_KEYS: Section[] = ['company', 'pipeline', 'reception', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
   company: 'Agence',
@@ -57,17 +58,24 @@ const SECTION_LABELS: Record<Section, string> = {
   notifications: 'Notifications',
   language: 'Langue',
   security: 'Securite',
+  ai_key: 'Clé API IA',
 }
+
+const BASE_SECTION_KEYS: Section[] = ['company', 'pipeline', 'reception', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 export function SettingsPage() {
   const { t } = useTranslation()
+  const { role } = useAuthStore()
   const [section, setSection] = useState<Section>('company')
+
+  const isAdmin = role === 'admin'
+  const sectionKeys: Section[] = isAdmin ? [...BASE_SECTION_KEYS, 'ai_key'] : BASE_SECTION_KEYS
 
   return (
     <div className="flex flex-col gap-6 lg:flex-row">
       {/* Side menu */}
       <div className="w-full shrink-0 space-y-1 lg:w-[220px]">
-        {SECTION_KEYS.map((key) => {
+        {sectionKeys.map((key) => {
           const Icon = SECTION_ICONS[key]
           return (
             <button
@@ -102,6 +110,7 @@ export function SettingsPage() {
         {section === 'notifications' && <NotificationsSection />}
         {section === 'language' && <LanguageSection />}
         {section === 'security' && <SecuritySection />}
+        {section === 'ai_key' && <AiKeySection />}
       </div>
     </div>
   )

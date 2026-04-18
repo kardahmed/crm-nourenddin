@@ -74,7 +74,7 @@ export function GoalsPage() {
   const { data: agents = [] } = useQuery({
     queryKey: ['goal-agents', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
     enabled: !!tenantId,
@@ -90,7 +90,7 @@ export function GoalsPage() {
   const { data: rawGoals = [], isLoading: loadingGoals } = useQuery({
     queryKey: ['goals', tenantId],
     queryFn: async () => {
-      let q = supabase.from('agent_goals').select('*').eq('tenant_id', tenantId!)
+      let q = supabase.from('agent_goals').select('*')
       if (isAgent && userId) q = q.eq('agent_id', userId)
       const { data, error } = await q.order('created_at', { ascending: false })
       if (error) { handleSupabaseError(error); throw error }

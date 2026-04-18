@@ -67,7 +67,7 @@ export function PipelinePage() {
   const { data: agentMap } = useQuery({
     queryKey: ['agent-names', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('users').select('id, first_name, last_name')
       const m = new Map<string, string>()
       for (const u of (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>) m.set(u.id, `${u.first_name} ${u.last_name}`)
       return m
@@ -79,7 +79,7 @@ export function PipelinePage() {
   const { data: projectMap } = useQuery({
     queryKey: ['project-names', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('projects').select('id, name')
       const m = new Map<string, string>()
       for (const p of (data ?? []) as Array<{ id: string; name: string }>) m.set(p.id, p.name)
       return m

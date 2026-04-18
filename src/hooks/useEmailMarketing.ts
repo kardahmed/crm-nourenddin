@@ -60,10 +60,9 @@ export function useEmailTemplates() {
   return useQuery({
     queryKey: ['email-templates', tenantId],
     queryFn: async () => {
-      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailTemplate[] | null; error: { message: string } | null }> } } } })
+      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailTemplate[] | null; error: { message: string } | null }> } } })
         .from('email_templates')
         .select('*')
-        .eq('tenant_id', tenantId)
         .order('updated_at', { ascending: false })
       if (error) { handleSupabaseError(error as never); throw error }
       return (data ?? []).map(d => ({ ...d, blocks: (d.blocks ?? []) as unknown as EmailBlock[] }))
@@ -122,10 +121,9 @@ export function useEmailCampaigns() {
   return useQuery({
     queryKey: ['email-campaigns', tenantId],
     queryFn: async () => {
-      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { eq: (k: string, v: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailCampaign[] | null; error: { message: string } | null }> } } } })
+      const { data, error } = await (supabase as never as { from: (t: string) => { select: (s: string) => { order: (k: string, o: { ascending: boolean }) => Promise<{ data: EmailCampaign[] | null; error: { message: string } | null }> } } })
         .from('email_campaigns')
         .select('*, email_templates(name)')
-        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
       if (error) { handleSupabaseError(error as never); throw error }
       return (data ?? []).map(d => ({
@@ -194,7 +192,6 @@ export function useSegmentCount(rules: SegmentRules) {
       let query = supabase
         .from('clients')
         .select('id', { count: 'exact', head: true })
-        .eq('tenant_id', tenantId)
         .not('email', 'is', null)
 
       if (rules.pipeline_stages?.length) query = query.in('pipeline_stage', rules.pipeline_stages as never)
@@ -257,7 +254,6 @@ export function useProjectsList() {
       const { data, error } = await supabase
         .from('projects')
         .select('id, name')
-        .eq('tenant_id', tenantId)
         .eq('status', 'active')
         .order('name')
       if (error) throw error

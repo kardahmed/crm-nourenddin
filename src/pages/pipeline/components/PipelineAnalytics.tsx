@@ -31,9 +31,9 @@ export function PipelineAnalytics() {
     queryKey: ['pipeline-analytics', tenantId],
     queryFn: async () => {
       const [clientsRes, historyRes, visitsRes] = await Promise.all([
-        supabase.from('clients').select('id, pipeline_stage, created_at, last_contact_at').eq('tenant_id', tenantId!),
-        supabase.from('history').select('client_id, type, created_at').eq('tenant_id', tenantId!),
-        supabase.from('visits').select('client_id, status').eq('tenant_id', tenantId!),
+        supabase.from('clients').select('id, pipeline_stage, created_at, last_contact_at'),
+        supabase.from('history').select('client_id, type, created_at'),
+        supabase.from('visits').select('client_id, status'),
       ])
 
       const clients = (clientsRes.data ?? []) as Array<{ id: string; pipeline_stage: string; created_at: string; last_contact_at: string | null }>

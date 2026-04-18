@@ -97,7 +97,7 @@ export function ReportsPage() {
   const { data: agents = [] } = useQuery({
     queryKey: ['report-agents', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name, last_activity, status').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).order('first_name')
+      const { data } = await supabase.from('users').select('id, first_name, last_name, last_activity, status').in('role', ['agent', 'admin']).order('first_name')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; last_activity: string | null; status: string }>
     },
     enabled: !!tenantId,
@@ -110,7 +110,6 @@ export function ReportsPage() {
       const { data, error } = await supabase
         .from('history')
         .select('id, type, title, description, agent_id, client_id, created_at, clients(full_name)')
-        .eq('tenant_id', tenantId!)
         .gte('created_at', rangeStart)
         .lte('created_at', rangeEnd)
         .order('created_at', { ascending: false })
@@ -134,7 +133,7 @@ export function ReportsPage() {
   const { data: newClientsMap = new Map<string, number>() } = useQuery({
     queryKey: ['report-new-clients', tenantId, rangeStart, rangeEnd],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('agent_id').eq('tenant_id', tenantId!).gte('created_at', rangeStart).lte('created_at', rangeEnd)
+      const { data } = await supabase.from('clients').select('agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)
       const m = new Map<string, number>()
       for (const c of (data ?? []) as Array<{ agent_id: string | null }>) {
         if (c.agent_id) m.set(c.agent_id, (m.get(c.agent_id) ?? 0) + 1)

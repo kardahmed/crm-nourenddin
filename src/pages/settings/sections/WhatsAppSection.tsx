@@ -22,7 +22,7 @@ export function WhatsAppSection() {
   const { data: account } = useQuery({
     queryKey: ['wa-account', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('whatsapp_accounts').select('*').eq('tenant_id', tenantId!).single()
+      const { data } = await supabase.from('whatsapp_accounts').select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: !!tenantId,
@@ -42,7 +42,6 @@ export function WhatsAppSection() {
       const { data } = await supabase
         .from('whatsapp_messages')
         .select('*, clients(full_name)')
-        .eq('tenant_id', tenantId!)
         .order('created_at', { ascending: false })
         .limit(20)
       return (data ?? []) as Array<Record<string, unknown>>

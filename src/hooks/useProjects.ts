@@ -18,7 +18,6 @@ export function useProjects() {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
 
       if (error) { handleSupabaseError(error); throw error }
@@ -96,7 +95,6 @@ export function useProjectById(id: string, tenantId: string) {
         .from('projects')
         .select('*, units(*)')
         .eq('id', id)
-        .eq('tenant_id', tenantId)
         .single()
 
       if (error) { handleSupabaseError(error); throw error }

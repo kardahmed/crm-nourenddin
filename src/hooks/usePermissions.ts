@@ -37,8 +37,15 @@ export function usePermissions(): Permissions {
     function can(permission: PermissionKey): boolean {
       // Admin bypass — always has all permissions
       if (isAdm) return true
-      // Agent: check profile permissions
-      return permissionProfile?.permissions?.[permission] === true
+      const perms = permissionProfile?.permissions
+      if (!perms) return false
+      if (perms[permission] === true) return true
+      // view_all is a superset of view_own
+      if (permission.endsWith('.view_own')) {
+        const allKey = permission.replace('.view_own', '.view_all') as PermissionKey
+        if (perms[allKey] === true) return true
+      }
+      return false
     }
 
     return {

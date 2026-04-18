@@ -75,7 +75,7 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
   const { data: msgTemplate } = useQuery({
     queryKey: ['task-msg-tpl', task.stage, task.channel, tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('message_templates').select('body').eq('tenant_id', tenantId!).eq('stage', task.stage).limit(1).maybeSingle()
+      const { data } = await supabase.from('message_templates').select('body').eq('stage', task.stage).limit(1).maybeSingle()
       return (data as { body: string } | null)?.body ?? null
     },
     enabled: isOpen && !!tenantId,

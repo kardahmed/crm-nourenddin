@@ -23,9 +23,9 @@ export function OnboardingWizard() {
     queryFn: async () => {
       if (!tenantId) return null
       const [projects, agents, clients, tenant] = await Promise.all([
-        supabase.from('projects').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
-        supabase.from('users').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId).in('role', ['agent']),
-        supabase.from('clients').select('id', { count: 'exact', head: true }).eq('tenant_id', tenantId),
+        supabase.from('projects').select('id', { count: 'exact', head: true }),
+        supabase.from('users').select('id', { count: 'exact', head: true }).in('role', ['agent']),
+        supabase.from('clients').select('id', { count: 'exact', head: true }),
         supabase.from('tenants').select('onboarding_completed').eq('id', tenantId).single(),
       ])
       return {

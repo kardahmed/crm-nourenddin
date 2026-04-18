@@ -58,7 +58,6 @@ export function TasksPage() {
     queryFn: async () => {
       let query = supabase.from('client_tasks')
         .select('*, clients(full_name, phone, pipeline_stage), users!client_tasks_agent_id_fkey(first_name, last_name)')
-        .eq('tenant_id', tenantId!)
         .order('created_at', { ascending: false })
         .limit(500)
 
@@ -82,7 +81,7 @@ export function TasksPage() {
   const { data: agents = [] } = useQuery({
     queryKey: ['task-agents', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
     enabled: !!tenantId && !isAgent,
@@ -126,7 +125,7 @@ export function TasksPage() {
   const { data: msgTemplates = [] } = useQuery({
     queryKey: ['task-msg-templates', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('message_templates').select('*').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('message_templates').select('*')
       return (data ?? []) as Array<{ stage: string; trigger_type: string; body: string; channel: string; attached_file_types: string[] }>
     },
     enabled: !!tenantId,
@@ -471,7 +470,7 @@ function MessagesTemplateTab({ tenantId }: { tenantId: string }) {
   const { data: messages = [], isLoading } = useQuery({
     queryKey: ['all-message-templates', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('message_templates').select('*').eq('tenant_id', tenantId).order('sort_order')
+      const { data } = await supabase.from('message_templates').select('*').order('sort_order')
       return (data ?? []) as MsgTpl[]
     },
   })

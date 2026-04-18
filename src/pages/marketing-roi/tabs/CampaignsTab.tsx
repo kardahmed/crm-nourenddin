@@ -45,7 +45,7 @@ export function CampaignsTab() {
   const { data: campaigns = [], isLoading } = useQuery({
     queryKey: ['marketing-campaigns', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('marketing_campaigns').select('*, projects(name)').eq('tenant_id', tenantId!).order('start_date', { ascending: false })
+      const { data } = await supabase.from('marketing_campaigns').select('*, projects(name)').order('start_date', { ascending: false })
       return (data ?? []) as unknown as Campaign[]
     },
     enabled: !!tenantId,
@@ -55,7 +55,7 @@ export function CampaignsTab() {
   const { data: allExpenses = [] } = useQuery({
     queryKey: ['campaign-expenses', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('marketing_expenses').select('*').eq('tenant_id', tenantId!).not('campaign_id', 'is', null).order('expense_date', { ascending: false })
+      const { data } = await supabase.from('marketing_expenses').select('*').not('campaign_id', 'is', null).order('expense_date', { ascending: false })
       return (data ?? []) as unknown as CampaignExpense[]
     },
     enabled: !!tenantId,
@@ -261,7 +261,7 @@ function CreateCampaignModal({ tenantId, onClose, onSaved }: { tenantId: string;
   const { data: projects = [] } = useQuery({
     queryKey: ['projects-simple', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId).eq('status', 'active')
+      const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
   })

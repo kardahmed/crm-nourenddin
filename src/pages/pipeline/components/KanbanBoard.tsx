@@ -61,7 +61,7 @@ export function KanbanBoard({
 
       const [historyRes, settingsRes] = await Promise.all([
         supabase.from('history').select('client_id, created_at').eq('type', 'stage_change').in('client_id', allClientIds).order('created_at', { ascending: false }),
-        supabase.from('tenant_settings').select('urgent_alert_days').eq('tenant_id', tenantId!).maybeSingle(),
+        supabase.from('tenant_settings').select('urgent_alert_days').maybeSingle(),
       ])
 
       const dates = new Map<string, string>()
@@ -82,7 +82,7 @@ export function KanbanBoard({
   const { data: agentMap } = useQuery({
     queryKey: ['agent-names', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('users').select('id, first_name, last_name')
       const m = new Map<string, string>()
       for (const u of (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>) m.set(u.id, `${u.first_name} ${u.last_name}`)
       return m
@@ -94,7 +94,7 @@ export function KanbanBoard({
   const { data: projectMap } = useQuery({
     queryKey: ['project-names', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('projects').select('id, name')
       const m = new Map<string, string>()
       for (const p of (data ?? []) as Array<{ id: string; name: string }>) m.set(p.id, p.name)
       return m

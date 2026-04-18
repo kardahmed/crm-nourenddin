@@ -18,7 +18,7 @@ interface TopbarProps {
 
 export function Topbar({ title, subtitle }: TopbarProps) {
   const { t } = useTranslation()
-  const { userProfile, tenantId } = useAuthStore()
+  const { userProfile } = useAuthStore()
   useBranding()
   const { isDark, setTheme } = useDarkMode()
   const { isMobile } = useMobile()
@@ -31,11 +31,11 @@ export function Topbar({ title, subtitle }: TopbarProps) {
   const handleSearch = useCallback(async (q: string) => {
     setSearchQuery(q)
     if (q.length < 2) { setSearchResults([]); setShowResults(false); return }
-    const { data } = await supabase.from('clients').select('id, full_name').eq('tenant_id', tenantId!).ilike('full_name', `%${q}%`).limit(5)
+    const { data } = await supabase.from('clients').select('id, full_name').ilike('full_name', `%${q}%`).limit(5)
     const results = (data ?? []).map(c => ({ id: c.id, name: (c as { full_name: string }).full_name, type: 'client' }))
     setSearchResults(results)
     setShowResults(results.length > 0)
-  }, [tenantId])
+  }, [])
 
   return (
     <header className="flex h-14 md:h-16 shrink-0 items-center justify-between border-b border-immo-border-default bg-immo-bg-sidebar px-3 md:px-6">

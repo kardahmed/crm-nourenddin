@@ -48,7 +48,6 @@ export function NotificationBell() {
       const { data } = await supabase
         .from('notifications')
         .select('id, type, title, message, read, created_at')
-        .eq('tenant_id', tenantId)
         .order('created_at', { ascending: false })
         .limit(20)
       return (data ?? []) as Notification[]
@@ -62,7 +61,7 @@ export function NotificationBell() {
   const markAllRead = useMutation({
     mutationFn: async () => {
       if (!tenantId) return
-      await supabase.from('notifications').update({ read: true } as never).eq('tenant_id', tenantId).eq('read', false)
+      await supabase.from('notifications').update({ read: true } as never).eq('read', false)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-notifications'] }),
   })

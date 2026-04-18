@@ -115,27 +115,27 @@ export function useDashboardStats() {
         agentReservationsRes, agentSalesRes,
         clientsRes, overdueRes, visitsRes, tasksRes, allSalesRes,
       ] = await Promise.all([
-        supabase.from('projects').select('id, name, code, status').eq('tenant_id', tenantId).eq('status', 'active'),
-        supabase.from('units').select('id, status, project_id, agent_id').eq('tenant_id', tenantId),
+        supabase.from('projects').select('id, name, code, status').eq('status', 'active'),
+        supabase.from('units').select('id, status, project_id, agent_id'),
         (() => {
-          let q = supabase.from('sales').select('final_price, agent_id, created_at').eq('tenant_id', tenantId).eq('status', 'active')
+          let q = supabase.from('sales').select('final_price, agent_id, created_at').eq('status', 'active')
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
-        supabase.from('history').select('id, type, title, created_at, clients(full_name), users!history_agent_id_fkey(first_name, last_name)').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(10),
-        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('users').select('id, first_name, last_name, last_activity').eq('tenant_id', tenantId).eq('role', 'agent').eq('status', 'active'),
-        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('reservations').select('agent_id').eq('tenant_id', tenantId).eq('status', 'active').gte('created_at', monthStart),
-        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('sales').select('agent_id, final_price').eq('tenant_id', tenantId).eq('status', 'active').gte('created_at', monthStart),
+        supabase.from('history').select('id, type, title, created_at, clients(full_name), users!history_agent_id_fkey(first_name, last_name)').order('created_at', { ascending: false }).limit(10),
+        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('users').select('id, first_name, last_name, last_activity').eq('role', 'agent').eq('status', 'active'),
+        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('reservations').select('agent_id').eq('status', 'active').gte('created_at', monthStart),
+        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('sales').select('agent_id, final_price').eq('status', 'active').gte('created_at', monthStart),
         // New: clients for pipeline funnel + at-risk
-        supabase.from('clients').select('id, full_name, phone, pipeline_stage, last_contact_at, source, agent_id, users!clients_agent_id_fkey(first_name, last_name)').eq('tenant_id', tenantId),
+        supabase.from('clients').select('id, full_name, phone, pipeline_stage, last_contact_at, source, agent_id, users!clients_agent_id_fkey(first_name, last_name)'),
         // New: overdue payments
-        supabase.from('payment_schedules').select('amount').eq('tenant_id', tenantId).eq('status', 'late'),
+        supabase.from('payment_schedules').select('amount').eq('status', 'late'),
         // New: today's visits
-        supabase.from('visits').select('id, scheduled_at, status, clients(full_name), users!visits_agent_id_fkey(first_name, last_name), projects(name)').eq('tenant_id', tenantId).gte('scheduled_at', today).lte('scheduled_at', today + 'T23:59:59').order('scheduled_at'),
+        supabase.from('visits').select('id, scheduled_at, status, clients(full_name), users!visits_agent_id_fkey(first_name, last_name), projects(name)').gte('scheduled_at', today).lte('scheduled_at', today + 'T23:59:59').order('scheduled_at'),
         // New: tasks
-        supabase.from('client_tasks').select('id, status, scheduled_at').eq('tenant_id', tenantId).in('status', ['pending', 'scheduled']),
+        supabase.from('client_tasks').select('id, status, scheduled_at').in('status', ['pending', 'scheduled']),
         // New: all sales for monthly chart
-        supabase.from('sales').select('final_price, created_at').eq('tenant_id', tenantId).eq('status', 'active').gte('created_at', new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString()),
+        supabase.from('sales').select('final_price, created_at').eq('status', 'active').gte('created_at', new Date(now.getFullYear(), now.getMonth() - 5, 1).toISOString()),
       ])
 
       for (const res of [projectsRes, unitsRes, salesRes, historyRes, agentsRes, agentReservationsRes, agentSalesRes, clientsRes]) {

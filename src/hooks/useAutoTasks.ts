@@ -41,7 +41,6 @@ export function useAutoTasks() {
       // 3. Fetch active templates for new stage
       const { data: templates } = await supabase.from('task_templates')
         .select('*')
-        .eq('tenant_id', tenantId)
         .eq('stage', newStage)
         .eq('is_active', true)
         .order('sort_order')

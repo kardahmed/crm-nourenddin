@@ -61,7 +61,6 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
       const { data } = await supabase
         .from('users')
         .select('id, first_name, last_name')
-        .eq('tenant_id', tenantId!)
         .in('role', ['agent', 'admin'])
         .eq('status', 'active')
         .order('first_name')

@@ -53,7 +53,6 @@ export function ExpensesTab() {
     queryFn: async () => {
       let q = supabase.from('marketing_expenses')
         .select('*, projects(name), marketing_campaigns(name)')
-        .eq('tenant_id', tenantId!)
         .gte('expense_date', dateFrom.toISOString().split('T')[0])
         .order('expense_date', { ascending: false })
       const { data } = await q
@@ -65,7 +64,7 @@ export function ExpensesTab() {
   const { data: projects = [] } = useQuery({
     queryKey: ['projects-list-simple', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('projects').select('id, name').eq('tenant_id', tenantId!).eq('status', 'active')
+      const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
     enabled: !!tenantId,
@@ -74,7 +73,7 @@ export function ExpensesTab() {
   const { data: campaigns = [] } = useQuery({
     queryKey: ['marketing-campaigns-simple', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('marketing_campaigns').select('id, name').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('marketing_campaigns').select('id, name')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
     enabled: !!tenantId,

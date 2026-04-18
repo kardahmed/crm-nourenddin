@@ -62,7 +62,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage,
     mutationFn: async () => {
       // Fetch active templates for current stage
       const { data: templates } = await supabase.from('task_templates').select('*')
-        .eq('tenant_id', tenantId).eq('stage', clientStage).eq('is_active', true).order('sort_order')
+        .eq('stage', clientStage).eq('is_active', true).order('sort_order')
 
       if (!templates || templates.length === 0) { toast.error('Aucun template actif pour cette étape'); return }
 

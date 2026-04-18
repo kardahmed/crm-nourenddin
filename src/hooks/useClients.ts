@@ -35,7 +35,6 @@ export function useClients(filters?: ClientFilters) {
       let query = supabase
         .from('clients')
         .select('*, users!clients_agent_id_fkey(first_name, last_name)', { count: 'exact' })
-        .eq('tenant_id', tenantId)
 
       if (filters?.stage) query = query.eq('pipeline_stage', filters.stage)
       if (filters?.source) query = query.eq('source', filters.source)
@@ -136,7 +135,6 @@ export function useClientById(id: string, tenantId: string) {
         .from('clients')
         .select('*, users!clients_agent_id_fkey(first_name, last_name)')
         .eq('id', id)
-        .eq('tenant_id', tenantId)
         .single()
 
       if (error) { handleSupabaseError(error); throw error }

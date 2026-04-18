@@ -66,7 +66,6 @@ export function AgentsPage() {
       const { data: users, error } = await supabase
         .from('users')
         .select('id, first_name, last_name, email, phone, role, status, last_activity')
-        .eq('tenant_id', tenantId!)
         .order('first_name')
       if (error) { handleSupabaseError(error); throw error }
 
@@ -74,8 +73,8 @@ export function AgentsPage() {
       if (agentIds.length === 0) return []
 
       const [clientsRes, salesRes] = await Promise.all([
-        supabase.from('clients').select('agent_id').eq('tenant_id', tenantId!),
-        supabase.from('sales').select('agent_id').eq('tenant_id', tenantId!).eq('status', 'active'),
+        supabase.from('clients').select('agent_id'),
+        supabase.from('sales').select('agent_id').eq('status', 'active'),
       ])
 
       const clientCounts = new Map<string, number>()

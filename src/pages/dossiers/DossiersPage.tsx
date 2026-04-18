@@ -76,7 +76,6 @@ export function DossiersPage() {
           let q = supabase
             .from('sales')
             .select('id, client_id, agent_id, project_id, unit_id, final_price, status, clients(full_name, phone), projects(name), units(code), users!sales_agent_id_fkey(first_name, last_name)')
-            .eq('tenant_id', tenantId)
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
@@ -84,18 +83,15 @@ export function DossiersPage() {
           let q = supabase
             .from('reservations')
             .select('id, client_id, agent_id, project_id, unit_id, deposit_amount, status, expires_at, clients(full_name, phone), projects(name), units(code), users!reservations_agent_id_fkey(first_name, last_name)')
-            .eq('tenant_id', tenantId)
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
         supabase
           .from('payment_schedules')
-          .select('sale_id, amount, status, due_date')
-          .eq('tenant_id', tenantId),
+          .select('sale_id, amount, status, due_date'),
         supabase
           .from('projects')
           .select('id, name')
-          .eq('tenant_id', tenantId)
           .eq('status', 'active'),
       ])
 

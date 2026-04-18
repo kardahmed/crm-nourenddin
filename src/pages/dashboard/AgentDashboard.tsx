@@ -19,7 +19,7 @@ export function AgentDashboard() {
       if (!userId || !tenantId) throw new Error('Missing context')
 
       const [clientsRes, visitsRes, salesRes, goalsRes] = await Promise.all([
-        supabase.from('clients').select('id, full_name, pipeline_stage, last_contact_at, confirmed_budget').eq('tenant_id', tenantId).eq('agent_id', userId),
+        supabase.from('clients').select('id, full_name, pipeline_stage, last_contact_at, confirmed_budget').eq('agent_id', userId),
         supabase.from('visits').select('id, scheduled_at, status, clients(full_name)').eq('agent_id', userId).gte('scheduled_at', new Date().toISOString().split('T')[0]).order('scheduled_at').limit(10),
         supabase.from('sales').select('final_price, created_at').eq('agent_id', userId).eq('status', 'active'),
         supabase.from('agent_goals').select('*').eq('agent_id', userId).limit(1).maybeSingle(),

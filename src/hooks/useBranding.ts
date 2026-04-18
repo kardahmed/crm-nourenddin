@@ -19,7 +19,6 @@ export function useBranding() {
       const { data } = await supabase
         .from('tenant_settings')
         .select('custom_logo_url, custom_primary_color, custom_app_name')
-        .eq('tenant_id', tenantId!)
         .maybeSingle()
       return (data ?? null) as BrandingConfig | null
     },

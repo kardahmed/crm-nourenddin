@@ -24,7 +24,6 @@ export function useUnits(filters?: UnitFilters) {
       let query = supabase
         .from('units')
         .select('*, projects(name, code)')
-        .eq('tenant_id', tenantId)
 
       if (filters?.projectId) query = query.eq('project_id', filters.projectId)
       if (filters?.status) query = query.eq('status', filters.status)
@@ -109,7 +108,6 @@ export function useUnitsByProject(projectId: string, tenantId: string) {
         .from('units')
         .select('*')
         .eq('project_id', projectId)
-        .eq('tenant_id', tenantId)
         .order('code')
 
       if (error) { handleSupabaseError(error); throw error }

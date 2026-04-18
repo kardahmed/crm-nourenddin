@@ -33,7 +33,7 @@ export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersP
   const { data: agents = [] } = useQuery({
     queryKey: ['filter-agents', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name').eq('tenant_id', tenantId!).in('role', ['agent', 'admin']).eq('status', 'active')
+      const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
     enabled: !!tenantId,

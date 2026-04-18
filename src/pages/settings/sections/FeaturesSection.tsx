@@ -51,7 +51,6 @@ export function FeaturesSection() {
     queryFn: async () => {
       const { data } = await supabase.from('tenant_settings')
         .select('feature_payment_tracking, feature_charges, feature_documents, feature_goals, feature_landing_pages, feature_ai_scripts, feature_whatsapp, feature_auto_tasks' as never)
-        .eq('tenant_id', tenantId!)
         .single()
       return data as unknown as Record<FeatureKey, boolean> | null
     },
@@ -86,7 +85,7 @@ export function FeaturesSection() {
 
   const save = useMutation({
     mutationFn: async () => {
-      await supabase.from('tenant_settings').update(features as never).eq('tenant_id', tenantId!)
+      await supabase.from('tenant_settings').update(features as never)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-features'] }); toast.success('Fonctionnalités mises à jour') },
   })

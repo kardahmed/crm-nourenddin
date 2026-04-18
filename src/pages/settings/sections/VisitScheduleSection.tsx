@@ -24,7 +24,7 @@ export function VisitScheduleSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-visit-settings', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('work_days, work_start_hour, work_end_hour, visit_duration_minutes, visit_slots, lunch_break_start, lunch_break_end').eq('tenant_id', tenantId!).single()
+      const { data } = await supabase.from('tenant_settings').select('work_days, work_start_hour, work_end_hour, visit_duration_minutes, visit_slots, lunch_break_start, lunch_break_end').single()
       return data as {
         work_days: number[]
         work_start_hour: number
@@ -69,7 +69,7 @@ export function VisitScheduleSection() {
         visit_slots: slots.sort(),
         lunch_break_start: lunchStart,
         lunch_break_end: lunchEnd,
-      } as never).eq('tenant_id', tenantId!)
+      } as never)
       if (error) throw error
     },
     onSuccess: () => {

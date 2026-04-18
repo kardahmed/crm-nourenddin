@@ -3,4 +3,5 @@ dist/
 .env.local
 .env.*.local
 .env
+.env.production
 supabase/.temp/

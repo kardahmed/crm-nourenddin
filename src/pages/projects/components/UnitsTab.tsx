@@ -15,6 +15,7 @@ import {
   Pencil,
   Trash2,
   ArrowUpDown,
+  Upload,
 } from 'lucide-react'
 import { useUnits } from '@/hooks/useUnits'
 import { useProjects } from '@/hooks/useProjects'
@@ -41,6 +42,7 @@ import { UNIT_TYPE_LABELS, UNIT_SUBTYPE_LABELS } from '@/types'
 import type { Unit, UnitStatus } from '@/types'
 import { format } from 'date-fns'
 import { CreateUnitModal } from './CreateUnitModal'
+import { BulkImportUnitsModal } from './BulkImportUnitsModal'
 
 const STATUS_BADGE: Record<string, { label: string; type: 'green' | 'orange' | 'blue' | 'red' | 'muted' }> = {
   available: { label: 'Disponible', type: 'green' },
@@ -85,6 +87,7 @@ export function UnitsTab() {
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [showBulkImport, setShowBulkImport] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
 
@@ -195,14 +198,23 @@ export function UnitsTab() {
             <ArrowUpDown className="mr-1 h-3.5 w-3.5" />
             {showAdvanced ? 'Masquer filtres' : 'Plus de filtres'}
           </Button>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2">
             {canManageProjects && (
-              <Button
-                onClick={() => setShowCreate(true)}
-                className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
-              >
-                <Plus className="mr-1.5 h-4 w-4" /> Nouvelle unité
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBulkImport(true)}
+                  className="border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
+                >
+                  <Upload className="mr-1.5 h-4 w-4" /> Import en masse
+                </Button>
+                <Button
+                  onClick={() => setShowCreate(true)}
+                  className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+                >
+                  <Plus className="mr-1.5 h-4 w-4" /> Nouvelle unité
+                </Button>
+              </>
             )}
           </div>
         </div>
@@ -330,6 +342,9 @@ export function UnitsTab() {
 
       {/* Create modal */}
       <CreateUnitModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+
+      {/* Bulk import modal */}
+      <BulkImportUnitsModal isOpen={showBulkImport} onClose={() => setShowBulkImport(false)} />
 
       {/* Delete confirm */}
       <ConfirmDialog

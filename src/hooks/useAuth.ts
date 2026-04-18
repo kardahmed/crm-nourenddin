@@ -91,7 +91,7 @@ export function useAuth() {
         // Use maybeSingle() so a missing row returns data=null (not a 400).
         // This prevents a malformed users row from locking the whole app
         // on the loading spinner forever.
-        const { data, error } = await supabase
+        const { data, error, status } = await supabase
           .from('users')
           .select('*')
           .eq('id', userId)
@@ -101,7 +101,15 @@ export function useAuth() {
         clearTimeout(timeoutId)
 
         if (error) {
-          console.error('[Auth] Profile error:', error.message)
+          // 403 Forbidden usually means the user session is valid but RLS
+          // is blocking access to the users table (e.g. missing helper perms).
+          // We must unblock the UI so the user isn't stuck on a spinner.
+          if (status === 403) {
+            console.error('[Auth] 403 Forbidden when fetching profile. RLS or permissions issue.')
+          } else {
+            console.error('[Auth] Profile error:', error.message)
+          }
+          
           setUserProfile(null)
           setLoading(false)
           return
@@ -116,7 +124,8 @@ export function useAuth() {
 
         const profile = data as User
 
-        if (profile.status === 'inactive') {
+        if (profile.status === 'inactive' || profile.status === 'archived') {
+          console.warn('[Auth] User account is inactive or archived, signing out')
           await supabase.auth.signOut()
           reset()
           return

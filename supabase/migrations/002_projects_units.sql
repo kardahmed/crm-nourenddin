@@ -63,19 +63,31 @@ ALTER TABLE units ENABLE ROW LEVEL SECURITY;
 ALTER TABLE project_files ENABLE ROW LEVEL SECURITY;
 
 -- All authenticated users can read
+DROP POLICY IF EXISTS "projects_select" ON projects;
 CREATE POLICY "projects_select" ON projects FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "units_select" ON units;
 CREATE POLICY "units_select" ON units FOR SELECT TO authenticated USING (true);
+DROP POLICY IF EXISTS "project_files_select" ON project_files;
 CREATE POLICY "project_files_select" ON project_files FOR SELECT TO authenticated USING (true);
 
 -- Admin can manage
+DROP POLICY IF EXISTS "projects_admin_insert" ON projects;
 CREATE POLICY "projects_admin_insert" ON projects FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "projects_admin_update" ON projects;
 CREATE POLICY "projects_admin_update" ON projects FOR UPDATE TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "projects_admin_delete" ON projects;
 CREATE POLICY "projects_admin_delete" ON projects FOR DELETE TO authenticated USING (public.is_admin());
 
+DROP POLICY IF EXISTS "units_admin_insert" ON units;
 CREATE POLICY "units_admin_insert" ON units FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "units_admin_update" ON units;
 CREATE POLICY "units_admin_update" ON units FOR UPDATE TO authenticated USING (true);
+DROP POLICY IF EXISTS "units_admin_delete" ON units;
 CREATE POLICY "units_admin_delete" ON units FOR DELETE TO authenticated USING (public.is_admin());
 
+DROP POLICY IF EXISTS "project_files_admin_insert" ON project_files;
 CREATE POLICY "project_files_admin_insert" ON project_files FOR INSERT TO authenticated WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "project_files_admin_update" ON project_files;
 CREATE POLICY "project_files_admin_update" ON project_files FOR UPDATE TO authenticated USING (public.is_admin());
+DROP POLICY IF EXISTS "project_files_admin_delete" ON project_files;
 CREATE POLICY "project_files_admin_delete" ON project_files FOR DELETE TO authenticated USING (public.is_admin());

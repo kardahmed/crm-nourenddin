@@ -88,17 +88,27 @@ export function useAuth() {
 
     async function loadProfile() {
       try {
+        // Use maybeSingle() so a missing row returns data=null (not a 400).
+        // This prevents a malformed users row from locking the whole app
+        // on the loading spinner forever.
         const { data, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', userId)
-          .single()
+          .maybeSingle()
 
         if (cancelled) return
         clearTimeout(timeoutId)
 
         if (error) {
           console.error('[Auth] Profile error:', error.message)
+          setUserProfile(null)
+          setLoading(false)
+          return
+        }
+
+        if (!data) {
+          console.warn('[Auth] No users row for id', userId)
           setUserProfile(null)
           setLoading(false)
           return
@@ -114,16 +124,26 @@ export function useAuth() {
 
         setUserProfile(profile)
 
-        // Load permission profile for agents
+        // Load permission profile for agents — maybeSingle() so a dangling
+        // FK (profile deleted but user row still points to it) doesn't
+        // block the render.
         const profileId = (profile as unknown as { permission_profile_id: string | null }).permission_profile_id
         if (profile.role === 'agent' && profileId) {
-          const { data: permProfile } = await supabase
-            .from('permission_profiles')
-            .select('*')
-            .eq('id', profileId)
-            .single()
-          if (!cancelled && permProfile) {
-            setPermissionProfile(permProfile as unknown as import('@/types/permissions').PermissionProfile)
+          try {
+            const { data: permProfile, error: permErr } = await supabase
+              .from('permission_profiles')
+              .select('*')
+              .eq('id', profileId)
+              .maybeSingle()
+            if (permErr) console.warn('[Auth] Permission profile error:', permErr.message)
+            if (!cancelled) {
+              setPermissionProfile(permProfile
+                ? (permProfile as unknown as import('@/types/permissions').PermissionProfile)
+                : null)
+            }
+          } catch (permCatch) {
+            console.warn('[Auth] Permission profile exception:', permCatch)
+            if (!cancelled) setPermissionProfile(null)
           }
         } else {
           setPermissionProfile(null)

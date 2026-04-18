@@ -27,9 +27,10 @@ export function PWAUpdateToast() {
       // Also check when the tab becomes visible (user comes back after
       // switching to another app). This way a fresh deploy is picked up
       // within seconds instead of waiting for the hourly poll.
+      const reg = registration
       function onVisibility() {
         if (document.visibilityState === 'visible') {
-          registration.update().catch(() => {})
+          reg.update().catch(() => {})
         }
       }
       document.addEventListener('visibilitychange', onVisibility)

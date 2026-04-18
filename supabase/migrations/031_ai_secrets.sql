@@ -22,17 +22,17 @@ ALTER TABLE public.app_secrets ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "app_secrets_admin_select" ON public.app_secrets;
 CREATE POLICY "app_secrets_admin_select" ON public.app_secrets
   FOR SELECT TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin', 'super_admin')));
+  USING (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'));
 
 DROP POLICY IF EXISTS "app_secrets_admin_update" ON public.app_secrets;
 CREATE POLICY "app_secrets_admin_update" ON public.app_secrets
   FOR UPDATE TO authenticated
-  USING (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin', 'super_admin')));
+  USING (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'));
 
 DROP POLICY IF EXISTS "app_secrets_admin_insert" ON public.app_secrets;
 CREATE POLICY "app_secrets_admin_insert" ON public.app_secrets
   FOR INSERT TO authenticated
-  WITH CHECK (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role IN ('admin', 'super_admin')));
+  WITH CHECK (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'));
 
 -- RPC: admin-only setter. Upserts the Anthropic key on the singleton row.
 CREATE OR REPLACE FUNCTION public.set_anthropic_api_key(new_key TEXT)

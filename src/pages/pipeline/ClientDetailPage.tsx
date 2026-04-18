@@ -52,6 +52,8 @@ import { QuickActions } from './components/QuickActions'
 import { ClientTabs } from './components/ClientTabs'
 import { ClientFormModal } from './components/ClientFormModal'
 import { PlanVisitModal } from './components/modals/PlanVisitModal'
+import { CreateReservationModal } from './components/modals/CreateReservationModal'
+import { NewSaleModal } from './components/modals/NewSaleModal'
 import { AISuggestionsModal } from './components/modals/AISuggestionsModal'
 import { ReassignModal } from './components/modals/ReassignModal'
 import { useAutoTasks } from '@/hooks/useAutoTasks'
@@ -76,6 +78,8 @@ export function ClientDetailPage() {
   const [stageConfirm, setStageConfirm] = useState<PipelineStage | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showVisitModal, setShowVisitModal] = useState(false)
+  const [showReservationModal, setShowReservationModal] = useState(false)
+  const [showSaleModal, setShowSaleModal] = useState(false)
   const [showAIModal, setShowAIModal] = useState(false)
   const [showReassignModal, setShowReassignModal] = useState(false)
 
@@ -305,6 +309,8 @@ export function ClientDetailPage() {
         projectName={client.interested_projects?.[0] && projectMap ? projectMap.get(client.interested_projects[0]) ?? undefined : undefined}
         onAction={handleQuickAction}
         onOpenVisit={() => setShowVisitModal(true)}
+        onOpenReservation={() => setShowReservationModal(true)}
+        onOpenSale={() => setShowSaleModal(true)}
         onOpenAI={() => setShowAIModal(true)}
         onOpenReassign={() => setShowReassignModal(true)}
       />
@@ -394,6 +400,20 @@ export function ClientDetailPage() {
         isOpen={showVisitModal}
         onClose={() => setShowVisitModal(false)}
         client={{ id: client.id, full_name: client.full_name, phone: client.phone, pipeline_stage: client.pipeline_stage }}
+      />
+
+      {/* Reservation modal */}
+      <CreateReservationModal
+        isOpen={showReservationModal}
+        onClose={() => setShowReservationModal(false)}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone, nin_cin: client.nin_cin, pipeline_stage: client.pipeline_stage }}
+      />
+
+      {/* Sale modal */}
+      <NewSaleModal
+        isOpen={showSaleModal}
+        onClose={() => setShowSaleModal(false)}
+        client={{ id: client.id, full_name: client.full_name, phone: client.phone, nin_cin: client.nin_cin, pipeline_stage: client.pipeline_stage }}
       />
 
       {/* AI suggestions modal */}

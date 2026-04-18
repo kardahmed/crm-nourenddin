@@ -16,6 +16,7 @@ import { Label } from '@/components/ui/label'
 import { StatusBadge, EmptyState, Modal } from '@/components/common'
 import { ClientDocuments } from '../ClientDocuments'
 import { NewSaleModal } from '../modals/NewSaleModal'
+import { CreateReservationModal } from '../modals/CreateReservationModal'
 import type { PipelineStage } from '@/types'
 
 function ClientDocumentsWrapper({ clientId }: { clientId: string }) {
@@ -33,6 +34,9 @@ import { inputClass } from './shared'
 /* ═══ Reservation ═══ */
 export function ReservationTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
+  const { can } = usePermissions()
+  const [showCreate, setShowCreate] = useState(false)
+
   const { data: reservations = [] } = useQuery({
     queryKey: ['client-reservations', clientId],
     queryFn: async () => {
@@ -42,23 +46,62 @@ export function ReservationTab({ clientId }: { clientId: string }) {
     },
   })
 
-  if (reservations.length === 0) return <EmptyState icon={<Bookmark className="h-10 w-10" />} title={t('common.no_data')} />
+  const { data: client } = useQuery({
+    queryKey: ['client-info-reservation', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name, phone, nin_cin, pipeline_stage')
+        .eq('id', clientId)
+        .single()
+      if (error) { handleSupabaseError(error); throw error }
+      return data as unknown as {
+        id: string; full_name: string; phone: string; nin_cin: string | null; pipeline_stage: PipelineStage
+      }
+    },
+  })
+
+  const canCreate = can('reservations.create')
 
   return (
-    <div className="space-y-2">
-      {reservations.map((r) => (
-        <div key={r.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-immo-text-primary">{(r.units as { code: string })?.code} — {(r.projects as { name: string })?.name}</p>
-              <p className="text-xs text-immo-text-muted">
-                {t('status.expired')} {format(new Date(r.expires_at as string), 'dd/MM/yyyy')} · {t('field.deposit')} : {formatPrice((r.deposit_amount as number) ?? 0)}
-              </p>
-            </div>
-            <StatusBadge label={r.status as string} type={r.status === 'active' ? 'green' : r.status === 'converted' ? 'blue' : 'red'} />
-          </div>
+    <div className="space-y-4">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCreate(true)}
+            disabled={!client}
+            className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> {t('action.add')}
+          </Button>
         </div>
-      ))}
+      )}
+
+      {reservations.length === 0 ? (
+        <EmptyState icon={<Bookmark className="h-10 w-10" />} title={t('common.no_data')} />
+      ) : (
+        <div className="space-y-2">
+          {reservations.map((r) => (
+            <div key={r.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-immo-text-primary">{(r.units as { code: string })?.code} — {(r.projects as { name: string })?.name}</p>
+                  <p className="text-xs text-immo-text-muted">
+                    {t('status.expired')} {format(new Date(r.expires_at as string), 'dd/MM/yyyy')} · {t('field.deposit')} : {formatPrice((r.deposit_amount as number) ?? 0)}
+                  </p>
+                </div>
+                <StatusBadge label={r.status as string} type={r.status === 'active' ? 'green' : r.status === 'converted' ? 'blue' : 'red'} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CreateReservationModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        client={client ?? null}
+      />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   Phone, PhoneCall, MessageCircle, MessageSquare,
-  Mail, Bot, Calendar, UserCheck,
+  Mail, Bot, Calendar, UserCheck, Bookmark, DollarSign,
 } from 'lucide-react'
 import { CallLogModal } from './modals/CallLogModal'
 import { CallScriptModal } from './modals/CallScriptModal'
@@ -19,6 +19,8 @@ interface QuickActionsProps {
   projectName?: string
   onAction: (action: string) => void
   onOpenVisit?: () => void
+  onOpenReservation?: () => void
+  onOpenSale?: () => void
   onOpenAI?: () => void
   onOpenReassign?: () => void
 }
@@ -26,7 +28,7 @@ interface QuickActionsProps {
 export function QuickActions({
   clientId, clientName, clientPhone, clientEmail, clientStage,
   agentId, agentName, projectName,
-  onAction, onOpenVisit, onOpenAI, onOpenReassign,
+  onAction, onOpenVisit, onOpenReservation, onOpenSale, onOpenAI, onOpenReassign,
 }: QuickActionsProps) {
   const [showCallLog, setShowCallLog] = useState(false)
   const [showCallScript, setShowCallScript] = useState(false)
@@ -75,6 +77,14 @@ export function QuickActions({
         onOpenVisit?.()
         break
 
+      case 'reservation':
+        onOpenReservation?.()
+        break
+
+      case 'sale':
+        onOpenSale?.()
+        break
+
       case 'reassign':
         onOpenReassign?.()
         break
@@ -92,6 +102,8 @@ export function QuickActions({
     { key: 'email', icon: Mail, label: 'Email', color: 'text-immo-status-orange', disabled: !clientEmail },
     { key: 'ai_task', icon: Bot, label: 'Suggestions AI', color: 'text-purple-400' },
     { key: 'visit_planned', icon: Calendar, label: 'Visite', color: 'text-immo-accent-blue' },
+    { key: 'reservation', icon: Bookmark, label: 'Réservation', color: 'text-immo-status-orange' },
+    { key: 'sale', icon: DollarSign, label: 'Vente', color: 'text-immo-accent-green' },
     { key: 'reassign', icon: UserCheck, label: 'Reassigner', color: 'text-immo-text-secondary' },
   ] as const
 

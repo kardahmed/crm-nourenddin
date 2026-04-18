@@ -77,17 +77,25 @@ export function useAuth() {
   }, [setSession, setLoading, reset])
 
   // Effect 2: When session changes, load the user profile.
-  // Only re-fetch when the user ID actually changed (token refresh keeps same id,
-  // so this effect doesn't re-run — meaning tab resume stays silent).
+  // Guard: if the profile for this userId is already in the store, skip —
+  // Supabase fires duplicate INITIAL_SESSION/TOKEN_REFRESHED events that would
+  // otherwise re-toggle the spinner and leave the last run hanging.
   useEffect(() => {
     if (!session?.user) return
 
-    let cancelled = false
     const userId = session.user.id
 
+    // Read the store directly (not via hook) so we don't need to list
+    // userProfile in the dep array — that would cause an infinite loop
+    // when we setUserProfile below.
+    if (useAuthStore.getState().userProfile?.id === userId) {
+      console.log('[Auth] Profile already loaded for', userId, '— skip')
+      return
+    }
+
+    let cancelled = false
+
     // Fresh sign-in (or initial mount): gate redirects until profile loads.
-    // Token refreshes keep the same user.id so this effect doesn't re-fire,
-    // which means we never toggle the spinner during a tab resume.
     setLoading(true)
 
     // Global safety net — guarantees the UI unblocks even in the pathological

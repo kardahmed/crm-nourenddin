@@ -7,6 +7,7 @@ import { usePageMeta } from '@/hooks/usePageMeta'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useMobile } from '@/hooks/useMobile'
+import { useAuthStore } from '@/store/authStore'
 
 export function AppLayout() {
   const { title, subtitle } = usePageMeta()

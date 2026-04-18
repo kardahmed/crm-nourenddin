@@ -65,12 +65,18 @@ export function useAuth() {
   }, [setSession, setLoading, reset])
 
   // Effect 2: When session changes, load the user profile.
-  // Only re-fetch when the user ID actually changed (token refresh keeps same id).
+  // Only re-fetch when the user ID actually changed (token refresh keeps same id,
+  // so this effect doesn't re-run — meaning tab resume stays silent).
   useEffect(() => {
     if (!session?.user) return
 
     let cancelled = false
     const userId = session.user.id
+
+    // Fresh sign-in (or initial mount): gate redirects until profile loads.
+    // Token refreshes keep the same user.id so this effect doesn't re-fire,
+    // which means we never toggle the spinner during a tab resume.
+    setLoading(true)
 
     // Safety timeout — if Supabase hangs after tab resume on iOS, unblock after 10s
     const timeoutId = setTimeout(() => {

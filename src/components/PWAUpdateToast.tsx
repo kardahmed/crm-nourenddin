@@ -17,13 +17,22 @@ export function PWAUpdateToast() {
     updateServiceWorker,
   } = useRegisterSW({
     onRegisteredSW(_swUrl, registration) {
-      // Poll for updates every hour so long-lived sessions still
-      // catch fresh deploys without waiting for a page reload.
-      if (registration) {
-        setInterval(() => {
+      if (!registration) return
+
+      // Check for updates every hour for long-lived sessions
+      setInterval(() => {
+        registration.update().catch(() => {})
+      }, 60 * 60 * 1000)
+
+      // Also check when the tab becomes visible (user comes back after
+      // switching to another app). This way a fresh deploy is picked up
+      // within seconds instead of waiting for the hourly poll.
+      function onVisibility() {
+        if (document.visibilityState === 'visible') {
           registration.update().catch(() => {})
-        }, 60 * 60 * 1000)
+        }
       }
+      document.addEventListener('visibilitychange', onVisibility)
     },
   })
 

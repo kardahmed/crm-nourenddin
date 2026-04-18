@@ -290,7 +290,6 @@ export const ar = {
     charges: 'المصاريف',
     notes: 'الملاحظات',
     tasks: 'المهام',
-    auto_tasks: 'متابعة 360',
     history: 'السجل',
   },
 

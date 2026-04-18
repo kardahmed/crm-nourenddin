@@ -8,5 +8,4 @@ export {
   DocumentsTab,
   ChargesTab,
   NotesTab,
-  TasksTab,
 } from './SimpleDataTabs'

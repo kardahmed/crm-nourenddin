@@ -290,7 +290,6 @@ export const fr = {
     charges: 'Charges',
     notes: 'Notes',
     tasks: 'Tâches',
-    auto_tasks: 'Suivi 360',
     history: 'Historique',
   },
 

@@ -19,11 +19,6 @@ interface ClientTask {
   created_at: string
 }
 
-interface TaskTemplate {
-  id: string; title: string; stage: string; channel: string; message_mode: string
-  delay_minutes: number; attached_file_types: string[]
-}
-
 const STATUS_MAP: Record<string, { label: string; type: 'green' | 'orange' | 'blue' | 'muted' | 'red' }> = {
   pending: { label: 'A faire', type: 'orange' },
   scheduled: { label: 'Programme', type: 'blue' },
@@ -39,10 +34,9 @@ interface Props {
   clientId: string
   clientName: string
   clientPhone: string
-  clientStage: string
 }
 
-export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage }: Props) {
+export function ClientTasksTab({ clientId, clientName, clientPhone }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('pending')
@@ -53,36 +47,6 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage 
     queryFn: async () => {
       const { data } = await supabase.from('client_tasks').select('*').eq('client_id', clientId).order('created_at')
       return (data ?? []) as ClientTask[]
-    },
-  })
-
-  // Generate tasks from templates if none exist
-  const generateTasks = useMutation({
-    mutationFn: async () => {
-      // Fetch active templates for current stage
-      const { data: templates } = await supabase.from('task_templates').select('*')
-        .eq('stage', clientStage).eq('is_active', true).order('sort_order')
-
-      if (!templates || templates.length === 0) throw new Error('NO_TEMPLATE')
-
-      const newTasks = (templates as TaskTemplate[]).map(t => ({
-        client_id: clientId,
-        template_id: t.id,
-        title: t.title,
-        stage: t.stage,
-        status: t.delay_minutes === 0 ? 'pending' : 'scheduled',
-        priority: 'medium',
-        channel: t.channel,
-        agent_id: userId,
-        scheduled_at: t.delay_minutes > 0 ? new Date(Date.now() + t.delay_minutes * 60000).toISOString() : null,
-      }))
-
-      const { error } = await supabase.from('client_tasks').insert(newTasks as never)
-      if (error) { handleSupabaseError(error); throw error }
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }); toast.success('Tâches générées') },
-    onError: (error: Error) => {
-      if (error.message === 'NO_TEMPLATE') toast.error('Aucun template actif pour cette étape')
     },
   })
 
@@ -154,12 +118,6 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage 
           </div>
         </div>
         <div className="flex gap-2">
-          {tasks.length === 0 && (
-            <Button onClick={() => generateTasks.mutate()} disabled={generateTasks.isPending}
-              className="h-7 bg-immo-accent-green text-[10px] text-white">
-              <Zap className="mr-1 h-3 w-3" /> Generer les taches
-            </Button>
-          )}
           <div className="flex rounded-lg border border-immo-border-default p-0.5">
             {(['pending', 'completed', 'all'] as const).map(f => (
               <button key={f} onClick={() => setFilter(f)}
@@ -176,7 +134,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage 
         <div className="py-8 text-center">
           <CheckCircle className="mx-auto mb-2 h-8 w-8 text-immo-accent-green/30" />
           <p className="text-sm text-immo-text-muted">
-            {tasks.length === 0 ? 'Aucune tache. Cliquez "Generer" pour creer les taches de cette etape.' : 'Toutes les taches sont terminees !'}
+            {tasks.length === 0 ? 'Aucune tâche pour cette étape. Les tâches sont créées automatiquement au changement d\'étape.' : 'Toutes les tâches sont terminées !'}
           </p>
         </div>
       ) : (

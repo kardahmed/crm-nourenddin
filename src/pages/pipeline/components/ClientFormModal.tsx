@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useClients } from '@/hooks/useClients'
+import { useAutoTasks } from '@/hooks/useAutoTasks'
 import { useProjects } from '@/hooks/useProjects'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuthStore } from '@/store/authStore'
@@ -54,6 +55,7 @@ const labelClass = 'text-[11px] font-medium text-immo-text-muted'
 export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProps) {
   const isEdit = !!client
   const { createClient, updateClient } = useClients()
+  const { generateForStage } = useAutoTasks()
   const { projects } = useProjects()
   const { isAgent } = usePermissions()
   const currentUserId = useAuthStore(s => s.session?.user?.id)
@@ -172,7 +174,10 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
     if (isEdit && client) {
       await updateClient.mutateAsync({ id: client.id, ...payload })
     } else {
-      await createClient.mutateAsync(payload)
+      const created = await createClient.mutateAsync(payload)
+      if (created?.id && created.pipeline_stage) {
+        generateForStage.mutate({ clientId: created.id, newStage: created.pipeline_stage })
+      }
     }
     onClose()
   }

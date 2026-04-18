@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Calendar, Bookmark, DollarSign, CreditCard, FileText, Receipt,
-  StickyNote, ListTodo, Clock, CheckSquare,
+  StickyNote, Clock, CheckSquare,
 } from 'lucide-react'
 import {
   VisitsTab,
@@ -14,7 +14,6 @@ import {
   DocumentsTab,
   ChargesTab,
   NotesTab,
-  TasksTab,
   HistoryTab,
 } from './tabs'
 import { ClientTasksTab } from './ClientTasksTab'
@@ -27,7 +26,7 @@ interface ClientTabsProps {
 
 const TAB_KEYS = [
   'visits', 'reservation', 'sale', 'schedule', 'payment',
-  'documents', 'charges', 'notes', 'tasks', 'auto_tasks', 'history',
+  'documents', 'charges', 'notes', 'tasks', 'history',
 ] as const
 
 type TabKey = (typeof TAB_KEYS)[number]
@@ -41,8 +40,7 @@ const TAB_ICONS: Record<TabKey, typeof Calendar> = {
   documents: FileText,
   charges: Receipt,
   notes: StickyNote,
-  tasks: ListTodo,
-  auto_tasks: CheckSquare,
+  tasks: CheckSquare,
   history: Clock,
 }
 
@@ -101,9 +99,8 @@ export function ClientTabs({ clientId }: ClientTabsProps) {
         {activeTab === 'documents' && <DocumentsTab clientId={clientId} />}
         {activeTab === 'charges' && <ChargesTab clientId={clientId} />}
         {activeTab === 'notes' && <NotesTab clientId={clientId} />}
-        {activeTab === 'tasks' && <TasksTab clientId={clientId} />}
-        {activeTab === 'auto_tasks' && clientInfo && (
-          <ClientTasksTab clientId={clientId} clientName={clientInfo.full_name} clientPhone={clientInfo.phone} clientStage={clientInfo.pipeline_stage} />
+        {activeTab === 'tasks' && clientInfo && (
+          <ClientTasksTab clientId={clientId} clientName={clientInfo.full_name} clientPhone={clientInfo.phone} />
         )}
         {activeTab === 'history' && <HistoryTab clientId={clientId} />}
       </div>

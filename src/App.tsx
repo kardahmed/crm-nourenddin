@@ -6,6 +6,7 @@ import { GuestOnlyRoute } from '@/components/auth/GuestOnlyRoute'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useAuthStore } from '@/store/authStore'
+import { useTabVisibility } from '@/hooks/useTabVisibility'
 
 // Lazy-loaded pages for code splitting
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage').then(m => ({ default: m.LoginPage })))
@@ -53,6 +54,7 @@ function HomeRedirect() {
 }
 
 function App() {
+  useTabVisibility()
   return (
     <ErrorBoundary>
     <Suspense fallback={<PageLoader />}>

@@ -18,33 +18,67 @@ export function useAuth() {
 
   // Effect 1: Listen to auth state changes (sync only — no await)
   useEffect(() => {
-    // Get initial session
+    let settled = false
+    function finishInit() {
+      if (settled) return
+      settled = true
+      // Let effect 2 handle loading=false once profile is loaded.
+      // This only fires the "no session" branch below.
+    }
+
+    // Get initial session — always unblock the spinner, even if there's no session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s)
       if (!s) setLoading(false)
+      finishInit()
+    }).catch(() => {
+      // Network/client error — unblock UI so user can at least retry
+      setLoading(false)
+      finishInit()
     })
 
-    // Listen for changes
+    // Safety: if getSession never resolves (iOS bfcache edge case), unblock after 8s
+    const timer = setTimeout(() => {
+      if (!settled) {
+        console.warn('[Auth] getSession timeout — unblocking UI')
+        setLoading(false)
+        finishInit()
+      }
+    }, 8000)
+
+    // Listen for changes.
+    // IMPORTANT: don't set loading=true on SIGNED_IN/TOKEN_REFRESHED — those fire
+    // every time iOS Safari wakes the tab and would re-trigger the spinner.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, s) => {
         setSession(s)
-        if (event === 'SIGNED_IN') {
-          setLoading(true)
-        } else if (event === 'SIGNED_OUT') {
+        if (event === 'SIGNED_OUT') {
           reset()
         }
       },
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timer)
+      subscription.unsubscribe()
+    }
   }, [setSession, setLoading, reset])
 
-  // Effect 2: When session changes, load the user profile
+  // Effect 2: When session changes, load the user profile.
+  // Only re-fetch when the user ID actually changed (token refresh keeps same id).
   useEffect(() => {
     if (!session?.user) return
 
     let cancelled = false
     const userId = session.user.id
+
+    // Safety timeout — if Supabase hangs after tab resume on iOS, unblock after 10s
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('[Auth] Profile fetch timeout — unblocking UI')
+        setLoading(false)
+      }
+    }, 10000)
 
     async function loadProfile() {
       try {
@@ -55,6 +89,7 @@ export function useAuth() {
           .single()
 
         if (cancelled) return
+        clearTimeout(timeoutId)
 
         if (error) {
           console.error('[Auth] Profile error:', error.message)
@@ -91,6 +126,7 @@ export function useAuth() {
         setLoading(false)
       } catch (err) {
         console.error('[Auth] Profile exception:', err)
+        clearTimeout(timeoutId)
         if (!cancelled) {
           setUserProfile(null)
           setLoading(false)
@@ -100,8 +136,11 @@ export function useAuth() {
 
     loadProfile()
 
-    return () => { cancelled = true }
-  }, [session?.user?.id, setUserProfile, setLoading, reset])
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
+  }, [session?.user?.id, setUserProfile, setPermissionProfile, setLoading, reset])
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })

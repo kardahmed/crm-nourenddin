@@ -51,7 +51,7 @@ export function AgentsPage() {
   const navigate = useNavigate()
   const { tenantId } = useAuthStore()
   const { canManageAgents } = usePermissions()
-  const { canAddAgent, usage, limits } = usePlanEnforcement()
+  const { canAddAgent } = usePlanEnforcement()
   const qc = useQueryClient()
 
   const [activeTab, setActiveTab] = useState<'agents' | 'permissions'>('agents')

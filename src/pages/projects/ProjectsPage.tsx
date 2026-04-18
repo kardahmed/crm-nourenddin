@@ -73,7 +73,7 @@ export function ProjectsPage() {
   const { units: rawUnits, isLoading: loadingUnits } = useUnits()
   const units = rawUnits as unknown as Unit[]
   const { canManageProjects } = usePermissions()
-  const { canAddProject, usage, limits } = usePlanEnforcement()
+  const { canAddProject } = usePlanEnforcement()
 
   const [activeTab, setActiveTab] = useState<'projects' | 'units'>('projects')
   const [search, setSearch] = useState('')

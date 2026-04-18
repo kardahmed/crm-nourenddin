@@ -3,6 +3,18 @@ import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import type { User } from '@/types'
 
+// Race a thenable against a timeout. Supabase builders are thenable but not
+// actual Promises, so we accept PromiseLike here. Prevents any individual
+// query from hanging the auth flow (RLS deadlock, network stall, SW caching).
+function withTimeout<T>(p: PromiseLike<T>, ms: number, label: string): Promise<T> {
+  return Promise.race([
+    Promise.resolve(p),
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`[Auth] ${label} timeout after ${ms}ms`)), ms),
+    ),
+  ])
+}
+
 export function useAuth() {
   const {
     session,
@@ -78,47 +90,49 @@ export function useAuth() {
     // which means we never toggle the spinner during a tab resume.
     setLoading(true)
 
-    // Safety timeout — if Supabase hangs after tab resume on iOS, unblock after 10s
-    const timeoutId = setTimeout(() => {
+    // Global safety net — guarantees the UI unblocks even in the pathological
+    // case where BOTH queries AND Promise.race somehow fail to settle.
+    const globalTimeout = setTimeout(() => {
       if (!cancelled) {
-        console.warn('[Auth] Profile fetch timeout — unblocking UI')
+        console.warn('[Auth] Global timeout — unblocking UI')
         setLoading(false)
       }
-    }, 10000)
+    }, 8000)
 
     async function loadProfile() {
+      console.log('[Auth] Loading profile for', userId)
       try {
-        // Use maybeSingle() so a missing row returns data=null (not a 400).
-        // This prevents a malformed users row from locking the whole app
-        // on the loading spinner forever.
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', userId)
-          .maybeSingle()
+        // Per-query timeout so a hung request can't freeze the flow.
+        const { data, error } = await withTimeout(
+          supabase.from('users').select('*').eq('id', userId).maybeSingle(),
+          5000,
+          'users query',
+        )
 
         if (cancelled) return
+        console.log('[Auth] Users query done', { hasData: !!data, hasError: !!error })
 
         if (error) {
           console.error('[Auth] Profile error:', error.message)
           setUserProfile(null)
-          clearTimeout(timeoutId)
           setLoading(false)
+          clearTimeout(globalTimeout)
           return
         }
 
         if (!data) {
           console.warn('[Auth] No users row for id', userId)
           setUserProfile(null)
-          clearTimeout(timeoutId)
           setLoading(false)
+          clearTimeout(globalTimeout)
           return
         }
 
         const profile = data as User
 
         if (profile.status === 'inactive') {
-          clearTimeout(timeoutId)
+          setLoading(false)
+          clearTimeout(globalTimeout)
           await supabase.auth.signOut()
           reset()
           return
@@ -126,14 +140,21 @@ export function useAuth() {
 
         setUserProfile(profile)
 
+        // Release the spinner now — permission profile load runs in background.
+        // Agents without a permission profile still get sensible defaults via
+        // the permission_profile fallback in usePermissions.
+        setLoading(false)
+        clearTimeout(globalTimeout)
+        console.log('[Auth] Spinner released')
+
         const profileId = (profile as unknown as { permission_profile_id: string | null }).permission_profile_id
         if (profile.role === 'agent' && profileId) {
           try {
-            const { data: permProfile, error: permErr } = await supabase
-              .from('permission_profiles')
-              .select('*')
-              .eq('id', profileId)
-              .maybeSingle()
+            const { data: permProfile, error: permErr } = await withTimeout(
+              supabase.from('permission_profiles').select('*').eq('id', profileId).maybeSingle(),
+              5000,
+              'permission_profiles query',
+            )
             if (permErr) console.warn('[Auth] Permission profile error:', permErr.message)
             if (!cancelled) {
               setPermissionProfile(permProfile
@@ -147,16 +168,13 @@ export function useAuth() {
         } else {
           setPermissionProfile(null)
         }
-
-        clearTimeout(timeoutId)
-        setLoading(false)
       } catch (err) {
         console.error('[Auth] Profile exception:', err)
-        clearTimeout(timeoutId)
         if (!cancelled) {
           setUserProfile(null)
           setLoading(false)
         }
+        clearTimeout(globalTimeout)
       }
     }
 
@@ -164,7 +182,7 @@ export function useAuth() {
 
     return () => {
       cancelled = true
-      clearTimeout(timeoutId)
+      clearTimeout(globalTimeout)
     }
   }, [session?.user?.id, setUserProfile, setPermissionProfile, setLoading, reset])
 

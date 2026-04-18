@@ -11,16 +11,9 @@
 -- Idempotent: safe to re-run.
 
 -- 1. user_role enum: add 'reception'
-DO $$
-BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_enum e
-    JOIN pg_type t ON e.enumtypid = t.oid
-    WHERE t.typname = 'user_role' AND e.enumlabel = 'reception'
-  ) THEN
-    ALTER TYPE user_role ADD VALUE 'reception';
-  END IF;
-END$$;
+-- NB: ALTER TYPE ADD VALUE cannot run inside a DO block.
+-- IF NOT EXISTS makes it idempotent (Postgres 12+).
+ALTER TYPE user_role ADD VALUE IF NOT EXISTS 'reception';
 
 -- 2. users: missing columns
 ALTER TABLE users

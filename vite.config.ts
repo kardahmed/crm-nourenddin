@@ -14,14 +14,12 @@ export default defineConfig({
     // fetch the new bundle silently, and activate it on the next
     // page load — no need to remove the icon and reinstall.
     VitePWA({
-      // prompt mode: the new SW installs silently in the background and
-      // waits for the React component (PWAUpdateToast) to call its
-      // `updateServiceWorker()` — which it does when the user clicks
-      // "Recharger" on the toast. No forced page swap mid-flow.
-      registerType: 'prompt',
+      registerType: 'autoUpdate',
       injectRegister: false,
       workbox: {
         cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,png,svg,ico,woff2}'],
         navigateFallbackDenylist: [/^\/api/, /^\/auth/],
         // Pull in our Web Push handler (push + notificationclick listeners).

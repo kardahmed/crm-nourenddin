@@ -98,11 +98,11 @@ export function useAuth() {
           .maybeSingle()
 
         if (cancelled) return
-        clearTimeout(timeoutId)
 
         if (error) {
           console.error('[Auth] Profile error:', error.message)
           setUserProfile(null)
+          clearTimeout(timeoutId)
           setLoading(false)
           return
         }
@@ -110,6 +110,7 @@ export function useAuth() {
         if (!data) {
           console.warn('[Auth] No users row for id', userId)
           setUserProfile(null)
+          clearTimeout(timeoutId)
           setLoading(false)
           return
         }
@@ -117,6 +118,7 @@ export function useAuth() {
         const profile = data as User
 
         if (profile.status === 'inactive') {
+          clearTimeout(timeoutId)
           await supabase.auth.signOut()
           reset()
           return
@@ -124,9 +126,6 @@ export function useAuth() {
 
         setUserProfile(profile)
 
-        // Load permission profile for agents — maybeSingle() so a dangling
-        // FK (profile deleted but user row still points to it) doesn't
-        // block the render.
         const profileId = (profile as unknown as { permission_profile_id: string | null }).permission_profile_id
         if (profile.role === 'agent' && profileId) {
           try {
@@ -149,6 +148,7 @@ export function useAuth() {
           setPermissionProfile(null)
         }
 
+        clearTimeout(timeoutId)
         setLoading(false)
       } catch (err) {
         console.error('[Auth] Profile exception:', err)

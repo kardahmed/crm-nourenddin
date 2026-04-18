@@ -41,8 +41,10 @@ export function isClientAtRisk(client: {
   const riskStages = ['negociation', 'reservation', 'visite_terminee']
   if (!riskStages.includes(client.pipeline_stage)) return { atRisk: false, reason: '', daysSinceContact: 0 }
 
-  const lastContact = client.last_contact_at ? new Date(client.last_contact_at).getTime() : 0
-  const daysSince = lastContact ? Math.floor((Date.now() - lastContact) / 86400000) : 999
+  if (!client.last_contact_at) {
+    return { atRisk: false, reason: '', daysSinceContact: 0 }
+  }
+  const daysSince = Math.floor((Date.now() - new Date(client.last_contact_at).getTime()) / 86400000)
 
   const thresholds: Record<string, number> = { negociation: 3, reservation: 5, visite_terminee: 5 }
   const threshold = thresholds[client.pipeline_stage] ?? 7
@@ -70,8 +72,12 @@ export function suggestNextAction(client: {
   const stage = client.pipeline_stage
   const daysSinceContact = client.last_contact_at
     ? Math.floor((Date.now() - new Date(client.last_contact_at).getTime()) / 86400000)
-    : 999
+    : null
 
+  if (daysSinceContact === null) {
+    if (stage === 'accueil') return 'Premier contact : envoyer message de bienvenue'
+    return 'Premier contact à initier avec ce client'
+  }
   if (daysSinceContact > 5) return 'Relance urgente — aucun contact depuis ' + daysSinceContact + ' jours'
   if (stage === 'accueil' && !client.confirmed_budget) return 'Appel de qualification pour identifier le budget'
   if (stage === 'accueil') return 'Proposer un creneau de visite'

@@ -35,7 +35,7 @@ export async function compressImage(file: File, maxWidth = 1920, quality = 0.8):
         (blob) => {
           if (!blob || blob.size >= file.size) { resolve(file); return }
           const compressed = new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() })
-          console.log(`[ImageCompression] ${file.name}: ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB (${Math.round((1 - compressed.size / file.size) * 100)}% saved)`)
+          if (import.meta.env.DEV) console.log(`[ImageCompression] ${file.name}: ${(file.size / 1024).toFixed(0)}KB → ${(compressed.size / 1024).toFixed(0)}KB (${Math.round((1 - compressed.size / file.size) * 100)}% saved)`)
           resolve(compressed)
         },
         'image/jpeg',

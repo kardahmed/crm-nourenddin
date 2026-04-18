@@ -18,7 +18,7 @@ export function PipelineSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('app_settings' as never).select('*').single()
+      const { data } = await supabase.from('app_settings' as never).select('*').maybeSingle()
       return data as Record<string, unknown> | null
     },
     enabled: true,

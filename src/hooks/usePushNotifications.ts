@@ -59,21 +59,25 @@ export function usePushNotifications() {
       }
       const p256dh = arrayBufferToBase64(subscription.getKey('p256dh'))
       const auth = arrayBufferToBase64(subscription.getKey('auth'))
-      // Upsert on endpoint (unique) so re-subscribes from same browser are idempotent
-      // push_subscriptions is not in generated types yet; cast to any.
-      await (supabase as unknown as { from: (t: string) => { upsert: (row: Record<string, unknown>, opts: { onConflict: string }) => Promise<unknown> } })
-        .from('push_subscriptions')
-        .upsert(
-          {
-            user_id: userId,
-            endpoint: subscription.endpoint,
-            p256dh,
-            auth,
-            user_agent: navigator.userAgent,
-            last_seen_at: new Date().toISOString(),
-          },
-          { onConflict: 'endpoint' },
-        )
+      // When the same browser is re-used by a different user (logout/login),
+      // the endpoint row already exists under the previous user_id and RLS
+      // blocks upsert-on-conflict (UPDATE denied). Delete first (reclaim policy
+      // in migration 030 lets any authed user wipe the stale row), then INSERT.
+      const sb = supabase as unknown as {
+        from: (t: string) => {
+          delete: () => { eq: (c: string, v: string) => Promise<unknown> }
+          insert: (row: Record<string, unknown>) => Promise<unknown>
+        }
+      }
+      await sb.from('push_subscriptions').delete().eq('endpoint', subscription.endpoint)
+      await sb.from('push_subscriptions').insert({
+        user_id: userId,
+        endpoint: subscription.endpoint,
+        p256dh,
+        auth,
+        user_agent: navigator.userAgent,
+        last_seen_at: new Date().toISOString(),
+      })
       setWebPushReady(true)
     } catch (err) {
       console.warn('Push subscription failed', err)

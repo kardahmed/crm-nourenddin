@@ -18,7 +18,7 @@ export function useBranding() {
         .from('app_settings')
         .select('custom_logo_url, custom_primary_color, custom_app_name')
         .limit(1)
-        .single()
+        .maybeSingle()
       return (data ?? null) as BrandingConfig | null
     },
     staleTime: 5 * 60 * 1000,

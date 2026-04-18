@@ -61,7 +61,7 @@ export function FeaturesSection() {
   const save = useMutation({
     mutationFn: async () => {
       // Single-tenant: update the sole app_settings row
-      const { data: existing } = await supabase.from('app_settings' as never).select('id').limit(1).single()
+      const { data: existing } = await supabase.from('app_settings' as never).select('id').limit(1).maybeSingle()
       const id = (existing as { id: string } | null)?.id
       if (!id) throw new Error('app_settings row missing')
       await supabase.from('app_settings' as never).update(features as never).eq('id', id)

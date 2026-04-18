@@ -92,7 +92,7 @@ export function CallScriptModal({
   const { data: contextNames } = useQuery({
     queryKey: ['script-context', agentId],
     queryFn: async () => {
-      const agentRes = await supabase.from('users').select('first_name, last_name').eq('id', agentId).single()
+      const agentRes = await supabase.from('users').select('first_name, last_name').eq('id', agentId).maybeSingle()
       return {
         agentName: agentRes.data ? `${agentRes.data.first_name} ${agentRes.data.last_name}` : 'Agent',
         agencyName: 'Agence',
@@ -728,7 +728,7 @@ function AvailabilityMini({ agentId }: { agentId: string }) {
   const { data: visitSettings } = useQuery({
     queryKey: ['tenant-visit-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('app_settings' as never).select('work_days, visit_slots, visit_duration_minutes').single()
+      const { data } = await supabase.from('app_settings' as never).select('work_days, visit_slots, visit_duration_minutes').maybeSingle()
       return data as { work_days: number[] | null; visit_slots: string[] | null; visit_duration_minutes: number | null } | null
     },
     staleTime: 300_000,

@@ -12,12 +12,12 @@ export interface NavItem {
 // "all" historically meant "every non-admin role sees this" — i.e. agents.
 // With the reception role added, we keep that meaning (agent + admin) and
 // wire reception-specific items explicitly. Reception users see the
-// /reception hub plus a read-only view of projects for phone answers.
+// /reception hub only — dispatch is their sole responsibility.
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Reception', path: '/reception', icon: 'UserPlus', roles: ['reception', 'admin'] },
   { label: "À faire", path: '/today', icon: 'CheckSquare', roles: ['agent', 'admin'] },
   { label: 'Dashboard', path: '/dashboard', icon: 'LayoutDashboard', roles: 'all', requiredPermission: 'dashboard.view' },
-  { label: 'Projets', path: '/projects', icon: 'Building2', roles: ['agent', 'admin', 'reception'], requiredPermission: 'projects.view' },
+  { label: 'Projets', path: '/projects', icon: 'Building2', roles: ['agent', 'admin'], requiredPermission: 'projects.view' },
   { label: 'Pipeline', path: '/pipeline', icon: 'GitBranch', roles: 'all', requiredPermission: 'pipeline.view_own' },
   { label: 'Taches', path: '/tasks', icon: 'CheckSquare', roles: 'all' },
   { label: 'Planning', path: '/planning', icon: 'Calendar', roles: 'all', requiredPermission: 'visits.view_own' },

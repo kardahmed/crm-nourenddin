@@ -2,8 +2,8 @@
 -- Admin-managed AI secrets (Anthropic API key).
 --
 -- Stored separately from app_settings so we can enforce strict RLS:
--- only admin / super_admin can SELECT or modify the key. The edge
--- functions read it via the service-role client, bypassing RLS.
+-- only admin can SELECT or modify the key. The edge functions read
+-- it via the service-role client, bypassing RLS.
 -- =================================================================
 
 CREATE TABLE IF NOT EXISTS public.app_secrets (
@@ -34,7 +34,7 @@ CREATE POLICY "app_secrets_admin_insert" ON public.app_secrets
   FOR INSERT TO authenticated
   WITH CHECK (EXISTS (SELECT 1 FROM public.users WHERE id = auth.uid() AND role = 'admin'));
 
--- RPC: admin-only setter. Upserts the Anthropic key on the singleton row.
+-- RPC: admin-only setter. Uses WHERE clause (pg_safeupdate requires it).
 CREATE OR REPLACE FUNCTION public.set_anthropic_api_key(new_key TEXT)
 RETURNS VOID
 LANGUAGE plpgsql
@@ -43,26 +43,30 @@ SET search_path = public
 AS $$
 DECLARE
   caller_role TEXT;
+  target_id UUID;
 BEGIN
-  SELECT role INTO caller_role FROM public.users WHERE id = auth.uid();
-  IF caller_role NOT IN ('admin', 'super_admin') THEN
+  SELECT role::text INTO caller_role FROM public.users WHERE id = auth.uid();
+  IF caller_role <> 'admin' THEN
     RAISE EXCEPTION 'Forbidden: admin role required';
   END IF;
 
-  UPDATE public.app_secrets
-  SET anthropic_api_key = NULLIF(new_key, ''),
-      updated_at = NOW(),
-      updated_by = auth.uid();
+  SELECT id INTO target_id FROM public.app_secrets LIMIT 1;
 
-  IF NOT FOUND THEN
+  IF target_id IS NOT NULL THEN
+    UPDATE public.app_secrets
+    SET anthropic_api_key = NULLIF(new_key, ''),
+        updated_at = NOW(),
+        updated_by = auth.uid()
+    WHERE id = target_id;
+  ELSE
     INSERT INTO public.app_secrets (anthropic_api_key, updated_by)
     VALUES (NULLIF(new_key, ''), auth.uid());
   END IF;
 END;
 $$;
 
--- RPC: returns only a masked preview (last 4 chars + length) so the UI
--- can display "sk-...xxxx" without ever leaking the full key over the wire.
+-- RPC: returns only a masked preview so the UI can display "sk-...xxxx"
+-- without ever leaking the full key over the wire.
 CREATE OR REPLACE FUNCTION public.get_anthropic_api_key_preview()
 RETURNS JSONB
 LANGUAGE plpgsql
@@ -73,8 +77,8 @@ DECLARE
   caller_role TEXT;
   key_val TEXT;
 BEGIN
-  SELECT role INTO caller_role FROM public.users WHERE id = auth.uid();
-  IF caller_role NOT IN ('admin', 'super_admin') THEN
+  SELECT role::text INTO caller_role FROM public.users WHERE id = auth.uid();
+  IF caller_role <> 'admin' THEN
     RAISE EXCEPTION 'Forbidden: admin role required';
   END IF;
 

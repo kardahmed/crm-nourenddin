@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useTenant } from './useTenant'
 import toast from 'react-hot-toast'
 import type { Database } from '@/types'
 
@@ -9,11 +8,10 @@ type ProjectInsert = Database['public']['Tables']['projects']['Insert']
 type ProjectUpdate = Database['public']['Tables']['projects']['Update']
 
 export function useProjects() {
-  const tenantId = useTenant()
   const qc = useQueryClient()
 
   const projectsQuery = useQuery({
-    queryKey: ['projects', tenantId],
+    queryKey: ['projects'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
@@ -26,10 +24,10 @@ export function useProjects() {
   })
 
   const createProject = useMutation({
-    mutationFn: async (input: Omit<ProjectInsert, 'tenant_id'>) => {
+    mutationFn: async (input: ProjectInsert) => {
       const { data, error } = await supabase
         .from('projects')
-        .insert({ ...input, tenant_id: tenantId })
+        .insert(input)
         .select()
         .single()
 
@@ -54,9 +52,9 @@ export function useProjects() {
       if (error) { handleSupabaseError(error); throw error }
       return data
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       qc.invalidateQueries({ queryKey: ['projects'] })
-      toast.success('Projet mis a jour')
+      qc.invalidateQueries({ queryKey: ['project-detail', variables.id] })
     },
   })
 
@@ -86,10 +84,10 @@ export function useProjects() {
   }
 }
 
-/** Standalone hook for fetching a single project by ID (defense-in-depth with tenant_id) */
-export function useProjectById(id: string, tenantId: string) {
+/** Standalone hook for fetching a single project by ID */
+export function useProjectById(id: string) {
   return useQuery({
-    queryKey: ['projects', id, tenantId],
+    queryKey: ['projects', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('projects')
@@ -100,6 +98,6 @@ export function useProjectById(id: string, tenantId: string) {
       if (error) { handleSupabaseError(error); throw error }
       return data
     },
-    enabled: !!id && !!tenantId,
+    enabled: !!id,
   })
 }

@@ -2,11 +2,11 @@ import { Outlet } from 'react-router-dom'
 import { Sidebar, MobileSidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { OnboardingWizard } from '@/components/common/OnboardingWizard'
+import { CommandPalette } from '@/components/CommandPalette'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useMobile } from '@/hooks/useMobile'
-import { useAuthStore } from '@/store/authStore'
 
 export function AppLayout() {
   const { title, subtitle } = usePageMeta()
@@ -31,6 +31,7 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+      <CommandPalette />
     </div>
   )
 }

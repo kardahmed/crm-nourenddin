@@ -24,15 +24,10 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''))
     if (authErr || !user) return json({ error: 'Invalid token' }, 401)
 
-    // Get tenant
-    const { data: profile } = await supabase.from('users').select('tenant_id').eq('id', user.id).single()
-    if (!profile?.tenant_id) return json({ error: 'No tenant' }, 403)
-
-    // Check WhatsApp is active for this tenant
+    // Check WhatsApp is active
     const { data: waAccount } = await supabase
       .from('whatsapp_accounts')
       .select('*')
-      .eq('tenant_id', profile.tenant_id)
       .eq('is_active', true)
       .single()
 
@@ -65,6 +60,27 @@ Deno.serve(async (req) => {
     }
 
     if (!to || !template_name) return json({ error: 'to and template_name required' }, 400)
+
+    // Cross-agent isolation: if a client_id is supplied, the caller must
+    // either be admin or own the client. Without this check, agent A could
+    // pollute agent B's client history / last_contact_at via service_role.
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    if (client_id !== undefined && client_id !== null) {
+      if (typeof client_id !== 'string' || !UUID_RE.test(client_id)) {
+        return json({ error: 'Invalid client_id' }, 400)
+      }
+      const [{ data: callerRow }, { data: clientRow }] = await Promise.all([
+        supabase.from('users').select('role, status').eq('id', user.id).single(),
+        supabase.from('clients').select('agent_id').eq('id', client_id).single(),
+      ])
+      const caller = callerRow as { role: string; status: string } | null
+      if (!caller || caller.status !== 'active') return json({ error: 'Inactive user' }, 403)
+      const role = caller.role
+      const ownerId = (clientRow as { agent_id: string | null } | null)?.agent_id ?? null
+      if (role !== 'admin' && ownerId !== user.id) {
+        return json({ error: 'Forbidden: not your client' }, 403)
+      }
+    }
 
     // Clean phone number (ensure format: 213XXXXXXXXX)
     let phone = to.replace(/[\s\-\(\)\+]/g, '')
@@ -104,7 +120,7 @@ Deno.serve(async (req) => {
     if (!response.ok) {
       // Log failed message
       await supabase.from('whatsapp_messages').insert({
-        tenant_id: profile.tenant_id,
+        
         client_id: client_id ?? null,
         agent_id: user.id,
         template_name,
@@ -122,7 +138,7 @@ Deno.serve(async (req) => {
 
     // Log successful message
     await supabase.from('whatsapp_messages').insert({
-      tenant_id: profile.tenant_id,
+      
       client_id: client_id ?? null,
       agent_id: user.id,
       template_name,
@@ -132,16 +148,16 @@ Deno.serve(async (req) => {
       status: 'sent',
     })
 
-    // Increment tenant message counter
+    // Increment message counter
     await supabase
       .from('whatsapp_accounts')
       .update({ messages_sent: account.messages_sent + 1 } as never)
-      .eq('tenant_id', profile.tenant_id)
+      .eq('is_active', true)
 
     // Log in client history if client_id provided
     if (client_id) {
       await supabase.from('history').insert({
-        tenant_id: profile.tenant_id,
+        
         client_id,
         agent_id: user.id,
         type: 'whatsapp_message',

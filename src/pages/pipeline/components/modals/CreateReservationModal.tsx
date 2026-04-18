@@ -26,7 +26,7 @@ interface ClientInfo {
   phone: string
   nin_cin: string | null
   pipeline_stage: PipelineStage
-  tenant_id: string
+
 }
 
 interface CreateReservationModalProps {
@@ -158,7 +158,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
 
       // 1. Upload CIN
       const ext = cinFile.name.split('.').pop()
-      const path = `${client.tenant_id}/cin/${client.id}_${Date.now()}.${ext}`
+      const path = `cin/${client.id}_${Date.now()}.${ext}`
       const { error: uploadErr } = await supabase.storage
         .from('documents')
         .upload(path, cinFile)
@@ -177,7 +177,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
       // 3. Create reservation for each selected unit
       for (const unitId of selectedUnits) {
         const { error: resErr } = await supabase.from('reservations').insert({
-          tenant_id: client.tenant_id,
+          
           client_id: client.id,
           agent_id: userId,
           project_id: projectId,
@@ -205,7 +205,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
         .join(', ')
 
       await supabase.from('history').insert({
-        tenant_id: client.tenant_id,
+        
         client_id: client.id,
         agent_id: userId,
         type: 'reservation',

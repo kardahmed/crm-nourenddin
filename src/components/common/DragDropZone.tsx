@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import { Upload } from 'lucide-react'
 import { compressImage } from '@/lib/imageCompression'
+import { validateFile } from '@/lib/fileValidation'
 import toast from 'react-hot-toast'
 
 interface Props {
@@ -12,6 +13,11 @@ interface Props {
   compact?: boolean
 }
 
+function acceptToMimeList(accept: string): string[] | undefined {
+  if (!accept || accept === '*' || accept === '*/*') return undefined
+  return accept.split(',').map(s => s.trim()).filter(Boolean)
+}
+
 export function DragDropZone({ onFilesSelected, accept = '*', multiple = true, maxSizeMB = 10, label, compact }: Props) {
   const [dragging, setDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -19,14 +25,16 @@ export function DragDropZone({ onFilesSelected, accept = '*', multiple = true, m
   async function processFiles(fileList: FileList | null) {
     if (!fileList) return
     const files: File[] = []
+    const allowedMimes = acceptToMimeList(accept)
 
     for (const file of Array.from(fileList)) {
-      if (file.size > maxSizeMB * 1024 * 1024) {
-        toast.error(`${file.name} depasse ${maxSizeMB}MB`)
+      const check = await validateFile(file, { maxSizeMB, allowedMimes })
+      if (!check.ok) {
+        toast.error(`${file.name}: ${check.reason}`)
         continue
       }
-      // Auto-compress images
-      if (file.type.startsWith('image/')) {
+      // Auto-compress real images (magic-byte verified).
+      if (check.detected.mime.startsWith('image/')) {
         const compressed = await compressImage(file)
         files.push(compressed)
       } else {

@@ -12,7 +12,6 @@ import {
 import type { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { PIPELINE_STAGES } from '@/types'
 import type { PipelineStage, Client } from '@/types'
 import { PIPELINE_ORDER } from '@/lib/constants'
@@ -37,7 +36,6 @@ export function KanbanBoard({
   selectedIds,
   onSelectClient,
 }: KanbanBoardProps) {
-  const { tenantId } = useAuthStore()
   const [activeId, setActiveId] = useState<string | null>(null)
 
   const sensors = useSensors(
@@ -55,13 +53,13 @@ export function KanbanBoard({
 
   // Fetch last stage_change per client + settings
   const { data: stageChangeDates } = useQuery({
-    queryKey: ['stage-change-dates', tenantId],
+    queryKey: ['stage-change-dates'],
     queryFn: async () => {
       if (allClientIds.length === 0) return { dates: new Map<string, string>(), urgentDays: 7 }
 
       const [historyRes, settingsRes] = await Promise.all([
         supabase.from('history').select('client_id, created_at').eq('type', 'stage_change').in('client_id', allClientIds).order('created_at', { ascending: false }),
-        supabase.from('tenant_settings').select('urgent_alert_days').maybeSingle(),
+        supabase.from('app_settings' as never).select('urgent_alert_days').maybeSingle(),
       ])
 
       const dates = new Map<string, string>()
@@ -69,9 +67,9 @@ export function KanbanBoard({
         if (!dates.has(row.client_id)) dates.set(row.client_id, row.created_at)
       }
 
-      return { dates, urgentDays: settingsRes.data?.urgent_alert_days ?? 7 }
+      return { dates, urgentDays: (settingsRes.data as { urgent_alert_days?: number } | null)?.urgent_alert_days ?? 7 }
     },
-    enabled: !!tenantId && allClientIds.length > 0,
+    enabled: allClientIds.length > 0,
     staleTime: 60_000,
   })
 
@@ -80,26 +78,24 @@ export function KanbanBoard({
 
   // Fetch agent & project names
   const { data: agentMap } = useQuery({
-    queryKey: ['agent-names', tenantId],
+    queryKey: ['agent-names'],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('id, first_name, last_name')
       const m = new Map<string, string>()
       for (const u of (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>) m.set(u.id, `${u.first_name} ${u.last_name}`)
       return m
     },
-    enabled: !!tenantId,
     staleTime: 300_000,
   })
 
   const { data: projectMap } = useQuery({
-    queryKey: ['project-names', tenantId],
+    queryKey: ['project-names'],
     queryFn: async () => {
       const { data } = await supabase.from('projects').select('id, name')
       const m = new Map<string, string>()
       for (const p of (data ?? []) as Array<{ id: string; name: string }>) m.set(p.id, p.name)
       return m
     },
-    enabled: !!tenantId,
     staleTime: 300_000,
   })
 

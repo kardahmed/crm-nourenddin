@@ -20,9 +20,9 @@ function contractNumber(): string {
   return `CTR-${timestamp}-${random}`
 }
 
-async function uploadPDF(blob: Blob, tenantId: string, clientId: string, prefix: string): Promise<string> {
+async function uploadPDF(blob: Blob, clientId: string, prefix: string): Promise<string> {
   const filename = `${prefix}-${format(new Date(), 'yyyyMMdd-HHmmss')}.pdf`
-  const path = `${tenantId}/${clientId}/${filename}`
+  const path = `${clientId}/${filename}`
 
   const { error } = await supabase.storage
     .from('documents')
@@ -30,7 +30,6 @@ async function uploadPDF(blob: Blob, tenantId: string, clientId: string, prefix:
 
   if (error) { handleSupabaseError(error); throw error }
 
-  // Use signed URL (private bucket) instead of public URL
   const { data: urlData, error: signErr } = await supabase.storage
     .from('documents')
     .createSignedUrl(path, 60 * 60 * 24 * 7) // 7-day expiry
@@ -55,9 +54,8 @@ export async function getDocumentSignedUrl(path: string): Promise<string> {
   return data.signedUrl
 }
 
-async function insertDocRecord(tenantId: string, clientId: string, saleId: string | null, type: string, name: string, url: string) {
+async function insertDocRecord(clientId: string, saleId: string | null, type: string, name: string, url: string) {
   await supabase.from('documents').insert({
-    tenant_id: tenantId,
     client_id: clientId,
     sale_id: saleId,
     type,
@@ -66,16 +64,33 @@ async function insertDocRecord(tenantId: string, clientId: string, saleId: strin
   } as never)
 }
 
-async function fetchTenant(tenantId: string) {
-  const { data, error } = await supabase.from('tenants').select('*').eq('id', tenantId).single()
-  if (error) throw error
-  return data as { name: string; address: string | null; phone: string | null; email: string | null; logo_url: string | null }
+// Fetch single-tenant company info from app_settings
+async function fetchCompany() {
+  const { data, error } = await supabase
+    .from('app_settings' as never)
+    .select('custom_app_name, custom_logo_url, company_name, company_phone, company_email, company_address')
+    .limit(1)
+    .single()
+  if (error) {
+    console.warn('[pdf] fetchCompany failed, falling back to defaults:', error.message)
+  }
+  const d = (data ?? {}) as {
+    custom_app_name?: string | null; custom_logo_url?: string | null;
+    company_name?: string | null; company_phone?: string | null;
+    company_email?: string | null; company_address?: string | null;
+  }
+  return {
+    name: d.company_name ?? d.custom_app_name ?? 'IMMO PRO-X',
+    address: d.company_address ?? null,
+    phone: d.company_phone ?? null,
+    email: d.company_email ?? null,
+    logo_url: d.custom_logo_url ?? null,
+  }
 }
 
 // ═══ Generate Sale Contract ═══
 
 export async function generateSaleContract(saleId: string): Promise<string> {
-  // Fetch sale with joins
   const { data: sale, error } = await supabase
     .from('sales')
     .select('*, clients(full_name, nin_cin, address, phone), units(code, type, subtype, surface, floor, building, delivery_date), projects(name, location), users!sales_agent_id_fkey(first_name, last_name)')
@@ -89,9 +104,8 @@ export async function generateSaleContract(saleId: string): Promise<string> {
   const unit = s.units as { code: string; type: UnitType; subtype: string | null; surface: number | null; floor: number | null; building: string | null; delivery_date: string | null }
   const project = s.projects as { name: string; location: string | null }
   const agent = s.users as { first_name: string; last_name: string }
-  const tenant = await fetchTenant(s.tenant_id as string)
+  const tenant = await fetchCompany()
 
-  // Fetch schedule
   const { data: scheduleRows } = await supabase
     .from('payment_schedules')
     .select('installment_number, due_date, amount, description')
@@ -135,8 +149,8 @@ export async function generateSaleContract(saleId: string): Promise<string> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blob = await pdf(createElement(SaleContractPDF, { data: contractData }) as any).toBlob()
-  const url = await uploadPDF(blob, s.tenant_id as string, s.client_id as string, 'contrat-vente')
-  await insertDocRecord(s.tenant_id as string, s.client_id as string, saleId, 'contrat_vente', `Contrat de vente — ${unit.code}`, url)
+  const url = await uploadPDF(blob, s.client_id as string, 'contrat-vente')
+  await insertDocRecord(s.client_id as string, saleId, 'contrat_vente', `Contrat de vente — ${unit.code}`, url)
 
   return url
 }
@@ -157,7 +171,7 @@ export async function generatePaymentSchedule(saleId: string): Promise<string> {
   const unit = s.units as { code: string }
   const project = s.projects as { name: string }
   const agent = s.users as { first_name: string; last_name: string }
-  const tenant = await fetchTenant(s.tenant_id as string)
+  const tenant = await fetchCompany()
 
   const { data: scheduleRows } = await supabase
     .from('payment_schedules')
@@ -193,8 +207,8 @@ export async function generatePaymentSchedule(saleId: string): Promise<string> {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blob = await pdf(createElement(PaymentSchedulePDF, { data }) as any).toBlob()
-  const url = await uploadPDF(blob, s.tenant_id as string, s.client_id as string, 'echeancier')
-  await insertDocRecord(s.tenant_id as string, s.client_id as string, saleId, 'echeancier', `Échéancier — ${unit.code}`, url)
+  const url = await uploadPDF(blob, s.client_id as string, 'echeancier')
+  await insertDocRecord(s.client_id as string, saleId, 'echeancier', `Échéancier — ${unit.code}`, url)
 
   return url
 }
@@ -215,7 +229,7 @@ export async function generateReservationReceipt(reservationId: string): Promise
   const unit = r.units as { code: string; type: UnitType; subtype: string | null; surface: number | null }
   const project = r.projects as { name: string; location: string | null }
   const agent = r.users as { first_name: string; last_name: string }
-  const tenant = await fetchTenant(r.tenant_id as string)
+  const tenant = await fetchCompany()
 
   const DEPOSIT_METHODS: Record<string, string> = { cash: 'Espèces', bank_transfer: 'Virement bancaire', cheque: 'Chèque' }
 
@@ -244,8 +258,8 @@ export async function generateReservationReceipt(reservationId: string): Promise
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const blob = await pdf(createElement(ReservationReceiptPDF, { data }) as any).toBlob()
-  const url = await uploadPDF(blob, r.tenant_id as string, r.client_id as string, 'bon-reservation')
-  await insertDocRecord(r.tenant_id as string, r.client_id as string, null, 'bon_reservation', `Bon de réservation — ${unit.code}`, url)
+  const url = await uploadPDF(blob, r.client_id as string, 'bon-reservation')
+  await insertDocRecord(r.client_id as string, null, 'bon_reservation', `Bon de réservation — ${unit.code}`, url)
 
   return url
 }

@@ -26,7 +26,7 @@ const TIME_SLOTS = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:
 
 export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientName, fromStage, toStage, loading }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
 
   const from = PIPELINE_STAGES[fromStage]
@@ -54,7 +54,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
     mutationFn: async () => {
       if (!visitDate || !visitTime) return
       await supabase.from('visits').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: userId,
+ client_id: clientId, agent_id: userId,
         scheduled_at: `${visitDate}T${visitTime}:00`,
         visit_type: visitType, status: 'planned',
       } as never)
@@ -126,7 +126,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
         finalNote = `${toStage === 'perdue' ? 'Client perdu' : 'Relancement'}: ${reason}${reminderDays ? '. Rappel dans ' + reminderDays + 'j' : ''}`
         if (reminderDays) {
           supabase.from('client_tasks').insert({
-            tenant_id: tenantId, client_id: clientId, agent_id: userId,
+     client_id: clientId, agent_id: userId,
             title: `Rappel: relancer ${clientName}`,
             stage: toStage, status: 'scheduled', channel: 'whatsapp', priority: 'medium',
             scheduled_at: new Date(Date.now() + parseInt(reminderDays) * 86400000).toISOString(),

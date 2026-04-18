@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { DollarSign, Users, Calendar, Home, TrendingUp, Target, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { KPICard, LoadingSpinner } from '@/components/common'
 import { formatPriceCompact } from '@/lib/constants'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
@@ -14,7 +13,7 @@ const SOURCE_LABELS: Record<string, string> = {
 }
 
 export function AnalyticsTab() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const [period, setPeriod] = useState<'month' | 'quarter' | 'year' | 'all'>('year')
 
   const now = new Date()
@@ -25,7 +24,7 @@ export function AnalyticsTab() {
   const dateStr = dateFrom.toISOString().split('T')[0]
 
   const { data, isLoading } = useQuery({
-    queryKey: ['marketing-roi', tenantId, period],
+    queryKey: ['marketing-roi', period],
     queryFn: async () => {
       const [expensesRes, clientsRes, visitsRes, reservationsRes, salesRes] = await Promise.all([
         supabase.from('marketing_expenses').select('amount, category, project_id, expense_date').gte('expense_date', dateStr),
@@ -92,7 +91,7 @@ export function AnalyticsTab() {
 
       return { totalSpent, totalLeads, totalVisits, totalReservations, totalSales, totalRevenue, cpl, cpv, cpr, cpa, roi, avgDealValue, bySource, cplTrend }
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   if (isLoading || !data) return <LoadingSpinner size="lg" className="h-96" />

@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette, Sparkles, MessageCircle, Calendar, ToggleLeft } from 'lucide-react'
+import { Building2, GitBranch, Bookmark, FileText, Bell, Globe, Shield, Palette, Sparkles, MessageCircle, Calendar, ToggleLeft, UserPlus } from 'lucide-react'
 import {
   CompanySection,
   PipelineSection,
   BrandingSection,
+  ReceptionSection,
   ReservationsSection,
   TemplatesSection,
   NotificationsSection,
@@ -18,11 +19,12 @@ import { VisitScheduleSection } from './sections/VisitScheduleSection'
 import { PermissionProfilesSection } from './sections/PermissionProfilesSection'
 import { FeaturesSection } from './sections/FeaturesSection'
 
-type Section = 'company' | 'pipeline' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'features' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
+type Section = 'company' | 'pipeline' | 'reception' | 'playbook' | 'tasks' | 'visits' | 'profiles' | 'features' | 'whatsapp' | 'branding' | 'reservations' | 'templates' | 'notifications' | 'language' | 'security'
 
 const SECTION_ICONS: Record<Section, typeof Building2> = {
   company: Building2,
   pipeline: GitBranch,
+  reception: UserPlus,
   playbook: Sparkles,
   tasks: Bell,
   visits: Calendar,
@@ -37,11 +39,12 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
   security: Shield,
 }
 
-const SECTION_KEYS: Section[] = ['company', 'pipeline', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
+const SECTION_KEYS: Section[] = ['company', 'pipeline', 'reception', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']
 
 const SECTION_LABELS: Record<Section, string> = {
   company: 'Agence',
   pipeline: 'Pipeline',
+  reception: 'Réception',
   playbook: 'Playbook IA',
   tasks: 'Taches auto',
   visits: 'Visites',
@@ -61,9 +64,9 @@ export function SettingsPage() {
   const [section, setSection] = useState<Section>('company')
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col gap-6 lg:flex-row">
       {/* Side menu */}
-      <div className="w-[220px] shrink-0 space-y-1">
+      <div className="w-full shrink-0 space-y-1 lg:w-[220px]">
         {SECTION_KEYS.map((key) => {
           const Icon = SECTION_ICONS[key]
           return (
@@ -87,6 +90,7 @@ export function SettingsPage() {
       <div className="min-w-0 flex-1">
         {section === 'company' && <CompanySection />}
         {section === 'pipeline' && <PipelineSection />}
+        {section === 'reception' && <ReceptionSection />}
         {section === 'tasks' && <TaskConfigSection />}
         {section === 'visits' && <VisitScheduleSection />}
         {section === 'profiles' && <PermissionProfilesSection />}

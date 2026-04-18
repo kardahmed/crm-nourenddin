@@ -56,8 +56,7 @@ const TAB_I18N: Record<TabKey, string> = {
 export function DossiersPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { tenantId, session } = useAuthStore()
-  const userId = session?.user?.id
+  const userId = useAuthStore(s => s.session?.user?.id)
   const { isAgent } = usePermissions()
 
   const [search, setSearch] = useState('')
@@ -67,10 +66,8 @@ export function DossiersPage() {
 
   // Fetch all data in parallel
   const { data, isLoading } = useQuery({
-    queryKey: ['dossiers', tenantId, userId, isAgent],
+    queryKey: ['dossiers', userId, isAgent],
     queryFn: async () => {
-      if (!tenantId) throw new Error('No tenant')
-
       const [salesRes, reservationsRes, schedulesRes, projectsRes] = await Promise.all([
         (() => {
           let q = supabase
@@ -106,7 +103,6 @@ export function DossiersPage() {
         projects: (projectsRes.data ?? []) as unknown as Array<{ id: string; name: string }>,
       }
     },
-    enabled: !!tenantId,
   })
 
   const sales = data?.sales ?? []
@@ -279,7 +275,7 @@ export function DossiersPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <SearchInput placeholder="Nom, téléphone..." value={search} onChange={setSearch} className="w-[240px]" />
+        <SearchInput placeholder="Nom, téléphone..." value={search} onChange={setSearch} className="w-full sm:w-[240px]" />
         <FilterDropdown label="Projet" options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
         <Button variant="ghost" size="sm" onClick={() => toast('Fonctionnalite d\'import CSV bientot disponible')} className="border border-immo-border-default text-xs text-immo-text-muted">
           <Upload className="mr-1 h-3.5 w-3.5" /> Importer

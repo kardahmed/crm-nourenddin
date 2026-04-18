@@ -8,7 +8,6 @@ export function useAuth() {
     session,
     userProfile,
     role,
-    tenantId,
     isLoading,
     setSession,
     setUserProfile,
@@ -19,43 +18,97 @@ export function useAuth() {
 
   // Effect 1: Listen to auth state changes (sync only — no await)
   useEffect(() => {
-    // Get initial session
+    let settled = false
+    function finishInit() {
+      if (settled) return
+      settled = true
+      // Let effect 2 handle loading=false once profile is loaded.
+      // This only fires the "no session" branch below.
+    }
+
+    // Get initial session — always unblock the spinner, even if there's no session
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       setSession(s)
       if (!s) setLoading(false)
+      finishInit()
+    }).catch(() => {
+      // Network/client error — unblock UI so user can at least retry
+      setLoading(false)
+      finishInit()
     })
 
-    // Listen for changes
+    // Safety: if getSession never resolves (iOS bfcache edge case), unblock after 8s
+    const timer = setTimeout(() => {
+      if (!settled) {
+        console.warn('[Auth] getSession timeout — unblocking UI')
+        setLoading(false)
+        finishInit()
+      }
+    }, 8000)
+
+    // Listen for changes.
+    // IMPORTANT: don't set loading=true on SIGNED_IN/TOKEN_REFRESHED — those fire
+    // every time iOS Safari wakes the tab and would re-trigger the spinner.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, s) => {
-        // IMPORTANT: only set session state here, NO async work
+      (event, s) => {
         setSession(s)
-        if (!s) reset()
+        if (event === 'SIGNED_OUT') {
+          reset()
+        }
       },
     )
 
-    return () => subscription.unsubscribe()
+    return () => {
+      clearTimeout(timer)
+      subscription.unsubscribe()
+    }
   }, [setSession, setLoading, reset])
 
-  // Effect 2: When session changes, load the user profile
+  // Effect 2: When session changes, load the user profile.
+  // Only re-fetch when the user ID actually changed (token refresh keeps same id,
+  // so this effect doesn't re-run — meaning tab resume stays silent).
   useEffect(() => {
     if (!session?.user) return
 
     let cancelled = false
     const userId = session.user.id
 
+    // Fresh sign-in (or initial mount): gate redirects until profile loads.
+    // Token refreshes keep the same user.id so this effect doesn't re-fire,
+    // which means we never toggle the spinner during a tab resume.
+    setLoading(true)
+
+    // Safety timeout — if Supabase hangs after tab resume on iOS, unblock after 10s
+    const timeoutId = setTimeout(() => {
+      if (!cancelled) {
+        console.warn('[Auth] Profile fetch timeout — unblocking UI')
+        setLoading(false)
+      }
+    }, 10000)
+
     async function loadProfile() {
       try {
+        // Use maybeSingle() so a missing row returns data=null (not a 400).
+        // This prevents a malformed users row from locking the whole app
+        // on the loading spinner forever.
         const { data, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', userId)
-          .single()
+          .maybeSingle()
 
         if (cancelled) return
+        clearTimeout(timeoutId)
 
         if (error) {
           console.error('[Auth] Profile error:', error.message)
+          setUserProfile(null)
+          setLoading(false)
+          return
+        }
+
+        if (!data) {
+          console.warn('[Auth] No users row for id', userId)
           setUserProfile(null)
           setLoading(false)
           return
@@ -71,16 +124,26 @@ export function useAuth() {
 
         setUserProfile(profile)
 
-        // Load permission profile for non-admin roles
+        // Load permission profile for agents — maybeSingle() so a dangling
+        // FK (profile deleted but user row still points to it) doesn't
+        // block the render.
         const profileId = (profile as unknown as { permission_profile_id: string | null }).permission_profile_id
-        if (profile.role !== 'admin' && profile.role !== 'super_admin' && profileId) {
-          const { data: permProfile } = await supabase
-            .from('permission_profiles')
-            .select('*')
-            .eq('id', profileId)
-            .single()
-          if (!cancelled && permProfile) {
-            setPermissionProfile(permProfile as unknown as import('@/types/permissions').PermissionProfile)
+        if (profile.role === 'agent' && profileId) {
+          try {
+            const { data: permProfile, error: permErr } = await supabase
+              .from('permission_profiles')
+              .select('*')
+              .eq('id', profileId)
+              .maybeSingle()
+            if (permErr) console.warn('[Auth] Permission profile error:', permErr.message)
+            if (!cancelled) {
+              setPermissionProfile(permProfile
+                ? (permProfile as unknown as import('@/types/permissions').PermissionProfile)
+                : null)
+            }
+          } catch (permCatch) {
+            console.warn('[Auth] Permission profile exception:', permCatch)
+            if (!cancelled) setPermissionProfile(null)
           }
         } else {
           setPermissionProfile(null)
@@ -89,6 +152,7 @@ export function useAuth() {
         setLoading(false)
       } catch (err) {
         console.error('[Auth] Profile exception:', err)
+        clearTimeout(timeoutId)
         if (!cancelled) {
           setUserProfile(null)
           setLoading(false)
@@ -98,8 +162,11 @@ export function useAuth() {
 
     loadProfile()
 
-    return () => { cancelled = true }
-  }, [session?.user?.id, setUserProfile, setLoading, reset])
+    return () => {
+      cancelled = true
+      clearTimeout(timeoutId)
+    }
+  }, [session?.user?.id, setUserProfile, setPermissionProfile, setLoading, reset])
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
@@ -120,7 +187,6 @@ export function useAuth() {
     user: session?.user ?? null,
     userProfile,
     role,
-    tenantId,
     isLoading,
     isAuthenticated: !!session,
     signIn,

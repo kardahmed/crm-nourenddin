@@ -1,6 +1,8 @@
 export const ar = {
   // Navigation
   nav: {
+    reception: 'الاستقبال',
+    today: 'اليوم',
     dashboard: 'لوحة التحكم',
     projects: 'المشاريع',
     pipeline: 'مسار العملاء',
@@ -14,11 +16,13 @@ export const ar = {
     tasks: 'المهام',
     marketing_roi: 'عائد التسويق',
     settings: 'الإعدادات',
+    profile: 'ملفي الشخصي',
   },
 
   // Page meta
   page: {
     dashboard_subtitle: 'نظرة عامة على نشاطك',
+    today_subtitle: 'زياراتك ومهامك ومتابعاتك لهذا اليوم',
     projects_subtitle: 'إدارة البرامج العقارية',
     pipeline_subtitle: 'متابعة العملاء حسب المرحلة',
     planning_subtitle: 'الزيارات والمواعيد',
@@ -28,6 +32,7 @@ export const ar = {
     agents_subtitle: 'إدارة الفريق التجاري',
     reports_subtitle: 'التقارير والإحصائيات',
     settings_subtitle: 'إعدادات الوكالة',
+    profile_subtitle: 'معلوماتك وأمان الحساب',
   },
 
   // Actions
@@ -116,10 +121,9 @@ export const ar = {
 
   // Rôles
   role: {
-    super_admin: 'مدير عام',
     admin: 'مدير',
     agent: 'وكيل تجاري',
-    reception: 'استقبال',
+    reception: 'الاستقبال',
   },
 
   // Types d'unités
@@ -286,7 +290,6 @@ export const ar = {
     charges: 'المصاريف',
     notes: 'الملاحظات',
     tasks: 'المهام',
-    auto_tasks: 'متابعة 360',
     history: 'السجل',
   },
 

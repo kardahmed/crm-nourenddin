@@ -15,6 +15,8 @@ import {
   Archive,
   Image as ImageIcon,
   Clock,
+  Upload,
+  X as XIcon,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -26,6 +28,9 @@ import { Separator } from '@/components/ui/separator'
 import { formatPrice, formatPriceCompact } from '@/lib/constants'
 import { HISTORY_TYPE_LABELS } from '@/types'
 import { UnitComparator } from './components/UnitComparator'
+import { CsvImportModal } from '@/components/common/CsvImportModal'
+import { UNIT_IMPORT_FIELDS } from './unitImportFields'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Unit, HistoryType } from '@/types'
 import { format, formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
@@ -65,6 +70,70 @@ export function ProjectDetailPage() {
   const [editLocation, setEditLocation] = useState('')
   const [compareIds, setCompareIds] = useState<string[]>([])
   const [showComparator, setShowComparator] = useState(false)
+  const [uploading, setUploading] = useState<'cover' | 'gallery' | null>(null)
+  const [showImportUnits, setShowImportUnits] = useState(false)
+  const qc = useQueryClient()
+
+  async function uploadImage(file: File): Promise<string | null> {
+    if (!projectId) return null
+    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
+    if (!['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext)) {
+      toast.error('Format non supporté (JPG, PNG, WEBP ou GIF uniquement)')
+      return null
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 5 Mo)')
+      return null
+    }
+    const path = `projects/${projectId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const { error } = await supabase.storage.from('landing-assets').upload(path, file, { upsert: false })
+    if (error) {
+      toast.error(`Erreur upload : ${error.message}`)
+      return null
+    }
+    const { data: urlData } = supabase.storage.from('landing-assets').getPublicUrl(path)
+    return urlData.publicUrl
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file || !projectId) return
+    setUploading('cover')
+    const url = await uploadImage(file)
+    if (url) {
+      await updateProject.mutateAsync({ id: projectId, cover_url: url } as never)
+      toast.success('Image de couverture mise à jour')
+    }
+    setUploading(null)
+  }
+
+  async function handleGalleryUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    e.target.value = ''
+    if (!files.length || !projectId) return
+    setUploading('gallery')
+    const urls: string[] = []
+    for (const file of files) {
+      const url = await uploadImage(file)
+      if (url) urls.push(url)
+    }
+    if (urls.length && project) {
+      const current = (project.gallery_urls ?? []) as string[]
+      await updateProject.mutateAsync({ id: projectId, gallery_urls: [...current, ...urls] } as never)
+      toast.success(`${urls.length} image(s) ajoutée(s)`)
+    }
+    setUploading(null)
+  }
+
+  async function removeGalleryImage(url: string) {
+    if (!projectId || !project) return
+    const current = (project.gallery_urls ?? []) as string[]
+    const next = current.filter((u) => u !== url)
+    await updateProject.mutateAsync({ id: projectId, gallery_urls: next } as never)
+    setGalleryIndex(0)
+    toast.success('Image retirée')
+  }
 
   // Fetch project with units
   const { data: project, isLoading } = useQuery({
@@ -175,8 +244,8 @@ export function ProjectDetailPage() {
           <div>
             {editMode ? (
               <div className="space-y-2">
-                <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nom du projet" className="h-9 w-[300px] border-immo-border-default text-sm" />
-                <Input value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Localisation" className="h-9 w-[300px] border-immo-border-default text-sm" />
+                <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nom du projet" className="h-9 w-full border-immo-border-default text-sm sm:w-[300px]" />
+                <Input value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Localisation" className="h-9 w-full border-immo-border-default text-sm sm:w-[300px]" />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={async () => {
                     await updateProject.mutateAsync({ id: project.id, name: editName, location: editLocation })
@@ -243,6 +312,42 @@ export function ProjectDetailPage() {
                   <ImageIcon className="h-12 w-12" />
                   <span className="text-sm">Aucune photo</span>
                 </div>
+              )}
+
+              {/* Admin controls overlay */}
+              {canManageProjects && (
+                <div className="absolute right-3 top-3 flex gap-2">
+                  <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur hover:bg-black/80">
+                    {uploading === 'cover' ? (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    )}
+                    Couverture
+                    <input type="file" accept="image/*" onChange={handleCoverUpload} className="hidden" disabled={uploading !== null} />
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur hover:bg-black/80">
+                    {uploading === 'gallery' ? (
+                      <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Upload className="h-3.5 w-3.5" />
+                    )}
+                    Ajouter
+                    <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" disabled={uploading !== null} />
+                  </label>
+                </div>
+              )}
+
+              {/* Remove current image button (admin + gallery image) */}
+              {canManageProjects && gallery.length > 0 && gallery[galleryIndex] && (
+                <button
+                  onClick={() => removeGalleryImage(gallery[galleryIndex])}
+                  className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-lg bg-black/60 px-2.5 py-1.5 text-[11px] font-medium text-white backdrop-blur hover:bg-immo-status-red/90"
+                  title="Retirer cette photo"
+                >
+                  <XIcon className="h-3.5 w-3.5" />
+                  Retirer
+                </button>
               )}
             </div>
             {/* Thumbnails */}
@@ -322,15 +427,28 @@ export function ProjectDetailPage() {
           <h3 className="text-sm font-semibold text-immo-text-primary">
             Biens du projet ({units.length})
           </h3>
-          {compareIds.length >= 2 && (
-            <Button
-              size="sm"
-              onClick={() => setShowComparator(true)}
-              className="bg-immo-accent-green text-white text-xs"
-            >
-              Comparer ({compareIds.length})
-            </Button>
-          )}
+          <div className="flex items-center gap-2">
+            {canManageProjects && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowImportUnits(true)}
+                className="border border-immo-border-default text-immo-text-secondary text-xs hover:bg-immo-bg-card-hover"
+                title="Importer des biens depuis un CSV"
+              >
+                <Upload className="mr-1.5 h-3.5 w-3.5" /> Importer CSV
+              </Button>
+            )}
+            {compareIds.length >= 2 && (
+              <Button
+                size="sm"
+                onClick={() => setShowComparator(true)}
+                className="bg-immo-accent-green text-white text-xs"
+              >
+                Comparer ({compareIds.length})
+              </Button>
+            )}
+          </div>
         </div>
         {units.length === 0 ? (
           <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-12 text-center text-sm text-immo-text-muted">
@@ -396,6 +514,22 @@ export function ProjectDetailPage() {
             />
           </div>
         )}
+
+        {/* Unit CSV Import — scoped to the current project */}
+        <CsvImportModal
+          isOpen={showImportUnits}
+          onClose={() => setShowImportUnits(false)}
+          title={`Importer des biens — ${project.name}`}
+          subtitle="Les biens importés seront rattachés à ce projet"
+          table="units"
+          fields={UNIT_IMPORT_FIELDS}
+          templateName={`biens-${project.code ?? 'projet'}`}
+          defaults={() => ({ project_id: projectId })}
+          onSuccess={() => {
+            qc.invalidateQueries({ queryKey: ['project-detail', projectId] })
+            qc.invalidateQueries({ queryKey: ['units'] })
+          }}
+        />
       </div>
 
       {/* Activity history */}

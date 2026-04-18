@@ -2,15 +2,15 @@ import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
-  Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal,
+  Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal, Archive,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
-  KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, ConfirmDialog,
+  KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, UserAvatar,
 } from '@/components/common'
+import { TransferAgentModal } from './components/TransferAgentModal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { USER_ROLE_LABELS } from '@/types'
 import type { UserRole } from '@/types'
-import { usePlanEnforcement } from '@/hooks/usePlanEnforcement'
 import { PermissionProfilesSection } from '@/pages/settings/sections/PermissionProfilesSection'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -36,36 +35,31 @@ interface AgentRow {
   role: UserRole
   status: string
   last_activity: string | null
+  archived_at: string | null
+  avatar_url: string | null
   clients_count: number
   sales_count: number
 }
 
-function nameToColor(name: string): string {
-  const C = ['#00D4A0', '#3782FF', '#FF9A1E', '#A855F7', '#06B6D4', '#EAB308', '#F97316', '#EC4899']
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
-  return C[Math.abs(h) % C.length]
-}
-
 export function AgentsPage() {
   const navigate = useNavigate()
-  const { tenantId } = useAuthStore()
   const { canManageAgents } = usePermissions()
-  const { canAddAgent } = usePlanEnforcement()
-  const qc = useQueryClient()
 
+  const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<'agents' | 'permissions'>('agents')
+  const [showArchived, setShowArchived] = useState(false)
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
+  const [archiveId, setArchiveId] = useState<string | null>(null)
 
   // Fetch agents with counts
   const { data: agents = [], isLoading } = useQuery({
-    queryKey: ['agents-list', tenantId],
+    queryKey: ['agents-list'],
     queryFn: async () => {
       const { data: users, error } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email, phone, role, status, last_activity')
+        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url')
         .order('first_name')
       if (error) { handleSupabaseError(error); throw error }
 
@@ -93,36 +87,55 @@ export function AgentsPage() {
         sales_count: saleCounts.get(u.id) ?? 0,
       }))
     },
-    enabled: !!tenantId,
   })
 
   // Deactivate agent
-  const deactivate = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from('users').update({ status: 'inactive' } as never).eq('id', id)
-      if (error) { handleSupabaseError(error); throw error }
+  const deactivateAgent = useMemo(
+    () => agents.find(a => a.id === deactivateId) ?? null,
+    [agents, deactivateId],
+  )
+  const archiveAgentRow = useMemo(
+    () => agents.find(a => a.id === archiveId) ?? null,
+    [agents, archiveId],
+  )
+
+  // Archive mutation — hits the archive_agent RPC which validates
+  // that the user is already inactive and owns nothing.
+  const archive = useMutation({
+    mutationFn: async (userId: string) => {
+      const { error } = await supabase.rpc('archive_agent' as never, { p_agent_id: userId } as never)
+      if (error) throw error
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
-      toast.success('Agent désactivé')
-      setDeactivateId(null)
+      toast.success('Utilisateur archivé. Historique conservé.')
+      setArchiveId(null)
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : 'Échec de l\'archivage')
     },
   })
 
-  // KPIs
-  const total = agents.length
+  // KPIs (computed on the full, unfiltered list so archived users
+  // don't distort the "inactif" count)
+  const nonArchived = agents.filter(a => a.status !== 'archived')
+  const total = nonArchived.length
   const active = agents.filter(a => a.status === 'active').length
   const inactive = agents.filter(a => a.status === 'inactive').length
+  const archivedCount = agents.filter(a => a.status === 'archived').length
   const totalClients = agents.reduce((s, a) => s + a.clients_count, 0)
 
-  // Filter
+  // Filter: hide archived by default; `showArchived` flips to archived-only.
   const filtered = useMemo(() => {
-    if (!search) return agents
+    const base = showArchived
+      ? agents.filter(a => a.status === 'archived')
+      : agents.filter(a => a.status !== 'archived')
+    if (!search) return base
     const q = search.toLowerCase()
-    return agents.filter(a =>
+    return base.filter(a =>
       `${a.first_name} ${a.last_name}`.toLowerCase().includes(q) || a.email.toLowerCase().includes(q)
     )
-  }, [agents, search])
+  }, [agents, search, showArchived])
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 
@@ -151,18 +164,27 @@ export function AgentsPage() {
         <KPICard label="Total agents" value={total} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
         <KPICard label="Actifs" value={active} accent="green" icon={<UserCheck className="h-4 w-4 text-immo-accent-green" />} />
         <KPICard label="Inactifs" value={inactive} accent="red" icon={<UserX className="h-4 w-4 text-immo-status-red" />} />
-        <KPICard label="Clients assignés" value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={archivedCount > 0 ? `Archivés (${archivedCount})` : 'Clients assignés'} value={archivedCount > 0 ? archivedCount : totalClients} accent="blue" icon={archivedCount > 0 ? <Archive className="h-4 w-4 text-immo-accent-blue" /> : <Users className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3">
-        <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-[260px]" />
-        {canManageAgents && (
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-full sm:w-[260px]" />
+        <button
+          onClick={() => setShowArchived(v => !v)}
+          className={`flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors ${
+            showArchived
+              ? 'border-immo-accent-blue bg-immo-accent-blue/10 text-immo-accent-blue'
+              : 'border-immo-border-default text-immo-text-muted hover:text-immo-text-primary'
+          }`}
+        >
+          <Archive className="h-3.5 w-3.5" />
+          {showArchived ? `Archivés (${archivedCount})` : 'Voir archivés'}
+        </button>
+        {canManageAgents && !showArchived && (
           <Button
             onClick={() => setShowCreate(true)}
-            disabled={!canAddAgent}
-            className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={!canAddAgent ? 'Limite atteinte — Passez au plan superieur' : undefined}
+            className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
           >
             <Plus className="mr-1.5 h-4 w-4" /> Ajouter un agent
           </Button>
@@ -183,17 +205,18 @@ export function AgentsPage() {
             <tbody className="divide-y divide-immo-border-default">
               {filtered.map(a => {
                 const fullName = `${a.first_name} ${a.last_name}`
-                const color = nameToColor(fullName)
-                const initials = `${a.first_name[0]}${a.last_name[0]}`.toUpperCase()
                 const inactiveLong = a.last_activity && (Date.now() - new Date(a.last_activity).getTime()) > 7 * 86400000
 
                 return (
                   <tr key={a.id} className="bg-immo-bg-card transition-colors hover:bg-immo-bg-card-hover">
                     <td className="whitespace-nowrap px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold" style={{ backgroundColor: color + '20', color }}>
-                          {initials}
-                        </div>
+                        <UserAvatar
+                          firstName={a.first_name}
+                          lastName={a.last_name}
+                          avatarUrl={a.avatar_url}
+                          size="sm"
+                        />
                         <span className="text-sm font-medium text-immo-text-primary">{fullName}</span>
                       </div>
                     </td>
@@ -208,7 +231,22 @@ export function AgentsPage() {
                       </span>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <StatusBadge label={a.status === 'active' ? 'Actif' : 'Inactif'} type={a.status === 'active' ? 'green' : 'red'} />
+                      <StatusBadge
+                        label={
+                          a.status === 'active'
+                            ? 'Actif'
+                            : a.status === 'archived'
+                              ? 'Archivé'
+                              : 'Inactif'
+                        }
+                        type={
+                          a.status === 'active'
+                            ? 'green'
+                            : a.status === 'archived'
+                              ? 'muted'
+                              : 'red'
+                        }
+                      />
                     </td>
                     <td className="whitespace-nowrap px-4 py-2">
                       <DropdownMenu>
@@ -227,6 +265,11 @@ export function AgentsPage() {
                               <Ban className="mr-2 h-3.5 w-3.5" /> Désactiver
                             </DropdownMenuItem>
                           )}
+                          {a.status === 'inactive' && canManageAgents && (
+                            <DropdownMenuItem onClick={() => setArchiveId(a.id)} className="text-sm text-immo-text-muted focus:bg-immo-bg-card-hover">
+                              <Archive className="mr-2 h-3.5 w-3.5" /> Archiver définitivement
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </td>
@@ -239,19 +282,53 @@ export function AgentsPage() {
       </div>
 
       {/* Create modal */}
-      <CreateAgentModal isOpen={showCreate} onClose={() => setShowCreate(false)} tenantId={tenantId!} />
+      <CreateAgentModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
 
-      {/* Deactivate confirm */}
-      <ConfirmDialog
+      {/* Transfer + deactivate */}
+      <TransferAgentModal
         isOpen={!!deactivateId}
         onClose={() => setDeactivateId(null)}
-        onConfirm={() => deactivateId && deactivate.mutate(deactivateId)}
-        title="Désactiver cet agent ?"
-        description="L'agent ne pourra plus se connecter. Ses données seront conservées."
-        confirmLabel="Désactiver"
-        confirmVariant="danger"
-        loading={deactivate.isPending}
+        agentId={deactivateId}
+        agentName={deactivateAgent ? `${deactivateAgent.first_name} ${deactivateAgent.last_name}` : ''}
       />
+
+      {/* Archive confirmation */}
+      <Modal
+        isOpen={!!archiveId}
+        onClose={() => (!archive.isPending ? setArchiveId(null) : undefined)}
+        title="Archiver définitivement"
+        subtitle={archiveAgentRow ? `${archiveAgentRow.first_name} ${archiveAgentRow.last_name}` : ''}
+        size="sm"
+      >
+        <div className="space-y-4">
+          <div className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3 text-[12px] leading-relaxed text-immo-text-primary">
+            <p className="mb-2 font-medium">L'archivage est définitif. Ce que cela implique:</p>
+            <ul className="list-disc space-y-1 pl-5 text-immo-text-secondary">
+              <li>Le compte disparaît de la liste principale (visible uniquement dans "Archivés").</li>
+              <li>Toutes les ventes, visites, appels et historique passés restent visibles au nom de cet utilisateur.</li>
+              <li>Aucune réactivation prévue. Si la personne revient, crée un nouveau compte.</li>
+            </ul>
+          </div>
+          <div className="flex justify-end gap-2 border-t border-immo-border-default pt-4">
+            <Button variant="ghost" onClick={() => setArchiveId(null)} disabled={archive.isPending}>
+              Annuler
+            </Button>
+            <Button
+              onClick={() => archiveId && archive.mutate(archiveId)}
+              disabled={archive.isPending}
+              className="bg-immo-text-muted font-semibold text-immo-bg-primary hover:bg-immo-text-muted/90"
+            >
+              {archive.isPending ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
+              ) : (
+                <>
+                  <Archive className="mr-1.5 h-4 w-4" /> Archiver
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      </Modal>
       </>
       )}
     </div>
@@ -260,55 +337,63 @@ export function AgentsPage() {
 
 /* ═══ Create Agent Modal ═══ */
 
-function CreateAgentModal({ isOpen, onClose, tenantId }: { isOpen: boolean; onClose: () => void; tenantId: string }) {
+function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const qc = useQueryClient()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
-  const [role, setRole] = useState<'admin' | 'agent'>('agent')
+  const [role, setRole] = useState<'admin' | 'agent' | 'reception'>('agent')
 
   const create = useMutation({
     mutationFn: async () => {
-      // Generate temp password
-      const tempPassword = `Immo${Date.now().toString(36).slice(-6)}!`
-
-      // Create auth user via Supabase
-      const { data: authData, error: authErr } = await supabase.auth.signUp({
-        email,
-        password: tempPassword,
-        options: { data: { first_name: firstName, last_name: lastName } },
+      const { data, error } = await supabase.functions.invoke('create-user', {
+        body: { email, first_name: firstName, last_name: lastName, phone: phone || null, role },
       })
-      if (authErr) { handleSupabaseError(authErr); throw authErr }
-      if (!authData.user) throw new Error('User creation failed')
-
-      // Insert in users table
-      const { error: userErr } = await supabase.from('users').insert({
-        id: authData.user.id,
-        tenant_id: tenantId,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone: phone || null,
-        role,
-        status: 'active',
-      } as never)
-      if (userErr) { handleSupabaseError(userErr); throw userErr }
+      if (error) {
+        // Extract the actual error body from the edge function response.
+        // supabase-js wraps non-2xx responses in a FunctionsHttpError whose
+        // `context` is the raw Response — we parse it to surface the real
+        // server-side message instead of "non-2xx status code".
+        try {
+          const ctx = (error as unknown as { context?: Response }).context
+          if (ctx && typeof ctx.json === 'function') {
+            const body = await ctx.json()
+            if (body?.error) throw new Error(body.error)
+          }
+        } catch (parseErr) {
+          if (parseErr instanceof Error && parseErr.message) throw parseErr
+        }
+        throw error
+      }
+      const payload = data as { error?: string; user_id?: string; invitation_sent?: boolean }
+      if (payload?.error) throw new Error(payload.error)
+      if (!payload?.user_id) throw new Error('Réponse serveur invalide')
+      return payload as { user_id: string; invitation_sent: boolean }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
-      toast.success('Agent créé — un email de bienvenue a été envoyé')
+      const roleLabel = role === 'reception' ? 'Compte réception' : role === 'admin' ? 'Admin' : 'Agent'
+      toast.success(
+        data.invitation_sent
+          ? `${roleLabel} créé. Email d'invitation envoyé à ${email} — il définira son mot de passe en cliquant sur le lien.`
+          : `${roleLabel} créé, mais l'envoi de l'email d'invitation a échoué. Demandez-lui d'utiliser "Mot de passe oublié" sur la page de connexion.`,
+        { duration: 15000 },
+      )
       resetAndClose()
+    },
+    onError: (err) => {
+      toast.error((err as Error).message)
     },
   })
 
   function resetAndClose() {
-    setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setRole('agent')
+    setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setRole('agent' as 'admin' | 'agent' | 'reception')
     onClose()
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={resetAndClose} title="Ajouter un agent" subtitle="Créer un nouveau compte agent" size="sm">
+    <Modal isOpen={isOpen} onClose={resetAndClose} title="Ajouter un utilisateur" subtitle="Créer un compte agent, réception ou administrateur" size="sm">
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -330,10 +415,16 @@ function CreateAgentModal({ isOpen, onClose, tenantId }: { isOpen: boolean; onCl
         </div>
         <div>
           <Label className="text-[11px] font-medium text-immo-text-muted">Rôle *</Label>
-          <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'agent')} className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
+          <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'agent' | 'reception')} className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
             <option value="agent">Agent commercial</option>
+            <option value="reception">Réception</option>
             <option value="admin">Administrateur</option>
           </select>
+          {role === 'reception' && (
+            <p className="mt-1 text-[11px] text-immo-text-muted">
+              Accès limité à la réception: saisie de leads, accueil des visites, assignation aux agents. Ne voit pas les ventes, réservations ni le pipeline commercial.
+            </p>
+          )}
         </div>
         <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
           <Button variant="ghost" onClick={resetAndClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">Annuler</Button>

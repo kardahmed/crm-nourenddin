@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useAuth } from '@/hooks/useAuth'
 import { useTranslation } from 'react-i18next'
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Check, BarChart3, Globe, Zap, Shield, Star, ArrowLeft } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, Check, BarChart3, Globe, Zap, Shield, Star } from 'lucide-react'
 
 const schema = z.object({
   email: z.string().min(1, 'Email requis').email('Email invalide'),
@@ -32,12 +32,13 @@ export function LoginPage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  if (isAuthenticated && role) {
-    navigate('/dashboard', { replace: true })
-    return null
-  }
+  useEffect(() => {
+    if (isAuthenticated && role) {
+      navigate(role === 'reception' ? '/reception' : '/dashboard', { replace: true })
+    }
+  }, [isAuthenticated, role, navigate])
 
-  if (isAuthenticated && !role) {
+  if (isAuthenticated) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#F6F9FC]">
         <div className="flex flex-col items-center gap-4">
@@ -66,9 +67,6 @@ export function LoginPage() {
         <div style={{position:'absolute',bottom:'-80px',left:'-80px',width:'250px',height:'250px',borderRadius:'50%',background:'rgba(6,182,212,.15)',filter:'blur(60px)'}} />
 
         <div style={{position:'relative',zIndex:1}}>
-          <a href="/marketing/index.html" className="mb-8 flex items-center gap-2 text-[11px] text-white/40 hover:text-white/70 transition-colors">
-            <ArrowLeft className="h-3 w-3" /> Retour au site
-          </a>
           <div className="flex items-center gap-3">
             <img src="/logo-180.png" alt="IMMO PRO-X" className="h-12 w-12" />
             <div>
@@ -120,14 +118,9 @@ export function LoginPage() {
       <div className="flex flex-1 items-center justify-center bg-[#F6F9FC] px-4">
         <div className="w-full max-w-[420px]">
           {/* Mobile header */}
-          <div className="mb-6 lg:hidden">
-            <a href="/marketing/index.html" className="mb-4 flex items-center gap-1.5 text-[11px] text-[#8898AA] hover:text-[#0579DA]">
-              <ArrowLeft className="h-3 w-3" /> Retour au site
-            </a>
-            <div className="flex items-center justify-center gap-3">
-              <img src="/logo-180.png" alt="" className="h-10 w-10" />
-              <span className="text-lg" style={{fontWeight:800,color:'#0A2540'}}>IMMO PRO-X</span>
-            </div>
+          <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+            <img src="/logo-180.png" alt="" className="h-10 w-10" />
+            <span className="text-lg" style={{fontWeight:800,color:'#0A2540'}}>IMMO PRO-X</span>
           </div>
 
           <div className="rounded-2xl border border-[#E3E8EF] bg-white p-8 shadow-xl shadow-black/[0.03] sm:p-10">
@@ -172,9 +165,9 @@ export function LoginPage() {
                   <label htmlFor="password" className="text-[12px] text-[#425466]" style={{fontWeight:600}}>
                     {t('login.password_label')}
                   </label>
-                  <button type="button" className="text-[11px] text-[#0579DA] hover:underline" style={{fontWeight:600}}>
+                  <Link to="/forgot-password" className="text-[11px] text-[#0579DA] hover:underline" style={{fontWeight:600}}>
                     Mot de passe oublie ?
-                  </button>
+                  </Link>
                 </div>
                 <div className="relative">
                   <Lock className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#8898AA]" />
@@ -212,19 +205,6 @@ export function LoginPage() {
               </button>
             </form>
 
-            {/* Sign up */}
-            <p className="mt-6 text-center text-[13px] text-[#8898AA]">
-              Pas encore de compte ? <Link to="/register" className="text-[#0579DA] hover:underline" style={{fontWeight:600}}>S'inscrire gratuitement</Link>
-            </p>
-          </div>
-
-          {/* Legal footer */}
-          <div className="mt-4 flex justify-center gap-4 text-[10px] text-[#B0BAC5]">
-            <a href="/marketing/cgu.html" className="hover:text-[#425466]">CGU</a>
-            <span>·</span>
-            <a href="/marketing/confidentialite.html" className="hover:text-[#425466]">Confidentialite</a>
-            <span>·</span>
-            <a href="/marketing/contact.html" className="hover:text-[#425466]">Contact</a>
           </div>
         </div>
       </div>

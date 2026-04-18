@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useTenant } from './useTenant'
 import toast from 'react-hot-toast'
 import type { Database, UnitStatus, UnitType } from '@/types'
 
@@ -15,11 +14,10 @@ interface UnitFilters {
 }
 
 export function useUnits(filters?: UnitFilters) {
-  const tenantId = useTenant()
   const qc = useQueryClient()
 
   const unitsQuery = useQuery({
-    queryKey: ['units', tenantId, filters],
+    queryKey: ['units', filters],
     queryFn: async () => {
       let query = supabase
         .from('units')
@@ -37,10 +35,10 @@ export function useUnits(filters?: UnitFilters) {
   })
 
   const createUnit = useMutation({
-    mutationFn: async (input: Omit<UnitInsert, 'tenant_id'>) => {
+    mutationFn: async (input: UnitInsert) => {
       const { data, error } = await supabase
         .from('units')
-        .insert({ ...input, tenant_id: tenantId })
+        .insert(input)
         .select()
         .single()
 
@@ -99,10 +97,10 @@ export function useUnits(filters?: UnitFilters) {
   }
 }
 
-/** Standalone hook for fetching units by project (defense-in-depth with tenant_id) */
-export function useUnitsByProject(projectId: string, tenantId: string) {
+/** Standalone hook for fetching units by project */
+export function useUnitsByProject(projectId: string) {
   return useQuery({
-    queryKey: ['units', 'project', projectId, tenantId],
+    queryKey: ['units', 'project', projectId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('units')
@@ -113,6 +111,6 @@ export function useUnitsByProject(projectId: string, tenantId: string) {
       if (error) { handleSupabaseError(error); throw error }
       return data
     },
-    enabled: !!projectId && !!tenantId,
+    enabled: !!projectId,
   })
 }

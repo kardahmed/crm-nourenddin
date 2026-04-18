@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { Bell, CheckCheck, CreditCard, Clock, Users, AlertTriangle } from 'lucide-react'
+import { Bell, CheckCheck, CreditCard, Clock, Users, AlertTriangle, BellRing } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
+import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import toast from 'react-hot-toast'
 
 interface Notification {
   id: string
@@ -30,7 +31,8 @@ const TYPE_COLORS: Record<string, string> = {
 export function NotificationBell() {
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const tenantId = useAuthStore(s => s.tenantId)
+  const { permission, enablePush, isSupported } = usePushNotifications()
+
   const qc = useQueryClient()
 
   useEffect(() => {
@@ -42,9 +44,8 @@ export function NotificationBell() {
   }, [])
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ['tenant-notifications', tenantId],
+    queryKey: ['tenant-notifications'],
     queryFn: async () => {
-      if (!tenantId) return []
       const { data } = await supabase
         .from('notifications')
         .select('id, type, title, message, read, created_at')
@@ -52,15 +53,15 @@ export function NotificationBell() {
         .limit(20)
       return (data ?? []) as Notification[]
     },
-    enabled: !!tenantId,
-    refetchInterval: 60_000,
+    enabled: open,
+    refetchOnWindowFocus: false,
   })
 
   const unread = notifications.filter(n => !n.read).length
 
   const markAllRead = useMutation({
     mutationFn: async () => {
-      if (!tenantId) return
+      
       await supabase.from('notifications').update({ read: true } as never).eq('read', false)
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tenant-notifications'] }),
@@ -78,7 +79,7 @@ export function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-50 mt-2 w-[360px] rounded-xl border border-immo-border-default bg-immo-bg-card shadow-lg">
+        <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-1.5rem)] max-w-[360px] rounded-xl border border-immo-border-default bg-immo-bg-card shadow-lg sm:w-[360px]">
           <div className="flex items-center justify-between border-b border-immo-border-default px-4 py-3">
             <h3 className="text-sm font-semibold text-immo-text-primary">Notifications</h3>
             {unread > 0 && (
@@ -87,6 +88,19 @@ export function NotificationBell() {
               </button>
             )}
           </div>
+          {isSupported && permission !== 'granted' && (
+            <button
+              onClick={async () => {
+                const result = await enablePush()
+                if (result === 'granted') toast.success('Notifications activées sur cet appareil')
+                else if (result === 'denied') toast.error('Notifications bloquées dans le navigateur')
+              }}
+              className="flex w-full items-center gap-2 border-b border-immo-border-default bg-immo-accent-green/5 px-4 py-2.5 text-left text-[11px] text-immo-accent-green hover:bg-immo-accent-green/10"
+            >
+              <BellRing className="h-3.5 w-3.5" />
+              Activer les notifications push pour cet appareil
+            </button>
+          )}
           <div className="max-h-[400px] divide-y divide-immo-border-default overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-xs text-immo-text-muted">Aucune notification</div>

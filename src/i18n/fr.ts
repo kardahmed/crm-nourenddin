@@ -1,6 +1,8 @@
 export const fr = {
   // Navigation
   nav: {
+    reception: 'Réception',
+    today: "À faire",
     dashboard: 'Dashboard',
     projects: 'Projets',
     pipeline: 'Pipeline',
@@ -14,11 +16,13 @@ export const fr = {
     tasks: 'Tâches',
     marketing_roi: 'ROI Marketing',
     settings: 'Paramètres',
+    profile: 'Mon profil',
   },
 
   // Page meta
   page: {
     dashboard_subtitle: "Vue d'ensemble de votre activité",
+    today_subtitle: "Tes visites, tâches et relances du jour",
     projects_subtitle: 'Gestion des programmes immobiliers',
     pipeline_subtitle: 'Suivi des clients par étape',
     planning_subtitle: 'Visites et rendez-vous',
@@ -28,6 +32,7 @@ export const fr = {
     agents_subtitle: "Gestion de l'équipe commerciale",
     reports_subtitle: 'Rapports et statistiques',
     settings_subtitle: "Configuration de l'agence",
+    profile_subtitle: 'Vos informations et sécurité du compte',
   },
 
   // Actions
@@ -116,10 +121,9 @@ export const fr = {
 
   // Rôles
   role: {
-    super_admin: 'Super Admin',
     admin: 'Administrateur',
     agent: 'Agent commercial',
-    reception: 'Reception',
+    reception: 'Réception',
   },
 
   // Types d'unités
@@ -286,7 +290,6 @@ export const fr = {
     charges: 'Charges',
     notes: 'Notes',
     tasks: 'Tâches',
-    auto_tasks: 'Suivi 360',
     history: 'Historique',
   },
 

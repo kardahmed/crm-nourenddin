@@ -1,3 +1,5 @@
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
 export type Database = {
   public: {
     Tables: {
@@ -40,7 +42,6 @@ export type Database = {
       users: {
         Row: {
           id: string
-          tenant_id: string | null
           first_name: string
           last_name: string
           email: string
@@ -48,11 +49,14 @@ export type Database = {
           role: UserRole
           status: UserStatus
           last_activity: string | null
+          avatar_url: string | null
+          must_change_password: boolean
+          archived_at: string | null
+          permission_profile_id: string | null
           created_at: string
         }
         Insert: {
           id: string
-          tenant_id?: string | null
           first_name: string
           last_name: string
           email: string
@@ -60,11 +64,14 @@ export type Database = {
           role?: UserRole
           status?: UserStatus
           last_activity?: string | null
+          avatar_url?: string | null
+          must_change_password?: boolean
+          archived_at?: string | null
+          permission_profile_id?: string | null
           created_at?: string
         }
         Update: {
           id?: string
-          tenant_id?: string | null
           first_name?: string
           last_name?: string
           email?: string
@@ -72,6 +79,10 @@ export type Database = {
           role?: UserRole
           status?: UserStatus
           last_activity?: string | null
+          avatar_url?: string | null
+          must_change_password?: boolean
+          archived_at?: string | null
+          permission_profile_id?: string | null
           created_at?: string
         }
         Relationships: []
@@ -79,7 +90,6 @@ export type Database = {
       projects: {
         Row: {
           id: string
-          tenant_id: string
           code: string
           name: string
           description: string | null
@@ -93,7 +103,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           code: string
           name: string
           description?: string | null
@@ -107,7 +116,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           code?: string
           name?: string
           description?: string | null
@@ -124,7 +132,6 @@ export type Database = {
       units: {
         Row: {
           id: string
-          tenant_id: string
           project_id: string
           code: string
           type: UnitType
@@ -142,7 +149,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           project_id: string
           code: string
           type?: UnitType
@@ -160,7 +166,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           project_id?: string
           code?: string
           type?: UnitType
@@ -181,7 +186,6 @@ export type Database = {
       clients: {
         Row: {
           id: string
-          tenant_id: string
           agent_id: string | null
           full_name: string
           phone: string
@@ -210,7 +214,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           agent_id?: string | null
           full_name: string
           phone: string
@@ -239,7 +242,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           agent_id?: string | null
           full_name?: string
           phone?: string
@@ -271,7 +273,6 @@ export type Database = {
       visits: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string | null
@@ -283,7 +284,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id?: string | null
@@ -295,7 +295,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string
           project_id?: string | null
@@ -310,7 +309,6 @@ export type Database = {
       reservations: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -326,7 +324,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -342,7 +339,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string
           project_id?: string
@@ -361,7 +357,6 @@ export type Database = {
       sales: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -379,7 +374,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id: string
           project_id: string
@@ -397,7 +391,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string
           project_id?: string
@@ -418,7 +411,6 @@ export type Database = {
       payment_schedules: {
         Row: {
           id: string
-          tenant_id: string
           sale_id: string
           installment_number: number
           due_date: string
@@ -430,7 +422,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           sale_id: string
           installment_number: number
           due_date: string
@@ -442,7 +433,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           sale_id?: string
           installment_number?: number
           due_date?: string
@@ -457,7 +447,6 @@ export type Database = {
       charges: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           sale_id: string | null
           label: string
@@ -470,7 +459,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           sale_id?: string | null
           label: string
@@ -483,7 +471,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           sale_id?: string | null
           label?: string
@@ -499,7 +486,6 @@ export type Database = {
       sale_amenities: {
         Row: {
           id: string
-          tenant_id: string
           sale_id: string
           description: string
           price: number
@@ -507,7 +493,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           sale_id: string
           description: string
           price?: number
@@ -515,7 +500,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           sale_id?: string
           description?: string
           price?: number
@@ -526,7 +510,6 @@ export type Database = {
       history: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string | null
           type: HistoryType
@@ -537,7 +520,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id?: string | null
           type: HistoryType
@@ -548,7 +530,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string | null
           type?: HistoryType
@@ -562,7 +543,6 @@ export type Database = {
       tasks: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           agent_id: string | null
           title: string
@@ -573,7 +553,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           agent_id?: string | null
           title: string
@@ -584,7 +563,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           agent_id?: string | null
           title?: string
@@ -598,7 +576,6 @@ export type Database = {
       documents: {
         Row: {
           id: string
-          tenant_id: string
           client_id: string
           sale_id: string | null
           type: DocType
@@ -609,7 +586,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           client_id: string
           sale_id?: string | null
           type?: DocType
@@ -620,7 +596,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           client_id?: string
           sale_id?: string | null
           type?: DocType
@@ -634,7 +609,6 @@ export type Database = {
       agent_goals: {
         Row: {
           id: string
-          tenant_id: string
           agent_id: string
           metric: GoalMetric
           period: GoalPeriod
@@ -647,7 +621,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           agent_id: string
           metric: GoalMetric
           period?: GoalPeriod
@@ -660,7 +633,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           agent_id?: string
           metric?: GoalMetric
           period?: GoalPeriod
@@ -676,7 +648,6 @@ export type Database = {
       tenant_settings: {
         Row: {
           id: string
-          tenant_id: string
           urgent_alert_days: number
           relaunch_alert_days: number
           reservation_duration_days: number
@@ -692,7 +663,6 @@ export type Database = {
         }
         Insert: {
           id?: string
-          tenant_id: string
           urgent_alert_days?: number
           relaunch_alert_days?: number
           reservation_duration_days?: number
@@ -708,7 +678,6 @@ export type Database = {
         }
         Update: {
           id?: string
-          tenant_id?: string
           urgent_alert_days?: number
           relaunch_alert_days?: number
           reservation_duration_days?: number
@@ -727,24 +696,215 @@ export type Database = {
       document_templates: {
         Row: {
           id: string
-          tenant_id: string
           type: DocType
           content: string
           updated_at: string
         }
         Insert: {
           id?: string
-          tenant_id: string
           type: DocType
           content?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          tenant_id?: string
           type?: DocType
           content?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      email_templates: {
+        Row: {
+          id: string
+          tenant_id: string
+          name: string
+          subject: string
+          blocks: Json
+          html_cache: string | null
+          thumbnail_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string
+          name: string
+          subject?: string
+          blocks?: Json
+          html_cache?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          name?: string
+          subject?: string
+          blocks?: Json
+          html_cache?: string | null
+          thumbnail_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      email_campaigns: {
+        Row: {
+          id: string
+          tenant_id: string
+          template_id: string | null
+          name: string
+          subject: string
+          status: string
+          segment_rules: Json
+          scheduled_at: string | null
+          sent_at: string | null
+          total_recipients: number
+          total_sent: number
+          total_opened: number
+          total_clicked: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string
+          template_id?: string | null
+          name: string
+          subject: string
+          status?: string
+          segment_rules?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          total_recipients?: number
+          total_sent?: number
+          total_opened?: number
+          total_clicked?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string
+          template_id?: string | null
+          name?: string
+          subject?: string
+          status?: string
+          segment_rules?: Json
+          scheduled_at?: string | null
+          sent_at?: string | null
+          total_recipients?: number
+          total_sent?: number
+          total_opened?: number
+          total_clicked?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'email_campaigns_template_id_fkey'
+            columns: ['template_id']
+            isOneToOne: false
+            referencedRelation: 'email_templates'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      email_campaign_recipients: {
+        Row: {
+          id: string
+          campaign_id: string
+          client_id: string | null
+          email: string
+          full_name: string | null
+          status: string
+          sent_at: string | null
+          opened_at: string | null
+          clicked_at: string | null
+        }
+        Insert: {
+          id?: string
+          campaign_id: string
+          client_id?: string | null
+          email: string
+          full_name?: string | null
+          status?: string
+          sent_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+        }
+        Update: {
+          id?: string
+          campaign_id?: string
+          client_id?: string | null
+          email?: string
+          full_name?: string | null
+          status?: string
+          sent_at?: string | null
+          opened_at?: string | null
+          clicked_at?: string | null
+        }
+        Relationships: []
+      }
+      email_events: {
+        Row: {
+          id: string
+          campaign_id: string | null
+          recipient_id: string | null
+          event_type: string
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          campaign_id?: string | null
+          recipient_id?: string | null
+          event_type: string
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          campaign_id?: string | null
+          recipient_id?: string | null
+          event_type?: string
+          metadata?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      email_logs: {
+        Row: {
+          id: string
+          tenant_id: string | null
+          template: string | null
+          recipient: string
+          subject: string
+          status: string
+          provider: string | null
+          metadata: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          tenant_id?: string | null
+          template?: string | null
+          recipient: string
+          subject: string
+          status?: string
+          provider?: string | null
+          metadata?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          tenant_id?: string | null
+          template?: string | null
+          recipient?: string
+          subject?: string
+          status?: string
+          provider?: string | null
+          metadata?: Json
+          created_at?: string
         }
         Relationships: []
       }
@@ -785,7 +945,7 @@ export type Database = {
 }
 
 // Enums
-export type UserRole = 'super_admin' | 'admin' | 'agent' | 'reception'
+export type UserRole = 'admin' | 'agent' | 'reception'
 export type UserStatus = 'active' | 'inactive'
 export type ProjectStatus = 'active' | 'inactive' | 'archived'
 export type UnitType = 'apartment' | 'local' | 'villa' | 'parking'
@@ -805,7 +965,7 @@ export type DiscountType = 'percentage' | 'fixed'
 export type SaleStatus = 'active' | 'cancelled'
 export type PaymentStatus = 'pending' | 'paid' | 'late'
 export type ChargeType = 'notaire' | 'agence' | 'promotion' | 'enregistrement' | 'autre'
-export type HistoryType = 'stage_change' | 'visit_planned' | 'visit_confirmed' | 'visit_completed' | 'call' | 'whatsapp_call' | 'whatsapp_message' | 'sms' | 'email' | 'reservation' | 'sale' | 'payment' | 'document' | 'note' | 'ai_task'
+export type HistoryType = 'stage_change' | 'visit_planned' | 'visit_confirmed' | 'visit_completed' | 'call' | 'whatsapp_call' | 'whatsapp_message' | 'sms' | 'email' | 'reservation' | 'sale' | 'payment' | 'document' | 'note' | 'ai_task' | 'client_created' | 'reassignment' | 'priority_change' | 'budget_change'
 export type TaskType = 'ai_generated' | 'manual'
 export type TaskStatus = 'pending' | 'done' | 'ignored'
 export type DocType = 'contrat_vente' | 'echeancier' | 'bon_reservation' | 'cin' | 'autre'
@@ -831,3 +991,8 @@ export type Document = Database['public']['Tables']['documents']['Row']
 export type AgentGoal = Database['public']['Tables']['agent_goals']['Row']
 export type TenantSettings = Database['public']['Tables']['tenant_settings']['Row']
 export type DocumentTemplate = Database['public']['Tables']['document_templates']['Row']
+export type EmailTemplateRow = Database['public']['Tables']['email_templates']['Row']
+export type EmailCampaignRow = Database['public']['Tables']['email_campaigns']['Row']
+export type EmailCampaignRecipientRow = Database['public']['Tables']['email_campaign_recipients']['Row']
+export type EmailEventRow = Database['public']['Tables']['email_events']['Row']
+export type EmailLogRow = Database['public']['Tables']['email_logs']['Row']

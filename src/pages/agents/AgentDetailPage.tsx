@@ -7,7 +7,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
-import { KPICard, StatusBadge, LoadingSpinner } from '@/components/common'
+import { KPICard, StatusBadge, LoadingSpinner, UserAvatar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { USER_ROLE_LABELS, GOAL_METRIC_LABELS, PIPELINE_STAGES, HISTORY_TYPE_LABELS } from '@/types'
@@ -15,13 +15,6 @@ import type { UserRole, GoalMetric, GoalStatus, PipelineStage, HistoryType } fro
 import { formatPriceCompact } from '@/lib/constants'
 import { format, startOfMonth, endOfMonth, formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
-
-function nameToColor(name: string): string {
-  const C = ['#00D4A0', '#3782FF', '#FF9A1E', '#A855F7', '#06B6D4', '#EAB308', '#F97316', '#EC4899']
-  let h = 0
-  for (let i = 0; i < name.length; i++) h = name.charCodeAt(i) + ((h << 5) - h)
-  return C[Math.abs(h) % C.length]
-}
 
 const STATUS_CONFIG: Record<GoalStatus, { label: string; type: 'blue' | 'green' | 'red' }> = {
   in_progress: { label: 'En cours', type: 'blue' },
@@ -45,7 +38,7 @@ export function AgentDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase.from('users').select('*').eq('id', agentId!).single()
       if (error) { handleSupabaseError(error); throw error }
-      return data as { id: string; first_name: string; last_name: string; email: string; phone: string | null; role: UserRole; status: string; last_activity: string | null }
+      return data as { id: string; first_name: string; last_name: string; email: string; phone: string | null; role: UserRole; status: string; last_activity: string | null; avatar_url: string | null }
     },
     enabled: !!agentId,
   })
@@ -106,8 +99,6 @@ export function AgentDetailPage() {
   if (isLoading || !agent) return <LoadingSpinner size="lg" className="h-96" />
 
   const fullName = `${agent.first_name} ${agent.last_name}`
-  const color = nameToColor(fullName)
-  const initials = `${agent.first_name[0]}${agent.last_name[0]}`.toUpperCase()
 
   return (
     <div className="space-y-5">
@@ -123,9 +114,13 @@ export function AgentDetailPage() {
         <Button variant="ghost" size="sm" onClick={() => navigate('/agents')} className="mt-1 text-immo-text-muted hover:text-immo-text-primary">
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl text-lg font-bold" style={{ backgroundColor: color + '20', color }}>
-          {initials}
-        </div>
+        <UserAvatar
+          firstName={agent.first_name}
+          lastName={agent.last_name}
+          avatarUrl={agent.avatar_url}
+          size="lg"
+          className="rounded-2xl"
+        />
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-immo-text-primary">{fullName}</h1>

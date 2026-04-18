@@ -80,7 +80,7 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Nouvelle unité" subtitle="Ajouter un bien au projet" size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Projet */}
           <div className="space-y-1.5">
             <Label className="text-sm text-immo-text-secondary">Projet *</Label>
@@ -110,7 +110,7 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* Type */}
           <div className="space-y-1.5">
             <Label className="text-sm text-immo-text-secondary">Type *</Label>
@@ -158,7 +158,7 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           {/* Étage */}
           <div className="space-y-1.5">
             <Label className="text-sm text-immo-text-secondary">Étage</Label>

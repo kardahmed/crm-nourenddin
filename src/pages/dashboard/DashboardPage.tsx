@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useDashboardStats } from '@/hooks/useDashboardStats'
 import { usePermissions } from '@/hooks/usePermissions'
-import { KPICard, LoadingSpinner, StatusBadge } from '@/components/common'
+import { KPICard, LoadingSpinner, StatusBadge, UserAvatar } from '@/components/common'
 import { formatPriceCompact } from '@/lib/constants'
 import { HISTORY_TYPE_LABELS, PIPELINE_STAGES } from '@/types'
 import type { HistoryType } from '@/types'
@@ -245,9 +245,12 @@ export function DashboardPage() {
                   <tr key={agent.id} className="bg-immo-bg-card hover:bg-immo-bg-card-hover transition-colors">
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-immo-accent-blue/15 text-xs font-semibold text-immo-accent-blue">
-                          {agent.first_name[0]}{agent.last_name[0]}
-                        </div>
+                        <UserAvatar
+                          firstName={agent.first_name}
+                          lastName={agent.last_name}
+                          avatarUrl={agent.avatar_url}
+                          size="sm"
+                        />
                         <span className="text-sm font-medium text-immo-text-primary">{agent.first_name} {agent.last_name}</span>
                       </div>
                     </td>

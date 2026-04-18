@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2, Receipt, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { KPICard, LoadingSpinner, Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -35,7 +34,7 @@ interface Expense {
 }
 
 export function ExpensesTab() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [periodFilter, setPeriodFilter] = useState<'month' | 'quarter' | 'year' | 'all'>('month')
@@ -49,34 +48,35 @@ export function ExpensesTab() {
     : new Date(2020, 0, 1)
 
   const { data: expenses = [], isLoading } = useQuery({
-    queryKey: ['marketing-expenses', tenantId, periodFilter],
+    queryKey: ['marketing-expenses', periodFilter],
     queryFn: async () => {
       let q = supabase.from('marketing_expenses')
         .select('*, projects(name), marketing_campaigns(name)')
+        
         .gte('expense_date', dateFrom.toISOString().split('T')[0])
         .order('expense_date', { ascending: false })
       const { data } = await q
       return (data ?? []) as unknown as Expense[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const { data: projects = [] } = useQuery({
-    queryKey: ['projects-list-simple', tenantId],
+    queryKey: ['projects-list-simple'],
     queryFn: async () => {
       const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const { data: campaigns = [] } = useQuery({
-    queryKey: ['marketing-campaigns-simple', tenantId],
+    queryKey: ['marketing-campaigns-simple'],
     queryFn: async () => {
       const { data } = await supabase.from('marketing_campaigns').select('id, name')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const deleteExpense = useMutation({
@@ -199,13 +199,13 @@ export function ExpensesTab() {
       </div>
 
       {/* Add Expense Modal */}
-      {showAdd && <AddExpenseModal tenantId={tenantId!} projects={projects} campaigns={campaigns} onClose={() => setShowAdd(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); setShowAdd(false) }} />}
+      {showAdd && <AddExpenseModal projects={projects} campaigns={campaigns} onClose={() => setShowAdd(false)} onSaved={() => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); setShowAdd(false) }} />}
     </div>
   )
 }
 
-function AddExpenseModal({ tenantId, projects, campaigns, onClose, onSaved }: {
-  tenantId: string; projects: Array<{ id: string; name: string }>; campaigns: Array<{ id: string; name: string }>
+function AddExpenseModal({ projects, campaigns, onClose, onSaved }: {
+   projects: Array<{ id: string; name: string }>; campaigns: Array<{ id: string; name: string }>
   onClose: () => void; onSaved: () => void
 }) {
   const [category, setCategory] = useState('ads_digital')
@@ -221,7 +221,7 @@ function AddExpenseModal({ tenantId, projects, campaigns, onClose, onSaved }: {
     if (!amount || Number(amount) <= 0) { toast.error('Montant requis'); return }
     setSaving(true)
     const { error } = await supabase.from('marketing_expenses').insert({
-      tenant_id: tenantId, category, subcategory: subcategory || null, amount: Number(amount),
+ category, subcategory: subcategory || null, amount: Number(amount),
       expense_date: date, project_id: projectId || null, campaign_id: campaignId || null, notes: notes || null,
     } as never)
     setSaving(false)

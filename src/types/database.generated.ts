@@ -2498,36 +2498,45 @@ export type Database = {
       }
       users: {
         Row: {
+          archived_at: string | null
+          avatar_url: string | null
           created_at: string | null
           email: string
           first_name: string
           id: string
           last_activity: string | null
           last_name: string
+          permission_profile_id: string | null
           phone: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: Database["public"]["Enums"]["user_status"]
           tenant_id: string | null
         }
         Insert: {
+          archived_at?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           email: string
           first_name: string
           id: string
           last_activity?: string | null
           last_name: string
+          permission_profile_id?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]
           tenant_id?: string | null
         }
         Update: {
+          archived_at?: string | null
+          avatar_url?: string | null
           created_at?: string | null
           email?: string
           first_name?: string
           id?: string
           last_activity?: string | null
           last_name?: string
+          permission_profile_id?: string | null
           phone?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: Database["public"]["Enums"]["user_status"]

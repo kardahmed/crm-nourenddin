@@ -3,6 +3,41 @@ import { useAuthStore } from '@/store/authStore'
 import type { UserRole } from '@/types'
 import type { PermissionKey } from '@/types/permissions'
 
+/**
+ * Default permissions granted to any agent that does NOT have a custom
+ * permission_profile_id assigned. Gives them everything they need to do
+ * the day-to-day commercial work without admin intervention. Admins can
+ * still create restrictive profiles and assign them to specific agents.
+ */
+/**
+ * Permissions granted to the `reception` role. The receptionist is a
+ * dispatcher, not a commercial — she sees the client list to assign it,
+ * reads projects to answer phone questions, but never touches sales,
+ * reservations, pipeline stages or goals.
+ */
+const RECEPTION_PERMISSIONS: PermissionKey[] = [
+  'pipeline.view_all', 'pipeline.create',
+  'projects.view', 'units.view',
+  'visits.view_all',
+]
+
+const DEFAULT_AGENT_PERMISSIONS: PermissionKey[] = [
+  'dashboard.view',
+  'pipeline.view_own', 'pipeline.create', 'pipeline.edit', 'pipeline.change_stage',
+  'projects.view', 'units.view',
+  'visits.view_own', 'visits.create', 'visits.edit',
+  'reservations.view', 'reservations.create',
+  'sales.view', 'sales.create',
+  'dossiers.view',
+  'documents.view', 'documents.generate', 'documents.upload',
+  'payments.view',
+  'goals.view_own',
+  'performance.view_own',
+  'reports.view',
+  'ai.call_script', 'ai.suggestions',
+  'whatsapp.send', 'whatsapp.view_history',
+]
+
 export interface Permissions {
   // Granular permission check
   can: (permission: PermissionKey) => boolean
@@ -23,6 +58,8 @@ export interface Permissions {
   isSuperAdmin: boolean
   isAdmin: boolean
   isAgent: boolean
+  isReception: boolean
+  canAssignClients: boolean
   hasRole: (...roles: UserRole[]) => boolean
 }
 
@@ -32,28 +69,28 @@ export function usePermissions(): Permissions {
 
   return useMemo(() => {
     const isAdm = role === 'admin'
+    const isRecep = role === 'reception'
 
-    // Core permission check
     function can(permission: PermissionKey): boolean {
-      // Admin bypass — always has all permissions
+      // Admin bypass — full access
       if (isAdm) return true
-      const perms = permissionProfile?.permissions
-      if (!perms) return false
-      if (perms[permission] === true) return true
-      // view_all is a superset of view_own
-      if (permission.endsWith('.view_own')) {
-        const allKey = permission.replace('.view_own', '.view_all') as PermissionKey
-        if (perms[allKey] === true) return true
+      // Reception has a narrow, fixed scope — no inherited agent perms.
+      if (isRecep) return RECEPTION_PERMISSIONS.includes(permission)
+      // Agent with a custom profile → use the profile
+      if (permissionProfile?.permissions) {
+        return permissionProfile.permissions[permission] === true
       }
-      return false
+      // Agent without a profile → grant defaults
+      return DEFAULT_AGENT_PERMISSIONS.includes(permission)
     }
 
     return {
-      // Granular check
       can,
-
-      // Legacy flags mapped to new granular permissions
-      canManageAgents: can('agents.edit'),
+      // Managing agents (create/deactivate, edit role) is admin-only and
+      // must match the router guard `<RoleRoute allowedRoles={['admin']}>`.
+      // Using a permission key here would let an admin with a restrictive
+      // custom profile lose access to a page the router still opens.
+      canManageAgents: isAdm,
       canManageSettings: can('settings.edit'),
       canViewAllClients: can('pipeline.view_all'),
       canViewAllAgents: can('agents.view'),
@@ -63,11 +100,13 @@ export function usePermissions(): Permissions {
       canManageGoals: can('goals.create'),
       canManageTemplates: can('documents.generate'),
       canExportData: can('reports.export'),
-
-      // Role flags
       isSuperAdmin: false,
       isAdmin: isAdm,
       isAgent: role === 'agent',
+      isReception: isRecep,
+      // Reception can assign any client; admin inherits it implicitly.
+      // Agents cannot reassign away from themselves.
+      canAssignClients: isAdm || isRecep,
       hasRole: (...roles: UserRole[]) => role !== null && roles.includes(role),
     }
   }, [role, permissionProfile])

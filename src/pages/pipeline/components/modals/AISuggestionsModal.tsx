@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
-  RotateCcw, ArrowUpDown, Check, Trophy, Award,
+  RotateCcw, ArrowUpDown, Check, Trophy, Award, ChevronDown, ChevronUp, BadgeCheck,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { Modal, FilterDropdown } from '@/components/common'
@@ -21,7 +21,7 @@ interface ClientInfo {
   interested_projects: string[] | null
   interest_level: string
   pipeline_stage: PipelineStage
-  tenant_id: string
+
 }
 
 interface AvailableUnit {
@@ -70,11 +70,12 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
 
   // Fetch available units
   const { data: rawUnits = [] } = useQuery({
-    queryKey: ['ai-units', client?.tenant_id],
+    queryKey: ['ai-units'],
     queryFn: async () => {
       const { data } = await supabase
         .from('units')
         .select('id, code, type, subtype, building, floor, surface, price, delivery_date, project_id, projects(name)')
+        
         .eq('status', 'available')
         .order('code')
       return (data ?? []).map((u: Record<string, unknown>) => ({
@@ -82,17 +83,17 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
         project_name: (u.projects as { name: string } | null)?.name ?? '-',
       })) as unknown as AvailableUnit[]
     },
-    enabled: !!client?.tenant_id && isOpen,
+    enabled: isOpen,
   })
 
   // Fetch projects for filter
   const { data: projects = [] } = useQuery({
-    queryKey: ['ai-projects', client?.tenant_id],
+    queryKey: ['ai-projects'],
     queryFn: async () => {
       const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
-    enabled: !!client?.tenant_id && isOpen,
+    enabled: isOpen,
   })
 
   // Filter units
@@ -357,6 +358,9 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
           </div>
         )}
 
+        {/* Comparison panel — appears when 2+ units selected */}
+        {selectedIds.length >= 2 && <ComparisonPanel units={sorted.filter(u => selectedIds.includes(u.id))} />}
+
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-immo-border-default pt-4">
           <span className="text-xs text-immo-text-muted">
@@ -378,5 +382,122 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
         </div>
       </div>
     </Modal>
+  )
+}
+
+/* ═══ Comparison Panel ═══ */
+
+function ComparisonPanel({ units }: { units: AvailableUnit[] }) {
+  const [expanded, setExpanded] = useState(true)
+
+  const pricePerM2 = (u: AvailableUnit) =>
+    u.price && u.surface && u.surface > 0 ? u.price / u.surface : Infinity
+
+  const bestPriceM2Id = useMemo(() => {
+    let bestId = ''
+    let best = Infinity
+    for (const u of units) {
+      const pm2 = pricePerM2(u)
+      if (pm2 < best) { best = pm2; bestId = u.id }
+    }
+    return best < Infinity ? bestId : null
+  }, [units])
+
+  const bestPriceId = useMemo(() => {
+    let bestId = ''
+    let best = Infinity
+    for (const u of units) {
+      if (u.price && u.price < best) { best = u.price; bestId = u.id }
+    }
+    return best < Infinity ? bestId : null
+  }, [units])
+
+  const bestSurfaceId = useMemo(() => {
+    let bestId = ''
+    let best = 0
+    for (const u of units) {
+      if (u.surface && u.surface > best) { best = u.surface; bestId = u.id }
+    }
+    return best > 0 ? bestId : null
+  }, [units])
+
+  type Row = { label: string; values: string[]; bestIdx: number | null }
+
+  const rows: Row[] = useMemo(() => {
+    const findBest = (id: string | null) => id ? units.findIndex(u => u.id === id) : null
+    const pm2Best = findBest(bestPriceM2Id)
+    const priceBest = findBest(bestPriceId)
+    const surfBest = findBest(bestSurfaceId)
+
+    return [
+      { label: 'Code', values: units.map(u => u.code), bestIdx: null },
+      { label: 'Projet', values: units.map(u => u.project_name), bestIdx: null },
+      { label: 'Type', values: units.map(u => UNIT_TYPE_LABELS[u.type] ?? u.type), bestIdx: null },
+      { label: 'Sous-type', values: units.map(u => u.subtype ? (UNIT_SUBTYPE_LABELS[u.subtype] ?? u.subtype) : '-'), bestIdx: null },
+      { label: 'Surface', values: units.map(u => u.surface ? `${u.surface} m²` : '-'), bestIdx: surfBest },
+      { label: 'Étage', values: units.map(u => u.floor != null ? `${u.floor}` : '-'), bestIdx: null },
+      { label: 'Bâtiment', values: units.map(u => u.building ?? '-'), bestIdx: null },
+      { label: 'Prix', values: units.map(u => u.price ? formatPrice(u.price) : '-'), bestIdx: priceBest },
+      { label: 'Prix/m²', values: units.map(u => { const v = pricePerM2(u); return v < Infinity ? formatPrice(Math.round(v)) : '-' }), bestIdx: pm2Best },
+      { label: 'Livraison', values: units.map(u => u.delivery_date ?? '-'), bestIdx: null },
+    ]
+  }, [units, bestPriceM2Id, bestPriceId, bestSurfaceId])
+
+  return (
+    <div className="rounded-xl border border-immo-accent-green/30 bg-immo-accent-green/5">
+      <button
+        onClick={() => setExpanded(e => !e)}
+        className="flex w-full items-center justify-between px-4 py-3"
+      >
+        <div className="flex items-center gap-2">
+          <BadgeCheck className="h-4 w-4 text-immo-accent-green" />
+          <span className="text-sm font-semibold text-immo-text-primary">
+            Fiche comparative ({units.length} unités)
+          </span>
+        </div>
+        {expanded ? <ChevronUp className="h-4 w-4 text-immo-text-muted" /> : <ChevronDown className="h-4 w-4 text-immo-text-muted" />}
+      </button>
+
+      {expanded && (
+        <div className="overflow-x-auto px-2 pb-4">
+          {/* Header with best badge */}
+          <div className="mb-3 flex gap-3 px-2">
+            <div className="w-[90px] shrink-0" />
+            {units.map(u => (
+              <div key={u.id} className="flex min-w-[140px] flex-1 flex-col items-center gap-1">
+                <span className="text-sm font-bold text-immo-text-primary">{u.code}</span>
+                {u.id === bestPriceM2Id && (
+                  <span className="flex items-center gap-1 rounded-full bg-immo-accent-green px-2.5 py-0.5 text-[10px] font-bold text-white">
+                    <BadgeCheck className="h-3 w-3" /> Meilleur prix/m²
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Rows */}
+          <table className="w-full">
+            <tbody>
+              {rows.map(row => (
+                <tr key={row.label} className="border-t border-immo-border-default/50">
+                  <td className="w-[90px] shrink-0 px-2 py-2 text-[11px] font-semibold text-immo-text-muted">{row.label}</td>
+                  {row.values.map((val, ci) => {
+                    const isBest = row.bestIdx === ci
+                    return (
+                      <td key={ci} className="min-w-[140px] px-2 py-2 text-center">
+                        <span className={`text-sm ${isBest ? 'font-bold text-immo-accent-green' : 'text-immo-text-primary'}`}>
+                          {val}
+                          {isBest && row.label === 'Prix/m²' && <BadgeCheck className="ml-1 inline h-3.5 w-3.5 text-immo-accent-green" />}
+                        </span>
+                      </td>
+                    )
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
   )
 }

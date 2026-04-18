@@ -13,16 +13,16 @@ import { SectionHeader, Field, SaveButton, inputClass } from './shared'
 /* ═══ Reservations ═══ */
 export function ReservationsSection() {
   const { t } = useTranslation()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
-    queryKey: ['tenant-settings', tenantId],
+    queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').single()
+      const { data } = await supabase.from('app_settings' as never).select('*').single()
       return data as Record<string, unknown> | null
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const [duration, setDuration] = useState('30')
@@ -38,9 +38,9 @@ export function ReservationsSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update({ reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
+        await supabase.from('app_settings' as never).update({ reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
       } else {
-        await supabase.from('tenant_settings').insert({ tenant_id: tenantId, reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
+        await supabase.from('app_settings' as never).insert({  reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-settings'] }); toast.success(t('success.saved')) },
@@ -61,17 +61,17 @@ export function ReservationsSection() {
 /* ═══ Templates ═══ */
 export function TemplatesSection() {
   const { t } = useTranslation()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<'contrat_vente' | 'echeancier' | 'bon_reservation'>('contrat_vente')
 
   const { data: templates = [] } = useQuery({
-    queryKey: ['doc-templates', tenantId],
+    queryKey: ['doc-templates'],
     queryFn: async () => {
       const { data } = await supabase.from('document_templates').select('*')
       return (data ?? []) as Array<{ id: string; type: string; content: string }>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const current = templates.find(tp => tp.type === activeTab)
@@ -84,7 +84,7 @@ export function TemplatesSection() {
       if (current) {
         await supabase.from('document_templates').update({ content } as never).eq('id', current.id)
       } else {
-        await supabase.from('document_templates').insert({ tenant_id: tenantId, type: activeTab, content } as never)
+        await supabase.from('document_templates').insert({  type: activeTab, content } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['doc-templates'] }); toast.success(t('success.saved')) },
@@ -123,16 +123,16 @@ export function TemplatesSection() {
 /* ═══ Notifications ═══ */
 export function NotificationsSection() {
   const { t } = useTranslation()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
-    queryKey: ['tenant-settings', tenantId],
+    queryKey: ['tenant-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').single()
+      const { data } = await supabase.from('app_settings' as never).select('*').single()
       return data as Record<string, unknown> | null
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const NOTIFS = [
@@ -161,9 +161,9 @@ export function NotificationsSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update(toggles as never)
+        await supabase.from('app_settings' as never).update(toggles as never)
       } else {
-        await supabase.from('tenant_settings').insert({ tenant_id: tenantId, ...toggles } as never)
+        await supabase.from('app_settings' as never).insert({  ...toggles } as never)
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['tenant-settings'] }); toast.success(t('success.saved')) },
@@ -221,12 +221,12 @@ export function NotificationsSection() {
 /* ═══ Language ═══ */
 export function LanguageSection() {
   const { i18n } = useTranslation()
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const current = i18n.language
 
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
-    if (tenantId) await supabase.from('tenant_settings').update({ language: lang } as never)
+    if (true) await supabase.from('app_settings' as never).update({ language: lang } as never)
     toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 

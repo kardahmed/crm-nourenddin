@@ -23,7 +23,7 @@ interface ClientInfo {
   full_name: string
   phone: string
   pipeline_stage: PipelineStage
-  tenant_id: string
+
 }
 
 interface ManageVisitModalProps {
@@ -60,7 +60,7 @@ export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisit
 
       // History
       await supabase.from('history').insert({
-        tenant_id: client.tenant_id,
+        
         client_id: client.id,
         agent_id: userId,
         type: 'visit_confirmed',
@@ -93,7 +93,7 @@ export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisit
 
       // History
       await supabase.from('history').insert({
-        tenant_id: client.tenant_id,
+        
         client_id: client.id,
         agent_id: userId,
         type: 'stage_change',

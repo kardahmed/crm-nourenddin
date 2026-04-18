@@ -9,6 +9,7 @@ import {
   Wallet,
   Plus,
   Download,
+  Upload,
   Kanban,
   LayoutGrid,
   List,
@@ -34,7 +35,6 @@ import type { PipelineStage, Client } from '@/types'
 
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { handleSupabaseError } from '@/lib/errors'
 import toast from 'react-hot-toast'
 import { AlertBar } from './components/AlertBar'
@@ -44,6 +44,9 @@ import { KanbanBoard } from './components/KanbanBoard'
 import { CardsView } from './components/CardsView'
 import { TableView } from './components/TableView'
 import { ClientFormModal } from './components/ClientFormModal'
+import { CsvImportModal } from '@/components/common/CsvImportModal'
+import { CLIENT_IMPORT_FIELDS } from './clientImportFields'
+import { useQueryClient } from '@tanstack/react-query'
 import { SmartStageDialog } from './components/SmartStageDialog'
 import { ClientSidePanel } from './components/ClientSidePanel'
 import { AdvancedFilters, EMPTY_FILTERS } from './components/AdvancedFilters'
@@ -58,38 +61,35 @@ export function PipelinePage() {
   const { clients: rawClients, isLoading: loadingClients, updateClientStage } = useClients()
   const { generateForStage } = useAutoTasks()
   const { data: stats, isLoading: loadingStats } = usePipelineStats()
-  const { canManageProjects } = usePermissions()
+  const { canManageProjects, isAgent } = usePermissions()
 
   const clients = rawClients as unknown as Client[]
-  const tenantId = useAuthStore((s) => s.tenantId)
 
   // Shared lookup maps for Cards/Table views
   const { data: agentMap } = useQuery({
-    queryKey: ['agent-names', tenantId],
+    queryKey: ['agent-names'],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('id, first_name, last_name')
       const m = new Map<string, string>()
       for (const u of (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>) m.set(u.id, `${u.first_name} ${u.last_name}`)
       return m
     },
-    enabled: !!tenantId,
     staleTime: 300_000,
   })
 
   const { data: projectMap } = useQuery({
-    queryKey: ['project-names', tenantId],
+    queryKey: ['project-names'],
     queryFn: async () => {
       const { data } = await supabase.from('projects').select('id, name')
       const m = new Map<string, string>()
       for (const p of (data ?? []) as Array<{ id: string; name: string }>) m.set(p.id, p.name)
       return m
     },
-    enabled: !!tenantId,
     staleTime: 300_000,
   })
 
   const { data: daysInStageMap } = useQuery({
-    queryKey: ['stage-dates', tenantId, clients.length],
+    queryKey: ['stage-dates', clients.length],
     queryFn: async () => {
       const ids = clients.map(c => c.id)
       if (ids.length === 0) return new Map<string, number>()
@@ -105,7 +105,7 @@ export function PipelinePage() {
       }
       return m
     },
-    enabled: !!tenantId && clients.length > 0,
+    enabled: clients.length > 0,
     staleTime: 60_000,
   })
 
@@ -118,6 +118,8 @@ export function PipelinePage() {
   const [compact, setCompact] = useState(() => localStorage.getItem('pipeline-compact') === 'true')
   const [alertFilter, setAlertFilter] = useState<string[] | null>(null)
   const [showClientForm, setShowClientForm] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const qc = useQueryClient()
   const [sidePanelClientId, setSidePanelClientId] = useState<string | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [reassignAgent, setReassignAgent] = useState('')
@@ -200,7 +202,6 @@ export function PipelinePage() {
           // If note provided, add to history
           if (note) {
             supabase.from('history').insert({
-              tenant_id: tenantId,
               client_id: pendingMove.clientId,
               agent_id: null,
               type: 'note',
@@ -358,7 +359,7 @@ export function PipelinePage() {
           placeholder="Nom, téléphone..."
           value={search}
           onChange={setSearch}
-          className="w-[240px]"
+          className="w-full sm:w-[240px]"
         />
         <FilterDropdown
           label="Projet"
@@ -422,6 +423,16 @@ export function PipelinePage() {
         </div>
 
         {canManageProjects && (
+          <Button
+            onClick={() => setShowImport(true)}
+            variant="ghost"
+            className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover"
+            title="Importer depuis un CSV (migration d'un ancien CRM)"
+          >
+            <Upload className="mr-1.5 h-4 w-4" /> Importer
+          </Button>
+        )}
+        {(canManageProjects || isAgent) && (
           <Button onClick={() => setShowClientForm(true)} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
             <Plus className="mr-1.5 h-4 w-4" /> Client
           </Button>
@@ -499,6 +510,21 @@ export function PipelinePage() {
       )}
 
       <ClientFormModal isOpen={showClientForm} onClose={() => setShowClientForm(false)} />
+      <CsvImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        title="Importer des clients"
+        subtitle="Depuis un CSV (ex: export de votre ancien CRM)"
+        table="clients"
+        fields={CLIENT_IMPORT_FIELDS}
+        templateName="clients"
+        defaults={async () => {
+          // Assign imported clients to the current user by default
+          const { data: { session } } = await supabase.auth.getSession()
+          return { agent_id: session?.user?.id ?? null }
+        }}
+        onSuccess={() => qc.invalidateQueries({ queryKey: ['clients'] })}
+      />
 
       {/* Stage change confirmation dialog */}
       {/* Client side panel */}

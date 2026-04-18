@@ -2,25 +2,29 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Bookmark, DollarSign, CreditCard, Receipt,
-  ListTodo, Clock, Plus, CheckCircle, Bot,
+  Clock, Plus,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 // native <select> used instead of base-ui Select
 import { StatusBadge, EmptyState, Modal } from '@/components/common'
 import { ClientDocuments } from '../ClientDocuments'
+import { NewSaleModal } from '../modals/NewSaleModal'
+import { CreateReservationModal } from '../modals/CreateReservationModal'
+import type { PipelineStage } from '@/types'
 
 function ClientDocumentsWrapper({ clientId }: { clientId: string }) {
   return <ClientDocuments clientId={clientId} />
 }
 import { formatPrice } from '@/lib/constants'
 import { PAYMENT_STATUS_LABELS } from '@/types'
-import type { PaymentStatus, TaskStatus } from '@/types'
+import type { PaymentStatus } from '@/types'
+
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import { inputClass } from './shared'
@@ -28,6 +32,9 @@ import { inputClass } from './shared'
 /* ═══ Reservation ═══ */
 export function ReservationTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
+  const { can } = usePermissions()
+  const [showCreate, setShowCreate] = useState(false)
+
   const { data: reservations = [] } = useQuery({
     queryKey: ['client-reservations', clientId],
     queryFn: async () => {
@@ -37,23 +44,62 @@ export function ReservationTab({ clientId }: { clientId: string }) {
     },
   })
 
-  if (reservations.length === 0) return <EmptyState icon={<Bookmark className="h-10 w-10" />} title={t('common.no_data')} />
+  const { data: client } = useQuery({
+    queryKey: ['client-info-reservation', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name, phone, nin_cin, pipeline_stage')
+        .eq('id', clientId)
+        .single()
+      if (error) { handleSupabaseError(error); throw error }
+      return data as unknown as {
+        id: string; full_name: string; phone: string; nin_cin: string | null; pipeline_stage: PipelineStage
+      }
+    },
+  })
+
+  const canCreate = can('reservations.create')
 
   return (
-    <div className="space-y-2">
-      {reservations.map((r) => (
-        <div key={r.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-immo-text-primary">{(r.units as { code: string })?.code} — {(r.projects as { name: string })?.name}</p>
-              <p className="text-xs text-immo-text-muted">
-                {t('status.expired')} {format(new Date(r.expires_at as string), 'dd/MM/yyyy')} · {t('field.deposit')} : {formatPrice((r.deposit_amount as number) ?? 0)}
-              </p>
-            </div>
-            <StatusBadge label={r.status as string} type={r.status === 'active' ? 'green' : r.status === 'converted' ? 'blue' : 'red'} />
-          </div>
+    <div className="space-y-4">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCreate(true)}
+            disabled={!client}
+            className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> {t('action.add')}
+          </Button>
         </div>
-      ))}
+      )}
+
+      {reservations.length === 0 ? (
+        <EmptyState icon={<Bookmark className="h-10 w-10" />} title={t('common.no_data')} />
+      ) : (
+        <div className="space-y-2">
+          {reservations.map((r) => (
+            <div key={r.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-immo-text-primary">{(r.units as { code: string })?.code} — {(r.projects as { name: string })?.name}</p>
+                  <p className="text-xs text-immo-text-muted">
+                    {t('status.expired')} {format(new Date(r.expires_at as string), 'dd/MM/yyyy')} · {t('field.deposit')} : {formatPrice((r.deposit_amount as number) ?? 0)}
+                  </p>
+                </div>
+                <StatusBadge label={r.status as string} type={r.status === 'active' ? 'green' : r.status === 'converted' ? 'blue' : 'red'} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CreateReservationModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        client={client ?? null}
+      />
     </div>
   )
 }
@@ -61,6 +107,9 @@ export function ReservationTab({ clientId }: { clientId: string }) {
 /* ═══ Sale ═══ */
 export function SaleTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
+  const { can } = usePermissions()
+  const [showCreate, setShowCreate] = useState(false)
+
   const { data: sales = [] } = useQuery({
     queryKey: ['client-sales', clientId],
     queryFn: async () => {
@@ -70,21 +119,60 @@ export function SaleTab({ clientId }: { clientId: string }) {
     },
   })
 
-  if (sales.length === 0) return <EmptyState icon={<DollarSign className="h-10 w-10" />} title={t('common.no_data')} />
+  const { data: client } = useQuery({
+    queryKey: ['client-info-sale', clientId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('id, full_name, phone, nin_cin, pipeline_stage')
+        .eq('id', clientId)
+        .single()
+      if (error) { handleSupabaseError(error); throw error }
+      return data as unknown as {
+        id: string; full_name: string; phone: string; nin_cin: string | null; pipeline_stage: PipelineStage
+      }
+    },
+  })
+
+  const canCreate = can('sales.create')
 
   return (
-    <div className="space-y-2">
-      {sales.map((s) => (
-        <div key={s.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-immo-text-primary">{(s.units as { code: string })?.code} — {(s.projects as { name: string })?.name}</p>
-              <p className="text-xs text-immo-text-muted">{t('field.price')} : {formatPrice(s.final_price as number)} · {s.financing_mode as string}</p>
-            </div>
-            <StatusBadge label={s.status === 'active' ? t('status.active') : t('status.cancelled')} type={s.status === 'active' ? 'green' : 'red'} />
-          </div>
+    <div className="space-y-4">
+      {canCreate && (
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowCreate(true)}
+            disabled={!client}
+            className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" /> {t('action.add')}
+          </Button>
         </div>
-      ))}
+      )}
+
+      {sales.length === 0 ? (
+        <EmptyState icon={<DollarSign className="h-10 w-10" />} title={t('common.no_data')} />
+      ) : (
+        <div className="space-y-2">
+          {sales.map((s) => (
+            <div key={s.id as string} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-immo-text-primary">{(s.units as { code: string })?.code} — {(s.projects as { name: string })?.name}</p>
+                  <p className="text-xs text-immo-text-muted">{t('field.price')} : {formatPrice(s.final_price as number)} · {s.financing_mode as string}</p>
+                </div>
+                <StatusBadge label={s.status === 'active' ? t('status.active') : t('status.cancelled')} type={s.status === 'active' ? 'green' : 'red'} />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <NewSaleModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        client={client ?? null}
+      />
     </div>
   )
 }
@@ -95,9 +183,14 @@ export function ScheduleTab({ clientId }: { clientId: string }) {
   const { data: schedules = [] } = useQuery({
     queryKey: ['client-schedules', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('payment_schedules').select('*, sales(units(code))').order('due_date')
+      const { data, error } = await supabase.from('payment_schedules').select('*, sales(units(code), client_id)').order('due_date')
+      // Filter by client_id in-memory (schedules linked to this client's sales)
+      const filtered = (data ?? []).filter((r: Record<string, unknown>) => {
+        const s = r.sales as { client_id: string } | null
+        return s?.client_id === clientId
+      })
       if (error) return []
-      return data as unknown as Array<Record<string, unknown>>
+      return filtered as unknown as Array<Record<string, unknown>>
     },
   })
 
@@ -188,7 +281,7 @@ export function DocumentsTab({ clientId }: { clientId: string }) {
 }
 
 /* ═══ Charges ═══ */
-export function ChargesTab({ clientId, tenantId }: { clientId: string; tenantId: string }) {
+export function ChargesTab({ clientId }: { clientId: string }) {
   const { t } = useTranslation()
   const [showCreate, setShowCreate] = useState(false)
   const qc = useQueryClient()
@@ -204,7 +297,7 @@ export function ChargesTab({ clientId, tenantId }: { clientId: string; tenantId:
 
   const createCharge = useMutation({
     mutationFn: async (input: { label: string; type: string; amount: number; charge_date: string; status: string }) => {
-      const { error } = await supabase.from('charges').insert({ tenant_id: tenantId, client_id: clientId, ...input } as never)
+      const { error } = await supabase.from('charges').insert({  client_id: clientId, ...input } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {
@@ -343,89 +436,3 @@ export function NotesTab({ clientId }: { clientId: string }) {
   )
 }
 
-/* ═══ Tasks ═══ */
-export function TasksTab({ clientId, tenantId }: { clientId: string; tenantId: string }) {
-  const { t } = useTranslation()
-  const [showCreate, setShowCreate] = useState(false)
-  const [title, setTitle] = useState(''); const [dueAt, setDueAt] = useState('')
-  const userId = useAuthStore((s) => s.session?.user?.id)
-  const qc = useQueryClient()
-
-  const { data: tasks = [] } = useQuery({
-    queryKey: ['client-tasks', clientId],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('tasks').select('*').eq('client_id', clientId).order('created_at', { ascending: false })
-      if (error) { handleSupabaseError(error); throw error }
-      return data as unknown as Array<Record<string, unknown>>
-    },
-  })
-
-  const createTask = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from('tasks').insert({ tenant_id: tenantId, client_id: clientId, agent_id: userId, title, type: 'manual', due_at: dueAt || null } as never)
-      if (error) { handleSupabaseError(error); throw error }
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['client-tasks', clientId] })
-      setShowCreate(false); setTitle(''); setDueAt('')
-      toast.success(t('success.created'))
-    },
-  })
-
-  const toggleStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: TaskStatus }) => {
-      const { error } = await supabase.from('tasks').update({ status } as never).eq('id', id)
-      if (error) { handleSupabaseError(error); throw error }
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }),
-  })
-
-  return (
-    <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setShowCreate(true)} className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
-          <Plus className="mr-1 h-3.5 w-3.5" /> {t('action.add')}
-        </Button>
-      </div>
-
-      {tasks.length === 0 ? (
-        <EmptyState icon={<ListTodo className="h-10 w-10" />} title={t('common.no_data')} />
-      ) : (
-        <div className="space-y-2">
-          {tasks.map((task) => {
-            const nextStatus: TaskStatus = task.status === 'pending' ? 'done' : task.status === 'done' ? 'ignored' : 'pending'
-            return (
-              <div key={task.id as string} className="flex items-center gap-3 rounded-lg border border-immo-border-default bg-immo-bg-card px-4 py-3">
-                <button onClick={() => toggleStatus.mutate({ id: task.id as string, status: nextStatus })}
-                  className={`h-5 w-5 shrink-0 rounded-full border-2 transition-colors ${task.status === 'done' ? 'border-immo-accent-green bg-immo-accent-green' : task.status === 'ignored' ? 'border-immo-text-muted bg-immo-text-muted/20' : 'border-immo-border-default hover:border-immo-accent-green'}`}>
-                  {task.status === 'done' && <CheckCircle className="h-full w-full text-immo-bg-primary" />}
-                </button>
-                <div className="min-w-0 flex-1">
-                  <p className={`text-sm ${task.status === 'done' ? 'text-immo-text-muted line-through' : 'text-immo-text-primary'}`}>{task.title as string}</p>
-                  <div className="flex items-center gap-2 text-[11px] text-immo-text-muted">
-                    {task.type === 'ai_generated' && <span className="flex items-center gap-0.5 text-purple-400"><Bot className="h-3 w-3" /> IA</span>}
-                    {typeof task.due_at === 'string' && <span>{format(new Date(task.due_at), 'dd/MM/yyyy')}</span>}
-                  </div>
-                </div>
-                <span className={`text-[11px] font-medium ${task.status === 'done' ? 'text-immo-accent-green' : task.status === 'ignored' ? 'text-immo-text-muted' : 'text-immo-status-orange'}`}>
-                  {task.status === 'done' ? t('status.completed') : task.status === 'ignored' ? t('status.cancelled') : t('status.pending')}
-                </span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      <Modal isOpen={showCreate} onClose={() => setShowCreate(false)} title={t('action.create')} size="sm">
-        <div className="space-y-3">
-          <div><Label className="text-xs text-immo-text-secondary">{t('field.name')} *</Label><Input value={title} onChange={(e) => setTitle(e.target.value)} className={inputClass} /></div>
-          <div><Label className="text-xs text-immo-text-secondary">{t('field.due_date')}</Label><Input type="date" value={dueAt} onChange={(e) => setDueAt(e.target.value)} className={inputClass} /></div>
-          <div className="flex justify-end gap-3 pt-2">
-            <Button variant="ghost" onClick={() => setShowCreate(false)} className="text-immo-text-secondary">{t('action.cancel')}</Button>
-            <Button onClick={() => createTask.mutate()} disabled={!title || createTask.isPending} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">{t('action.create')}</Button>
-          </div>
-        </div>
-      </Modal>
-    </div>
-  )
-}

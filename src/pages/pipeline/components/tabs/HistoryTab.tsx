@@ -25,7 +25,7 @@ export function HistoryTab({ clientId }: { clientId: string }) {
   const [limit, setLimit] = useState(20)
   const userId = useAuthStore((s) => s.session?.user?.id)
   const qc = useQueryClient()
-  const tenantId = useAuthStore((s) => s.tenantId)
+  
   const [showAdd, setShowAdd] = useState(false)
   const [addTitle, setAddTitle] = useState('')
   const [addType, setAddType] = useState<string>('note')
@@ -49,7 +49,7 @@ export function HistoryTab({ clientId }: { clientId: string }) {
   const addEntry = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: userId, type: addType, title: addTitle,
+ client_id: clientId, agent_id: userId, type: addType, title: addTitle,
       } as never)
       if (error) { handleSupabaseError(error); throw error }
     },

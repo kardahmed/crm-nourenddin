@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { MessageCircle, Check, AlertTriangle, Zap, Crown, Rocket } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { StatusBadge } from '@/components/common'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'
@@ -17,15 +16,15 @@ interface WaPlan {
 const PLAN_ICONS: Record<string, typeof Zap> = { starter: Zap, pro: Rocket, premium: Crown }
 
 export function WhatsAppSection() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
 
   const { data: account } = useQuery({
-    queryKey: ['wa-account', tenantId],
+    queryKey: ['wa-account'],
     queryFn: async () => {
       const { data } = await supabase.from('whatsapp_accounts').select('*').single()
       return data as Record<string, unknown> | null
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const { data: plans = [] } = useQuery({
@@ -37,16 +36,17 @@ export function WhatsAppSection() {
   })
 
   const { data: messages = [] } = useQuery({
-    queryKey: ['wa-messages-tenant', tenantId],
+    queryKey: ['wa-messages-tenant'],
     queryFn: async () => {
       const { data } = await supabase
         .from('whatsapp_messages')
         .select('*, clients(full_name)')
+        
         .order('created_at', { ascending: false })
         .limit(20)
       return (data ?? []) as Array<Record<string, unknown>>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const isActive = account?.is_active as boolean ?? false

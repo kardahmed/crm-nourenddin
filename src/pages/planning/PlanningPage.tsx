@@ -39,7 +39,7 @@ interface VisitRow {
   agent_name: string
   client_phone: string
   client_stage: PipelineStage
-  tenant_id: string
+
 }
 
 type ViewMode = 'month' | 'week' | 'day'
@@ -47,7 +47,7 @@ type ViewMode = 'month' | 'week' | 'day'
 /* ═══ Component ═══ */
 
 export function PlanningPage() {
-  const { tenantId, session } = useAuthStore()
+  const { session } = useAuthStore()
   const userId = session?.user?.id
   const { isAgent } = usePermissions()
 
@@ -68,11 +68,12 @@ export function PlanningPage() {
 
   // Fetch visits
   const { data: visits = [], isLoading } = useQuery({
-    queryKey: ['planning-visits', tenantId, rangeStart, rangeEnd, agentFilter],
+    queryKey: ['planning-visits', rangeStart, rangeEnd, agentFilter],
     queryFn: async () => {
       let q = supabase
         .from('visits')
-        .select('id, client_id, agent_id, project_id, scheduled_at, visit_type, status, notes, clients(full_name, phone, pipeline_stage, tenant_id), users!visits_agent_id_fkey(first_name, last_name)')
+        .select('id, client_id, agent_id, project_id, scheduled_at, visit_type, status, notes, clients(full_name, phone, pipeline_stage), users!visits_agent_id_fkey(first_name, last_name)')
+        
         .gte('scheduled_at', `${rangeStart}T00:00:00`)
         .lte('scheduled_at', `${rangeEnd}T23:59:59`)
         .order('scheduled_at')
@@ -89,7 +90,7 @@ export function PlanningPage() {
       if (error) { handleSupabaseError(error); throw error }
 
       return (data ?? []).map((v: Record<string, unknown>) => {
-        const client = v.clients as { full_name: string; phone: string; pipeline_stage: PipelineStage; tenant_id: string } | null
+        const client = v.clients as { full_name: string; phone: string; pipeline_stage: PipelineStage } | null
         const agent = v.users as { first_name: string; last_name: string } | null
         return {
           id: v.id as string,
@@ -104,44 +105,44 @@ export function PlanningPage() {
           agent_name: agent ? `${agent.first_name} ${agent.last_name}` : '-',
           client_phone: client?.phone ?? '',
           client_stage: client?.pipeline_stage ?? 'accueil',
-          tenant_id: client?.tenant_id ?? tenantId!,
+          
         } satisfies VisitRow
       })
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // Fetch agents for filter
   const { data: agents = [] } = useQuery({
-    queryKey: ['planning-agents', tenantId],
+    queryKey: ['planning-agents'],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('id, first_name, last_name').in('role', ['agent', 'admin']).eq('status', 'active')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
     },
-    enabled: !!tenantId && !isAgent,
+    enabled: !isAgent,
   })
 
   // Fetch projects for filter
   const { data: projectsList = [] } = useQuery({
-    queryKey: ['planning-projects', tenantId],
+    queryKey: ['planning-projects'],
     queryFn: async () => {
       const { data } = await supabase.from('projects').select('id, name').eq('status', 'active')
       return (data ?? []) as Array<{ id: string; name: string }>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // AI Tasks
   const { data: aiTasks = [] } = useQuery({
-    queryKey: ['ai-tasks', tenantId],
+    queryKey: ['ai-tasks'],
     queryFn: async () => {
-      let q = supabase.from('tasks').select('*, clients(full_name)').eq('type', 'ai_generated').eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
+      let q = supabase.from('client_tasks').select('*, clients(full_name)').not('template_id', 'is', null).eq('status', 'pending').order('created_at', { ascending: false }).limit(20)
       if (isAgent && userId) q = q.eq('agent_id', userId)
       const { data, error } = await q
       if (error) return []
       return data as unknown as Array<Record<string, unknown>>
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // KPIs
@@ -171,7 +172,7 @@ export function PlanningPage() {
 
   // Build client info for modals
   function getClientInfo(v: VisitRow) {
-    return { id: v.client_id, full_name: v.client_name, phone: v.client_phone, pipeline_stage: v.client_stage, tenant_id: v.tenant_id, nin_cin: null }
+    return { id: v.client_id, full_name: v.client_name, phone: v.client_phone, pipeline_stage: v.client_stage,  nin_cin: null }
   }
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
@@ -260,7 +261,7 @@ export function PlanningPage() {
                 <p className="text-sm text-immo-text-primary">{t.title as string}</p>
                 <p className="mt-1 text-[11px] text-immo-text-muted">
                   {(t.clients as { full_name: string })?.full_name ?? '-'}
-                  {typeof t.due_at === 'string' && ` · ${format(new Date(t.due_at), 'dd/MM/yyyy')}`}
+                  {typeof t.scheduled_at === 'string' && ` · ${format(new Date(t.scheduled_at), 'dd/MM/yyyy')}`}
                 </p>
               </div>
             ))}

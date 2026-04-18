@@ -14,16 +14,16 @@ interface Props {
   onClose: () => void
   clientId: string
   currentAgentId: string | null
-  tenantId: string
+
 }
 
-export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenantId }: Props) {
+export function ReassignModal({ isOpen, onClose, clientId, currentAgentId }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   const [selectedAgent, setSelectedAgent] = useState(currentAgentId ?? '')
 
   const { data: agents = [] } = useQuery({
-    queryKey: ['agents-reassign', tenantId],
+    queryKey: ['agents-reassign'],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('id, first_name, last_name, email')
         .in('role', ['agent', 'admin']).eq('status', 'active').order('first_name')
@@ -40,7 +40,7 @@ export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenan
 
       const newAgent = agents.find(a => a.id === selectedAgent)
       await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: userId,
+ client_id: clientId, agent_id: userId,
         type: 'note',
         title: `Client reassigne a ${newAgent?.first_name ?? ''} ${newAgent?.last_name ?? ''}`,
       } as never)

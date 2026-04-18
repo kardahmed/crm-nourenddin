@@ -1,48 +1,67 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { authenticate } from '../_shared/auth.ts'
+import { rateLimit } from '../_shared/rateLimit.ts'
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY')!
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+}
+
+const MAX_UNITS = 40
+const MAX_STRING = 500
+
+function sanitizeForPrompt(v: unknown, depth = 0): unknown {
+  if (depth > 3) return null
+  if (v == null) return null
+  if (typeof v === 'string') return v.replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, MAX_STRING)
+  if (typeof v === 'number' || typeof v === 'boolean') return v
+  if (Array.isArray(v)) return v.slice(0, 100).map(x => sanitizeForPrompt(x, depth + 1))
+  if (typeof v === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, val] of Object.entries(v as Record<string, unknown>)) {
+      if (/^[A-Za-z0-9_]{1,40}$/.test(k)) out[k] = sanitizeForPrompt(val, depth + 1)
+    }
+    return out
+  }
+  return null
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  const auth = await authenticate(req, { corsHeaders })
+  if (!auth.ok) return auth.response
+  const { principal } = auth
+  if (principal.kind !== 'user') {
+    return new Response(JSON.stringify({ error: 'User required' }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
+  // 10 req/min per user, 100/hour as a safety net on Anthropic spend.
+  const minuteLimit = rateLimit(`ai-suggestions:min:${principal.userId}`, 10, 60_000)
+  if (!minuteLimit.allowed) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded (minute)' }), {
+      status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': String(Math.ceil((minuteLimit.resetAt - Date.now()) / 1000)) },
+    })
+  }
+  const hourLimit = rateLimit(`ai-suggestions:hour:${principal.userId}`, 100, 60 * 60_000)
+  if (!hourLimit.allowed) {
+    return new Response(JSON.stringify({ error: 'Rate limit exceeded (hour)' }), {
+      status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
   }
 
   try {
-    // 1. Verify user JWT
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ error: 'Missing authorization' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-      global: { headers: { Authorization: authHeader } },
-    })
-
-    // Validate the JWT by getting the user
-    const { data: { user }, error: userErr } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    )
-    if (userErr || !user) {
-      return new Response(JSON.stringify({ error: 'Invalid token' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
-
-    // 2. Parse request body
-    const { clientProfile, unitsList } = await req.json()
+    const body = await req.json()
+    const { clientProfile, unitsList } = body ?? {}
 
     if (!clientProfile || !unitsList || !Array.isArray(unitsList)) {
       return new Response(JSON.stringify({ error: 'Invalid request body' }), {
@@ -50,6 +69,14 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+    if (unitsList.length > MAX_UNITS) {
+      return new Response(JSON.stringify({ error: `unitsList exceeds ${MAX_UNITS}` }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    const safeProfile = sanitizeForPrompt(clientProfile)
+    const safeUnits = sanitizeForPrompt(unitsList)
 
     // 3. Call Anthropic API server-side
     const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -65,7 +92,7 @@ Deno.serve(async (req) => {
         system: 'Tu es un expert immobilier algerien. Classe ces unites selon leur adequation avec le profil client. Criteres : budget, type souhaite, rapport qualite/prix, etage, surface. Reponds UNIQUEMENT avec un JSON array : [{"unit_id":"...","rank":1},...]',
         messages: [{
           role: 'user',
-          content: `Profil client: ${JSON.stringify(clientProfile)}\n\nUnites disponibles: ${JSON.stringify(unitsList)}`,
+          content: `Profil client (JSON): ${JSON.stringify(safeProfile)}\n\nUnites disponibles (JSON): ${JSON.stringify(safeUnits)}`,
         }],
       }),
     })
@@ -82,16 +109,19 @@ Deno.serve(async (req) => {
     const data = await response.json()
     const text = data.content?.[0]?.text ?? ''
 
-    // 4. Parse ranking from response
-    const jsonMatch = text.match(/\[[\s\S]*\]/)
-    if (!jsonMatch) {
+    // 4. Parse ranking from response.
+    // Use a non-greedy first-array match so two arrays in the answer don't merge.
+    const jsonMatch = text.match(/\[[\s\S]*?\]/)
+    let ranking: unknown = null
+    if (jsonMatch) {
+      try { ranking = JSON.parse(jsonMatch[0]) } catch { /* fall through */ }
+    }
+    if (!Array.isArray(ranking)) {
       return new Response(JSON.stringify({ error: 'Invalid AI response format' }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
-
-    const ranking = JSON.parse(jsonMatch[0])
 
     return new Response(JSON.stringify({ ranking }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -1,22 +1,37 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { authenticate } from '../_shared/auth.ts'
+import { rateLimit } from '../_shared/rateLimit.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const resendApiKey = Deno.env.get('RESEND_API_KEY')
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 const BATCH_SIZE = 50
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method !== 'POST') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  })
+  const auth = await authenticate(req, { allowService: true, requireAdmin: true, corsHeaders })
+  if (!auth.ok) return auth.response
+  const { principal, supabase } = auth
+
+  if (principal.kind === 'user') {
+    const rl = rateLimit(`send-campaign:${principal.userId}`, 5, 60_000)
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
 
   try {
     const { campaign_id } = await req.json()
@@ -47,12 +62,14 @@ Deno.serve(async (req) => {
     let query = supabase
       .from('clients')
       .select('id, email, full_name')
-      .eq('tenant_id', campaign.tenant_id)
+      
       .not('email', 'is', null)
 
     if (rules.pipeline_stages?.length) query = query.in('pipeline_stage', rules.pipeline_stages)
     if (rules.sources?.length) query = query.in('source', rules.sources)
-    if (rules.project_ids?.length) query = query.in('project_id', rules.project_ids)
+    // `clients` has no project_id column; the UI stores interested projects
+    // as a text[] on clients.interested_projects, so use overlap semantics.
+    if (rules.project_ids?.length) query = query.overlaps('interested_projects', rules.project_ids)
 
     const { data: clients, error: clientErr } = await query
     if (clientErr) throw new Error(`Segment query failed: ${clientErr.message}`)
@@ -173,7 +190,7 @@ Deno.serve(async (req) => {
 
     // 9. Log in email_logs
     await supabase.from('email_logs').insert({
-      tenant_id: campaign.tenant_id,
+      
       template: 'campaign',
       recipient: `${totalSent} destinataires`,
       subject: emailSubject,
@@ -189,8 +206,7 @@ Deno.serve(async (req) => {
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
   } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err)
-    console.error('send-campaign error:', msg)
-    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    console.error('send-campaign error:', err)
+    return new Response(JSON.stringify({ error: 'Internal error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 })

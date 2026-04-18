@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
-import { blocksToHtml, STARTER_BLOCKS } from '@/lib/blocksToHtml'
+import { blocksToHtml, sanitizeTextHtml, STARTER_BLOCKS } from '@/lib/blocksToHtml'
+import { validateFile } from '@/lib/fileValidation'
 import type { EmailBlock } from '@/lib/blocksToHtml'
 import { useSaveTemplate } from '@/hooks/useEmailMarketing'
 import { DragDropZone } from '@/components/common/DragDropZone'
@@ -47,7 +48,7 @@ interface Props {
 }
 
 export function TemplateEditor({ initialTemplate, onClose }: Props) {
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const [name, setName] = useState(initialTemplate?.name ?? 'Nouveau template')
   const [subject, setSubject] = useState(initialTemplate?.subject ?? '')
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialTemplate?.blocks ?? [...STARTER_BLOCKS])
@@ -102,10 +103,13 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
 
   const handleImageUpload = async (files: File[], blockId: string) => {
     const file = files[0]
-    if (!file || !tenantId) return
-    const ext = file.name.split('.').pop()
-    const path = `${tenantId}/email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`
-    const { error } = await supabase.storage.from('email-assets').upload(path, file)
+    if (!file) return
+    const check = await validateFile(file, { maxSizeMB: 5, allowedMimes: ['image/*'] })
+    if (!check.ok) { toast.error(`Image refusée: ${check.reason}`); return }
+    const path = `email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${check.detected.ext}`
+    const { error } = await supabase.storage
+      .from('email-assets')
+      .upload(path, file, { contentType: check.detected.mime })
     if (error) { toast.error('Erreur upload'); return }
     const { data: urlData } = supabase.storage.from('email-assets').getPublicUrl(path)
     updateBlock(blockId, { content: { src: urlData.publicUrl } })
@@ -115,7 +119,7 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex bg-immo-bg-primary">
       {/* Left: Block palette */}
-      <div className="w-[200px] shrink-0 border-r border-immo-border-default bg-immo-bg-card p-4 space-y-3">
+      <div className="hidden w-[200px] shrink-0 space-y-3 border-r border-immo-border-default bg-immo-bg-card p-4 md:block">
         <h3 className="text-xs font-bold text-immo-text-secondary uppercase tracking-wider">Blocs</h3>
         <div className="space-y-1.5">
           {BLOCK_TYPES.map(({ type, icon: Icon, label }) => (
@@ -136,9 +140,9 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
       {/* Center: Preview */}
       <div className="flex-1 overflow-y-auto p-6">
         {/* Toolbar */}
-        <div className="mb-4 flex items-center gap-3">
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du template" className="max-w-[250px] text-sm" />
-          <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Objet de l'email" className="flex-1 text-sm" />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du template" className="w-full text-sm sm:max-w-[250px]" />
+          <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Objet de l'email" className="w-full text-sm sm:flex-1" />
           <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)} className="gap-1 text-xs">
             <Eye className="h-3.5 w-3.5" /> {showPreview ? 'Éditeur' : 'Aperçu'}
           </Button>
@@ -154,7 +158,8 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
               srcDoc={blocksToHtml(blocks)}
               className="w-full rounded-xl"
               style={{ minHeight: 600, border: 'none' }}
-              sandbox="allow-same-origin"
+              sandbox=""
+              referrerPolicy="no-referrer"
               title="Email preview"
             />
           </div>
@@ -201,7 +206,7 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
       </div>
 
       {/* Right: Properties */}
-      <div className="w-[260px] shrink-0 border-l border-immo-border-default bg-immo-bg-card p-4 overflow-y-auto">
+      <div className="hidden w-[260px] shrink-0 overflow-y-auto border-l border-immo-border-default bg-immo-bg-card p-4 lg:block">
         <h3 className="text-xs font-bold text-immo-text-secondary uppercase tracking-wider mb-3">Propriétés</h3>
         {selectedBlock ? (
           <BlockProperties block={selectedBlock} onChange={(updates) => updateBlock(selectedBlock.id, updates)} />
@@ -262,7 +267,7 @@ function BlockPreview({ block, onImageUpload }: { block: EmailBlock; onImageUplo
       return (
         <div
           className="text-sm text-immo-text-primary"
-          dangerouslySetInnerHTML={{ __html: String(block.content.text ?? '') }}
+          dangerouslySetInnerHTML={{ __html: sanitizeTextHtml(String(block.content.text ?? '')) }}
         />
       )
     case 'image': {

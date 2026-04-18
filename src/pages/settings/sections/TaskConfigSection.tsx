@@ -31,37 +31,37 @@ const CHANNEL_LABELS: Record<string, string> = { whatsapp: 'WhatsApp', sms: 'SMS
 const VARIABLES = ['{client_nom}','{client_prenom}','{client_phone}','{client_budget}','{agent_nom}','{agent_prenom}','{agent_phone}','{agence}','{projet}','{prix_min}','{unite_visitee}','{prix_unite}','{date_visite}','{heure_visite}','{adresse_projet}','{lien_maps}','{montant_echeance}','{date_echeance}','{apport}','{nb_echeances}']
 
 export function TaskConfigSection() {
-  const { tenantId } = useAuthStore()
+  const {} = useAuthStore()
   const qc = useQueryClient()
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(['accueil']))
   const [editMsg, setEditMsg] = useState<MessageTpl | null>(null)
   const [editBody, setEditBody] = useState('')
 
   const { data: bundles = [] } = useQuery({
-    queryKey: ['task-bundles', tenantId],
+    queryKey: ['task-bundles'],
     queryFn: async () => {
       const { data } = await supabase.from('task_bundles').select('*').order('sort_order')
       return (data ?? []) as Bundle[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const { data: templates = [] } = useQuery({
-    queryKey: ['task-templates', tenantId],
+    queryKey: ['task-templates'],
     queryFn: async () => {
       const { data } = await supabase.from('task_templates').select('*').order('sort_order')
       return (data ?? []) as TaskTemplate[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const { data: messages = [] } = useQuery({
-    queryKey: ['message-templates', tenantId],
+    queryKey: ['message-templates'],
     queryFn: async () => {
       const { data } = await supabase.from('message_templates').select('*').order('sort_order')
       return (data ?? []) as MessageTpl[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const toggleTask = useMutation({

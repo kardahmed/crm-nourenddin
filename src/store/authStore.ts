@@ -8,7 +8,6 @@ interface AuthState {
   session: Session | null
   userProfile: User | null
   role: UserRole | null
-  tenantId: string | null
   permissionProfile: PermissionProfile | null
   isLoading: boolean
   setSession: (session: Session | null) => void
@@ -22,7 +21,6 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   userProfile: null,
   role: null,
-  tenantId: SINGLE_TENANT_ID,
   permissionProfile: null,
   isLoading: true,
 
@@ -32,7 +30,6 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       userProfile: profile,
       role: profile?.role ?? null,
-      tenantId: SINGLE_TENANT_ID,
     }),
 
   setPermissionProfile: (profile) => set({ permissionProfile: profile }),
@@ -44,7 +41,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       session: null,
       userProfile: null,
       role: null,
-      tenantId: SINGLE_TENANT_ID,
       permissionProfile: null,
       isLoading: false,
     }),

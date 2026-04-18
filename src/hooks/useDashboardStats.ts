@@ -28,6 +28,7 @@ interface AgentPerformance {
   id: string
   first_name: string
   last_name: string
+  avatar_url: string | null
   reservations_count: number
   sales_count: number
   revenue: number
@@ -89,21 +90,21 @@ export interface DashboardStats {
 interface UnitRow { id: string; status: string; project_id: string; agent_id: string | null }
 interface SaleRow { final_price: number; agent_id: string; created_at: string }
 interface ProjectRow { id: string; name: string; code: string; status: string }
-interface AgentRow { id: string; first_name: string; last_name: string; last_activity: string | null }
+interface AgentRow { id: string; first_name: string; last_name: string; avatar_url: string | null; last_activity: string | null }
 interface ReservationRow { agent_id: string }
 interface HistoryRow { id: string; type: string; title: string; created_at: string; clients: { full_name: string } | null; users: { first_name: string; last_name: string } | null }
 
 const PIPELINE_STAGES = ['accueil', 'visite_a_gerer', 'visite_confirmee', 'visite_terminee', 'negociation', 'reservation', 'vente', 'relancement', 'perdue']
 
 export function useDashboardStats() {
-  const { tenantId, role, session } = useAuthStore()
+  const { role, session } = useAuthStore()
   const userId = session?.user?.id
   const isAgent = role === 'agent'
 
   return useQuery({
-    queryKey: ['dashboard-stats', tenantId, role, userId],
+    queryKey: ['dashboard-stats', role, userId],
+    enabled: !isAgent && !!role,
     queryFn: async (): Promise<DashboardStats> => {
-      if (!tenantId) throw new Error('No tenant')
 
       const now = new Date()
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
@@ -115,19 +116,19 @@ export function useDashboardStats() {
         agentReservationsRes, agentSalesRes,
         clientsRes, overdueRes, visitsRes, tasksRes, allSalesRes,
       ] = await Promise.all([
-        supabase.from('projects').select('id, name, code, status').eq('status', 'active'),
-        supabase.from('units').select('id, status, project_id, agent_id'),
+        supabase.from('projects').select('id, name, code, status').eq('status', 'active').limit(200),
+        supabase.from('units').select('id, status, project_id, agent_id').limit(5000),
         (() => {
           let q = supabase.from('sales').select('final_price, agent_id, created_at').eq('status', 'active')
           if (isAgent && userId) q = q.eq('agent_id', userId)
           return q
         })(),
         supabase.from('history').select('id, type, title, created_at, clients(full_name), users!history_agent_id_fkey(first_name, last_name)').order('created_at', { ascending: false }).limit(10),
-        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('users').select('id, first_name, last_name, last_activity').eq('role', 'agent').eq('status', 'active'),
+        isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('users').select('id, first_name, last_name, avatar_url, last_activity').eq('role', 'agent').eq('status', 'active'),
         isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('reservations').select('agent_id').eq('status', 'active').gte('created_at', monthStart),
         isAgent ? Promise.resolve({ data: [], error: null }) : supabase.from('sales').select('agent_id, final_price').eq('status', 'active').gte('created_at', monthStart),
         // New: clients for pipeline funnel + at-risk
-        supabase.from('clients').select('id, full_name, phone, pipeline_stage, last_contact_at, source, agent_id, users!clients_agent_id_fkey(first_name, last_name)'),
+        supabase.from('clients').select('id, full_name, phone, pipeline_stage, last_contact_at, source, agent_id, users!clients_agent_id_fkey(first_name, last_name)').limit(5000),
         // New: overdue payments
         supabase.from('payment_schedules').select('amount').eq('status', 'late'),
         // New: today's visits
@@ -186,7 +187,7 @@ export function useDashboardStats() {
 
       // Agent performance
       const agentPerformance: AgentPerformance[] = agents.map(a => ({
-        id: a.id, first_name: a.first_name, last_name: a.last_name,
+        id: a.id, first_name: a.first_name, last_name: a.last_name, avatar_url: a.avatar_url,
         reservations_count: monthReservations.filter(r => r.agent_id === a.id).length,
         sales_count: monthSales.filter(s => s.agent_id === a.id).length,
         revenue: monthSales.filter(s => s.agent_id === a.id).reduce((sum, s) => sum + (s.final_price ?? 0), 0),
@@ -264,6 +265,5 @@ export function useDashboardStats() {
         todayTasks, overdueTasks,
       }
     },
-    enabled: !!tenantId,
   })
 }

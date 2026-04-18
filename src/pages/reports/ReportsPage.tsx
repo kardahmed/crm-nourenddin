@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -78,41 +78,54 @@ const PAGE_SIZE = 25
 
 export function ReportsPage() {
   const navigate = useNavigate()
-  const { tenantId } = useAuthStore()
-  const userId = useAuthStore((s) => s.session?.user?.id)
   const { isAgent } = usePermissions()
+  const userId = useAuthStore((s) => s.session?.user?.id) ?? ''
 
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [agentFilter, setAgentFilter] = useState('all')
   const [_projectFilter] = useState('all')
-  const [view, setView] = useState<'team' | 'agent'>('team')
-  const [selectedAgent, setSelectedAgent] = useState('')
+  // Agents get the per-agent view, locked to themselves.
+  const [view, setView] = useState<'team' | 'agent'>(isAgent ? 'agent' : 'team')
+  const [selectedAgent, setSelectedAgent] = useState(isAgent ? userId : '')
   const [detailPage, setDetailPage] = useState(0)
+
+  // Keep the agent's selection locked to their own id if the store rehydrates.
+  useEffect(() => {
+    if (isAgent && userId && selectedAgent !== userId) {
+      setView('agent')
+      setSelectedAgent(userId)
+    }
+  }, [isAgent, userId, selectedAgent])
 
   const range = getPeriodRange(period)
   const rangeStart = format(range.start, "yyyy-MM-dd'T'HH:mm:ss")
   const rangeEnd = format(range.end, "yyyy-MM-dd'T'HH:mm:ss")
 
-  // Fetch agents
+  // Fetch agents — admins see the full team, agents get only their own row
+  // (used by the team table which is hidden for them anyway, but the shape
+  // stays consistent so the agent-view KPIs still resolve).
   const { data: agents = [] } = useQuery({
-    queryKey: ['report-agents', tenantId],
+    queryKey: ['report-agents', isAgent, userId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('id, first_name, last_name, last_activity, status').in('role', ['agent', 'admin']).order('first_name')
+      let q = supabase.from('users').select('id, first_name, last_name, last_activity, status').in('role', ['agent', 'admin']).order('first_name')
+      if (isAgent && userId) q = q.eq('id', userId)
+      const { data } = await q
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; last_activity: string | null; status: string }>
     },
-    enabled: !!tenantId,
   })
 
-  // Fetch all history for period
+  // Fetch history for the period. Agents see only their own history.
   const { data: allHistory = [], isLoading } = useQuery({
-    queryKey: ['report-history', tenantId, rangeStart, rangeEnd],
+    queryKey: ['report-history', rangeStart, rangeEnd, isAgent, userId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let q = supabase
         .from('history')
         .select('id, type, title, description, agent_id, client_id, created_at, clients(full_name)')
         .gte('created_at', rangeStart)
         .lte('created_at', rangeEnd)
         .order('created_at', { ascending: false })
+      if (isAgent && userId) q = q.eq('agent_id', userId)
+      const { data, error } = await q
       if (error) { handleSupabaseError(error); throw error }
       return (data ?? []).map((h: Record<string, unknown>) => ({
         id: h.id as string,
@@ -126,29 +139,29 @@ export function ReportsPage() {
         project_name: null,
       })) satisfies HistoryEntry[]
     },
-    enabled: !!tenantId,
   })
 
-  // Fetch new clients count per agent
+  // Fetch new clients count per agent — scoped for agents.
   const { data: newClientsMap = new Map<string, number>() } = useQuery({
-    queryKey: ['report-new-clients', tenantId, rangeStart, rangeEnd],
+    queryKey: ['report-new-clients', rangeStart, rangeEnd, isAgent, userId],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)
+      let q = supabase.from('clients').select('agent_id').gte('created_at', rangeStart).lte('created_at', rangeEnd)
+      if (isAgent && userId) q = q.eq('agent_id', userId)
+      const { data } = await q
       const m = new Map<string, number>()
       for (const c of (data ?? []) as Array<{ agent_id: string | null }>) {
         if (c.agent_id) m.set(c.agent_id, (m.get(c.agent_id) ?? 0) + 1)
       }
       return m
     },
-    enabled: !!tenantId,
   })
 
 
-  // Team view data
+  // Team view data — this page is admin-only (<RoleRoute allowedRoles={['admin']}/>),
+  // so we always show the full team. If the route is ever reclassified, add an
+  // agent-scoped filter here.
   const teamData = useMemo(() => {
-    const filteredAgents = isAgent && userId ? agents.filter(a => a.id === userId) : agents
-
-    return filteredAgents.map(a => {
+    return agents.map(a => {
       const agentHistory = allHistory.filter(h => h.agent_id === a.id)
       const countType = (type: string) => agentHistory.filter(h => h.type === type).length
       const inactiveDays = a.last_activity ? Math.floor((Date.now() - new Date(a.last_activity).getTime()) / 86400000) : 999
@@ -171,7 +184,7 @@ export function ReportsPage() {
         new_clients: newClientsMap.get(a.id) ?? 0,
       }
     })
-  }, [agents, allHistory, newClientsMap, isAgent, userId])
+  }, [agents, allHistory, newClientsMap])
 
   // Team totals
   const totals = useMemo(() => {
@@ -245,18 +258,20 @@ export function ReportsPage() {
           <Download className="mr-1 h-3.5 w-3.5" /> Exporter
         </Button>
 
-        <div className="ml-auto flex gap-1 rounded-lg border border-immo-border-default p-0.5">
-          <button onClick={() => setView('team')} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'team' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
-            Équipe
-          </button>
-          <button onClick={() => { setView('agent'); if (!selectedAgent && agents.length) setSelectedAgent(agents[0].id) }} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'agent' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
-            Agent
-          </button>
-        </div>
+        {!isAgent && (
+          <div className="ml-auto flex gap-1 rounded-lg border border-immo-border-default p-0.5">
+            <button onClick={() => setView('team')} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'team' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
+              Équipe
+            </button>
+            <button onClick={() => { setView('agent'); if (!selectedAgent && agents.length) setSelectedAgent(agents[0].id) }} className={`rounded-md px-3 py-1 text-[11px] font-medium ${view === 'agent' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}>
+              Agent
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* TEAM VIEW */}
-      {view === 'team' && (
+      {/* TEAM VIEW — admin only */}
+      {view === 'team' && !isAgent && (
         <div className="overflow-hidden rounded-xl border border-immo-border-default">
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -310,13 +325,15 @@ export function ReportsPage() {
       {/* AGENT VIEW */}
       {view === 'agent' && (
         <div className="space-y-5">
-          {/* Agent selector */}
-          <FilterDropdown
-            label="Agent"
-            options={agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))}
-            value={selectedAgent}
-            onChange={(v) => { setSelectedAgent(v); setDetailPage(0) }}
-          />
+          {/* Agent selector — hidden for agents (locked to themselves) */}
+          {!isAgent && (
+            <FilterDropdown
+              label="Agent"
+              options={agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))}
+              value={selectedAgent}
+              onChange={(v) => { setSelectedAgent(v); setDetailPage(0) }}
+            />
+          )}
 
           {selectedAgent && (
             <>

@@ -12,13 +12,12 @@ interface TaskTemplate {
  * Also cancels pending tasks from the previous stage.
  */
 export function useAutoTasks() {
-  const tenantId = useAuthStore(s => s.tenantId)
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
 
   const generateForStage = useMutation({
     mutationFn: async ({ clientId, newStage, oldStage }: { clientId: string; newStage: string; oldStage?: string }) => {
-      if (!tenantId || !userId) return
+      if (!userId) return
 
       // 1. Cancel pending tasks from old stage
       if (oldStage && oldStage !== newStage) {
@@ -49,7 +48,6 @@ export function useAutoTasks() {
 
       // 4. Create tasks
       const newTasks = (templates as TaskTemplate[]).map(t => ({
-        tenant_id: tenantId,
         client_id: clientId,
         template_id: t.id,
         bundle_id: t.bundle_id,

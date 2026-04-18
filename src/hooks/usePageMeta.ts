@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 const PAGE_KEYS: Record<string, { titleKey: string; subtitleKey: string }> = {
   '/dashboard': { titleKey: 'nav.dashboard', subtitleKey: 'page.dashboard_subtitle' },
+  '/today': { titleKey: 'nav.today', subtitleKey: 'page.today_subtitle' },
   '/projects': { titleKey: 'nav.projects', subtitleKey: 'page.projects_subtitle' },
   '/pipeline': { titleKey: 'nav.pipeline', subtitleKey: 'page.pipeline_subtitle' },
   '/planning': { titleKey: 'nav.planning', subtitleKey: 'page.planning_subtitle' },
@@ -12,6 +13,7 @@ const PAGE_KEYS: Record<string, { titleKey: string; subtitleKey: string }> = {
   '/agents': { titleKey: 'nav.agents', subtitleKey: 'page.agents_subtitle' },
   '/reports': { titleKey: 'nav.reports', subtitleKey: 'page.reports_subtitle' },
   '/settings': { titleKey: 'nav.settings', subtitleKey: 'page.settings_subtitle' },
+  '/profile': { titleKey: 'nav.profile', subtitleKey: 'page.profile_subtitle' },
 }
 
 export function usePageMeta() {

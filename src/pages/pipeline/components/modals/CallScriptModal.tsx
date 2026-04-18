@@ -38,12 +38,12 @@ interface CallScriptModalProps {
   clientName: string
   clientPhone: string
   clientStage: PipelineStage
-  tenantId: string
+
   agentId: string
 }
 
 export function CallScriptModal({
-  isOpen, onClose, clientId, clientName, clientPhone, clientStage, tenantId, agentId,
+  isOpen, onClose, clientId, clientName, clientPhone, clientStage, agentId,
 }: CallScriptModalProps) {
   const qc = useQueryClient()
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
@@ -67,7 +67,7 @@ export function CallScriptModal({
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/answer-question`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
-        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName, agent_id: agentId, tenant_id: tenantId }),
+        body: JSON.stringify({ question, client_stage: clientStage, client_name: clientName, agent_id: agentId,  }),
       })
 
       const data = await res.json()
@@ -88,18 +88,15 @@ export function CallScriptModal({
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [isOpen])
 
-  // Fetch agent + tenant names for template variable replacement
+  // Fetch agent name for template variable replacement
   const { data: contextNames } = useQuery({
-    queryKey: ['script-context', agentId, tenantId],
+    queryKey: ['script-context', agentId],
     queryFn: async () => {
-      const [agentRes, tenantRes] = await Promise.all([
-        supabase.from('users').select('first_name, last_name').eq('id', agentId).single(),
-        supabase.from('tenants').select('name, phone').eq('id', tenantId).single(),
-      ])
+      const agentRes = await supabase.from('users').select('first_name, last_name').eq('id', agentId).single()
       return {
         agentName: agentRes.data ? `${agentRes.data.first_name} ${agentRes.data.last_name}` : 'Agent',
-        agencyName: tenantRes.data?.name ?? 'Agence',
-        agencyPhone: tenantRes.data?.phone ?? '',
+        agencyName: 'Agence',
+        agencyPhone: '',
       }
     },
     enabled: isOpen,
@@ -169,12 +166,12 @@ export function CallScriptModal({
 
   // Fetch playbook for objection handling
   const { data: playbook } = useQuery({
-    queryKey: ['sale-playbook', tenantId],
+    queryKey: ['sale-playbook'],
     queryFn: async () => {
       const { data } = await supabase.from('sale_playbooks').select('*').eq('is_active', true).limit(1).maybeSingle()
       return data as { objective: string; tone: string; closing_phrases: string[]; objection_rules: ObjectionRule[]; custom_instructions: string } | null
     },
-    enabled: isOpen && !!tenantId,
+    enabled: isOpen,
   })
 
   const [showVisitForm, setShowVisitForm] = useState(false)
@@ -187,13 +184,13 @@ export function CallScriptModal({
     mutationFn: async () => {
       if (!visitDate || !visitTime) return
       const { error } = await supabase.from('visits').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         scheduled_at: `${visitDate}T${visitTime}:00`,
         visit_type: 'on_site', status: 'planned',
       } as never)
       if (error) { handleSupabaseError(error); throw error }
       await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         type: 'visit_planned', title: `Visite planifiee depuis appel — ${visitDate} ${visitTime}`,
       } as never)
       // Move to visite_a_gerer if in accueil
@@ -267,7 +264,7 @@ export function CallScriptModal({
     try {
       // 1. Save call response
       await supabase.from('call_responses').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         script_id: script?.script_id ?? null,
         responses: { ...answers, _client_qa: clientQA.map(q => ({ q: q.question, a: q.answer })) },
         duration_seconds: timer,
@@ -310,7 +307,7 @@ export function CallScriptModal({
       const answeredCount = Object.keys(answers).length
       const totalQuestions = script?.questions?.length ?? 0
       await supabase.from('history').insert({
-        tenant_id: tenantId, client_id: clientId, agent_id: agentId,
+ client_id: clientId, agent_id: agentId,
         type: 'call',
         title: `Appel guide ${Math.floor(timer / 60)}min — ${result === 'qualified' ? 'Qualifie' : result === 'callback' ? 'A rappeler' : 'Pas interesse'} (${answeredCount}/${totalQuestions} questions)`,
         metadata: { duration: timer, result, answers_count: answeredCount, mode: script?.mode },
@@ -601,7 +598,7 @@ export function CallScriptModal({
           </div>
 
           {/* Mini availability calendar */}
-          <AvailabilityMini agentId={agentId} tenantId={tenantId} />
+          <AvailabilityMini agentId={agentId} />
           <div className="mb-4">
             {!showVisitForm ? (
               <Button onClick={() => setShowVisitForm(true)} className="w-full border border-immo-accent-blue/30 bg-immo-accent-blue/5 text-xs font-semibold text-immo-accent-blue hover:bg-immo-accent-blue/10">
@@ -726,12 +723,12 @@ export function CallScriptModal({
 }
 
 // Mini availability calendar — reads tenant visit settings
-function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: string }) {
+function AvailabilityMini({ agentId }: { agentId: string }) {
   // Load tenant visit settings
   const { data: visitSettings } = useQuery({
-    queryKey: ['tenant-visit-settings', tenantId],
+    queryKey: ['tenant-visit-settings'],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('work_days, visit_slots, visit_duration_minutes').single()
+      const { data } = await supabase.from('app_settings' as never).select('work_days, visit_slots, visit_duration_minutes').single()
       return data as { work_days: number[] | null; visit_slots: string[] | null; visit_duration_minutes: number | null } | null
     },
     staleTime: 300_000,
@@ -747,6 +744,7 @@ function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: st
         .from('visits')
         .select('scheduled_at')
         .eq('agent_id', agentId)
+        
         .gte('scheduled_at', now.toISOString())
         .lte('scheduled_at', nextWeek.toISOString())
         .in('status', ['planned', 'confirmed'])

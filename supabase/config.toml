@@ -1,0 +1,12 @@
+# Supabase project config
+# See https://supabase.com/docs/reference/cli/config
+
+project_id = "crm-nourenddin"
+
+# Per-function settings
+#
+# create-user: we do our own admin-role verification inside the function
+# (with service role privileges), so we disable the gateway JWT check to
+# keep the auth logic in one place and surface meaningful 4xx responses.
+[functions.create-user]
+verify_jwt = false

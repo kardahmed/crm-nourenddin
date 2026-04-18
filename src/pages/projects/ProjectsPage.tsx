@@ -33,6 +33,10 @@ import { format } from 'date-fns'
 import { ProjectCard } from './components/ProjectCard'
 import { CreateProjectModal } from './components/CreateProjectModal'
 import { UnitsTab } from './components/UnitsTab'
+import { CsvImportModal } from '@/components/common/CsvImportModal'
+import { PROJECT_IMPORT_FIELDS } from './projectImportFields'
+import { useQueryClient } from '@tanstack/react-query'
+import { Upload } from 'lucide-react'
 
 interface ProjectWithCounts {
   id: string
@@ -80,6 +84,8 @@ export function ProjectsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [showCreate, setShowCreate] = useState(false)
+  const [showImport, setShowImport] = useState(false)
+  const qc = useQueryClient()
   const [deleteId, setDeleteId] = useState<string | null>(null)
 
   // Build projects with unit counts
@@ -280,7 +286,7 @@ export function ProjectsPage() {
             placeholder="Rechercher un projet..."
             value={search}
             onChange={setSearch}
-            className="w-[260px]"
+            className="w-full sm:w-[260px]"
           />
           <FilterDropdown
             label={t('projects_extra.filter_status')}
@@ -306,14 +312,24 @@ export function ProjectsPage() {
         </div>
 
         {canManageProjects && (
-          <Button
-            onClick={() => setShowCreate(true)}
-            disabled={!canAddProject}
-            className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
-            title={!canAddProject ? 'Limite atteinte — Passez au plan superieur' : undefined}
-          >
-            <Plus className="mr-1.5 h-4 w-4" /> Nouveau projet
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setShowImport(true)}
+              variant="ghost"
+              className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover"
+              title="Importer des projets depuis un CSV"
+            >
+              <Upload className="mr-1.5 h-4 w-4" /> Importer
+            </Button>
+            <Button
+              onClick={() => setShowCreate(true)}
+              disabled={!canAddProject}
+              className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
+              title={!canAddProject ? 'Limite atteinte — Passez au plan superieur' : undefined}
+            >
+              <Plus className="mr-1.5 h-4 w-4" /> Nouveau projet
+            </Button>
+          </div>
         )}
       </div>
 
@@ -350,6 +366,16 @@ export function ProjectsPage() {
 
       {/* Create modal */}
       <CreateProjectModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+      <CsvImportModal
+        isOpen={showImport}
+        onClose={() => setShowImport(false)}
+        title="Importer des projets"
+        subtitle="Depuis un CSV — migration ou batch"
+        table="projects"
+        fields={PROJECT_IMPORT_FIELDS}
+        templateName="projets"
+        onSuccess={() => qc.invalidateQueries({ queryKey: ['projects'] })}
+      />
 
       {/* Delete confirm */}
       <ConfirmDialog

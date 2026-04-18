@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Shield, Plus, Pencil, Trash2, Check, Users, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Modal } from '@/components/common'
@@ -20,23 +19,23 @@ interface Profile {
 }
 
 export function PermissionProfilesSection() {
-  const tenantId = useAuthStore(s => s.tenantId)
+  
   const qc = useQueryClient()
   const [editProfile, setEditProfile] = useState<Profile | null>(null)
   const [showCreate, setShowCreate] = useState(false)
 
   const { data: profiles = [] } = useQuery({
-    queryKey: ['permission-profiles', tenantId],
+    queryKey: ['permission-profiles'],
     queryFn: async () => {
       const { data } = await supabase.from('permission_profiles').select('*').order('created_at')
       return (data ?? []) as Profile[]
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   // Count agents per profile
   const { data: agentCounts = {} } = useQuery({
-    queryKey: ['agent-profile-counts', tenantId],
+    queryKey: ['agent-profile-counts'],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('*').eq('role', 'agent')
       const counts: Record<string, number> = {}
@@ -46,7 +45,7 @@ export function PermissionProfilesSection() {
       }
       return counts
     },
-    enabled: !!tenantId,
+    enabled: true,
   })
 
   const deleteProfile = useMutation({
@@ -132,7 +131,6 @@ export function PermissionProfilesSection() {
       {(showCreate || editProfile) && (
         <ProfileEditor
           profile={editProfile}
-          tenantId={tenantId!}
           onClose={() => { setShowCreate(false); setEditProfile(null) }}
           onSaved={() => { qc.invalidateQueries({ queryKey: ['permission-profiles'] }); setShowCreate(false); setEditProfile(null) }}
         />
@@ -141,9 +139,9 @@ export function PermissionProfilesSection() {
   )
 }
 
-function ProfileEditor({ profile, tenantId, onClose, onSaved }: {
+function ProfileEditor({ profile, onClose, onSaved }: {
   profile: Profile | null
-  tenantId: string
+
   onClose: () => void
   onSaved: () => void
 }) {
@@ -180,7 +178,7 @@ function ProfileEditor({ profile, tenantId, onClose, onSaved }: {
         } as never).eq('id', profile.id)
       } else {
         await supabase.from('permission_profiles').insert({
-          tenant_id: tenantId,
+  
           name: name.trim(),
           description: description.trim() || null,
           permissions,

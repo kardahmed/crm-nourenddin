@@ -68,20 +68,24 @@ function App() {
         {/* App routes — /dashboard, /pipeline, etc. */}
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
-            {/* Accessible to all authenticated users */}
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/today" element={<TodayPage />} />
+            {/* All roles: profile + projects (reception needs projects for phone answers) */}
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="/projects" element={<ProjectsPage />} />
             <Route path="/projects/:projectId" element={<ProjectDetailPage />} />
-            <Route path="/pipeline" element={<PipelinePage />} />
-            <Route path="/pipeline/clients/:clientId" element={<ClientDetailPage />} />
-            <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/planning" element={<PlanningPage />} />
-            <Route path="/dossiers" element={<DossiersPage />} />
-            <Route path="/profile" element={<ProfilePage />} />
-            <Route path="/goals" element={<GoalsPage />} />
-            <Route path="/performance" element={<PerformancePage />} />
-            <Route path="/reports" element={<ReportsPage />} />
+
+            {/* Agent + admin */}
+            <Route element={<RoleRoute allowedRoles={['agent', 'admin']} />}>
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/today" element={<TodayPage />} />
+              <Route path="/pipeline" element={<PipelinePage />} />
+              <Route path="/pipeline/clients/:clientId" element={<ClientDetailPage />} />
+              <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/planning" element={<PlanningPage />} />
+              <Route path="/dossiers" element={<DossiersPage />} />
+              <Route path="/goals" element={<GoalsPage />} />
+              <Route path="/performance" element={<PerformancePage />} />
+              <Route path="/reports" element={<ReportsPage />} />
+            </Route>
 
             {/* Reception + admin (front-desk hub) */}
             <Route element={<RoleRoute allowedRoles={['reception', 'admin']} />}>

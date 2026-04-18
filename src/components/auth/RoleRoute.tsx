@@ -10,7 +10,8 @@ export function RoleRoute({ allowedRoles }: RoleRouteProps) {
   const role = useAuthStore((s) => s.role)
 
   if (!role || !allowedRoles.includes(role)) {
-    return <Navigate to="/dashboard" replace />
+    const target = role === 'reception' ? '/reception' : '/dashboard'
+    return <Navigate to={target} replace />
   }
 
   return <Outlet />

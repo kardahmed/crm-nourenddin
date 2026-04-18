@@ -34,7 +34,7 @@ export function LoginPage() {
 
   useEffect(() => {
     if (isAuthenticated && role) {
-      navigate('/dashboard', { replace: true })
+      navigate(role === 'reception' ? '/reception' : '/dashboard', { replace: true })
     }
   }, [isAuthenticated, role, navigate])
 

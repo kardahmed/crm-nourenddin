@@ -1,12 +1,8 @@
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 
-// Wraps public auth pages (/login, /register, /forgot-password,
-// /reset-password). If a valid session is already loaded we redirect
-// to /dashboard rather than re-rendering a form the user has no
-// reason to see — keeps guest entrypoints consistent with LoginPage.
 export function GuestOnlyRoute() {
-  const { isAuthenticated, isLoading } = useAuth()
+  const { isAuthenticated, isLoading, role } = useAuth()
 
   if (isLoading) {
     return (
@@ -17,7 +13,8 @@ export function GuestOnlyRoute() {
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />
+    const target = role === 'reception' ? '/reception' : '/dashboard'
+    return <Navigate to={target} replace />
   }
 
   return <Outlet />

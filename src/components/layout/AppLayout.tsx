@@ -7,11 +7,13 @@ import { usePageMeta } from '@/hooks/usePageMeta'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { useMobile } from '@/hooks/useMobile'
+import { useAuthStore } from '@/store/authStore'
+import type { AuthState } from '@/store/authStore'
 
 export function AppLayout() {
   const { title, subtitle } = usePageMeta()
   const { isMobile } = useMobile()
-  const role = useAuthStore((s) => s.role)
+  const role = useAuthStore((s: AuthState) => s.role)
   useKeyboardShortcuts()
   usePushNotifications()
 

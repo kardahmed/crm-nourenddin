@@ -946,7 +946,7 @@ export type Database = {
 
 // Enums
 export type UserRole = 'admin' | 'agent' | 'reception'
-export type UserStatus = 'active' | 'inactive'
+export type UserStatus = 'active' | 'inactive' | 'archived'
 export type ProjectStatus = 'active' | 'inactive' | 'archived'
 export type UnitType = 'apartment' | 'local' | 'villa' | 'parking'
 export type UnitSubtype = 'F2' | 'F3' | 'F4' | 'F5' | 'F6'

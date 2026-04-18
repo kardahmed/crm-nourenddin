@@ -100,6 +100,10 @@ INSERT INTO _old_clients VALUES
   ('fd006c2e-8a32-4ebe-b0e1-e502b060397b', '09daa9d0-3c8f-49fb-909f-24da5563908b'::uuid, 'Ismail', '0549516554', NULL, NULL, NULL::date, 'Algérienne', NULL, 'autre'::client_source, NULL::text[], ARRAY['91f9c29c-79a6-4fa0-bd2c-734ba56d2d50']::text[], NULL::numeric, 'medium'::interest_level, NULL::numeric, NULL, NULL, '2026-02-12 16:46:20.62104+00'::timestamptz),
   ('fd68caf5-dda8-47c6-8172-85ae2e3b5ff0', '09daa9d0-3c8f-49fb-909f-24da5563908b'::uuid, 'Imene Hamidou', '+213557071321', NULL, NULL, NULL::date, 'Algérienne', NULL, 'autre'::client_source, NULL::text[], NULL::text[], NULL::numeric, 'medium'::interest_level, NULL::numeric, NULL, NULL, '2026-01-21 10:27:43.360874+00'::timestamptz);
 
+-- Legacy multi-tenant column `tenant_id` is still NOT NULL on prod.
+-- Make it nullable (J9KXG is single-tenant, the column is dead weight).
+ALTER TABLE public.clients ALTER COLUMN tenant_id DROP NOT NULL;
+
 -- Helper: normalize phone the same way the trigger does (strip non-digits, drop leading country code keeping last 9-10)
 -- We'll match against existing clients.phone_normalized to avoid UNIQUE conflict.
 INSERT INTO public.clients (

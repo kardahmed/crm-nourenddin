@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import type { Session } from '@supabase/supabase-js'
 import type { User, UserRole } from '@/types'
 import type { PermissionProfile } from '@/types/permissions'
+import { SINGLE_TENANT_ID } from '@/lib/singleTenant'
 
 interface AuthState {
   session: Session | null
@@ -21,7 +22,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   session: null,
   userProfile: null,
   role: null,
-  tenantId: null,
+  tenantId: SINGLE_TENANT_ID,
   permissionProfile: null,
   isLoading: true,
 
@@ -31,7 +32,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({
       userProfile: profile,
       role: profile?.role ?? null,
-      tenantId: profile?.tenant_id ?? null,
+      tenantId: SINGLE_TENANT_ID,
     }),
 
   setPermissionProfile: (profile) => set({ permissionProfile: profile }),
@@ -43,7 +44,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       session: null,
       userProfile: null,
       role: null,
-      tenantId: null,
+      tenantId: SINGLE_TENANT_ID,
       permissionProfile: null,
       isLoading: false,
     }),

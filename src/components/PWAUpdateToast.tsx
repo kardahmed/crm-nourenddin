@@ -16,7 +16,7 @@ export function PWAUpdateToast() {
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(swUrl, registration) {
+    onRegisteredSW(_swUrl, registration) {
       // Poll for updates every hour so long-lived sessions still
       // catch fresh deploys without waiting for a page reload.
       if (registration) {

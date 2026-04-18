@@ -2,12 +2,11 @@ import { useState, useCallback } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Bookmark, DollarSign, CreditCard, Receipt,
-  ListTodo, Clock, Plus, CheckCircle, Bot,
+  Clock, Plus,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,7 +25,6 @@ import { formatPrice } from '@/lib/constants'
 import { PAYMENT_STATUS_LABELS } from '@/types'
 import type { PaymentStatus } from '@/types'
 
-type ClientTaskStatus = 'pending' | 'completed' | 'cancelled'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import { inputClass } from './shared'

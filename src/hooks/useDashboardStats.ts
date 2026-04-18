@@ -265,6 +265,5 @@ export function useDashboardStats() {
         todayTasks, overdueTasks,
       }
     },
-    enabled: true,
   })
 }

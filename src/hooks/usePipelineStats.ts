@@ -48,7 +48,7 @@ export function usePipelineStats() {
           .then(r => isAgent && userId ? { ...r, data: r.data } : r), // RLS handles filtering
       ])
 
-      const settings = settingsRes.data
+      const settings = settingsRes.data as { urgent_alert_days?: number; relaunch_alert_days?: number } | null
       const clients = (clientsRes.data ?? []) as Array<{
         id: string; pipeline_stage: PipelineStage; confirmed_budget: number | null
         last_contact_at: string | null; created_at: string; is_priority: boolean; interest_level: string

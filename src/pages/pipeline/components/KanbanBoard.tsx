@@ -67,7 +67,7 @@ export function KanbanBoard({
         if (!dates.has(row.client_id)) dates.set(row.client_id, row.created_at)
       }
 
-      return { dates, urgentDays: settingsRes.data?.urgent_alert_days ?? 7 }
+      return { dates, urgentDays: (settingsRes.data as { urgent_alert_days?: number } | null)?.urgent_alert_days ?? 7 }
     },
     enabled: allClientIds.length > 0,
     staleTime: 60_000,

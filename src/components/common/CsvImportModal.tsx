@@ -106,7 +106,7 @@ export function CsvImportModal({
   const [step, setStep] = useState<Step>('upload')
   const [csv, setCsv] = useState<ParsedCsv | null>(null)
   const [mapping, setMapping] = useState<Record<string, string>>({}) // db column -> csv header
-  const [importing, setImporting] = useState(false)
+  const [, setImporting] = useState(false)
   const [progress, setProgress] = useState(0)
   const [result, setResult] = useState<{ inserted: number; errors: string[] } | null>(null)
 

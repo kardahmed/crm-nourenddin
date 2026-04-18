@@ -61,7 +61,7 @@ export function CompanySection() {
   const save = useMutation({
     mutationFn: async () => {
       if (!settings?.id) throw new Error('app_settings row missing')
-      const { error } = await supabase.from('app_settings' as never).update(form).eq('id', settings.id)
+      const { error } = await supabase.from('app_settings' as never).update(form as never).eq('id', settings.id)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['app-settings-company'] }); toast.success(t('success.saved')) },

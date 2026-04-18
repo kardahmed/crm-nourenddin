@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { MessageCircle, Check, AlertTriangle, Zap, Crown, Rocket } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { useAuthStore } from '@/store/authStore'
 import { StatusBadge } from '@/components/common'
 import { formatDistanceToNow } from 'date-fns'
 import { fr as frLocale } from 'date-fns/locale'

@@ -123,7 +123,7 @@ export function TodayPage() {
 
   const completeTask = useMutation({
     mutationFn: async (taskId: string) => {
-      const { error } = await supabase.from('client_tasks').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', taskId)
+      const { error } = await supabase.from('client_tasks').update({ status: 'completed', completed_at: new Date().toISOString() } as never).eq('id', taskId)
       if (error) throw error
     },
     onSuccess: () => {

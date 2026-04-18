@@ -65,7 +65,7 @@ export function BrandingSection() {
         custom_primary_color: primaryColor || null,
         custom_app_name: appName || null,
       }
-      const { error } = await supabase.from('app_settings' as never).update(payload).eq('id', settings.id)
+      const { error } = await supabase.from('app_settings' as never).update(payload as never).eq('id', settings.id)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {

@@ -88,18 +88,15 @@ export function CallScriptModal({
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [isOpen])
 
-  // Fetch agent + tenant names for template variable replacement
+  // Fetch agent name for template variable replacement
   const { data: contextNames } = useQuery({
     queryKey: ['script-context', agentId],
     queryFn: async () => {
-      const [agentRes, tenantRes] = await Promise.all([
-        supabase.from('users').select('first_name, last_name').eq('id', agentId).single(),
-        Promise.resolve({ data: null, error: null }),
-      ])
+      const agentRes = await supabase.from('users').select('first_name, last_name').eq('id', agentId).single()
       return {
         agentName: agentRes.data ? `${agentRes.data.first_name} ${agentRes.data.last_name}` : 'Agent',
-        agencyName: tenantRes.data?.name ?? 'Agence',
-        agencyPhone: tenantRes.data?.phone ?? '',
+        agencyName: 'Agence',
+        agencyPhone: '',
       }
     },
     enabled: isOpen,

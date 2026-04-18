@@ -51,6 +51,8 @@ export type Database = {
           last_activity: string | null
           avatar_url: string | null
           must_change_password: boolean
+          archived_at: string | null
+          permission_profile_id: string | null
           created_at: string
         }
         Insert: {
@@ -64,6 +66,8 @@ export type Database = {
           last_activity?: string | null
           avatar_url?: string | null
           must_change_password?: boolean
+          archived_at?: string | null
+          permission_profile_id?: string | null
           created_at?: string
         }
         Update: {
@@ -77,6 +81,8 @@ export type Database = {
           last_activity?: string | null
           avatar_url?: string | null
           must_change_password?: boolean
+          archived_at?: string | null
+          permission_profile_id?: string | null
           created_at?: string
         }
         Relationships: []

@@ -64,7 +64,7 @@ export function FeaturesSection() {
       const { data: existing } = await supabase.from('app_settings' as never).select('id').limit(1).single()
       const id = (existing as { id: string } | null)?.id
       if (!id) throw new Error('app_settings row missing')
-      await supabase.from('app_settings' as never).update(features).eq('id', id)
+      await supabase.from('app_settings' as never).update(features as never).eq('id', id)
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['app-settings-features'] }); toast.success('Fonctionnalités mises à jour') },
   })

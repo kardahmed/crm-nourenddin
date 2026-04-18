@@ -4,7 +4,6 @@ import { CheckCircle, Clock, Send, Phone, MessageCircle, Mail, AlertTriangle, Za
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
-import { Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/common'
 // import { PIPELINE_STAGES } from '@/types'
 import { formatDistanceToNow } from 'date-fns'

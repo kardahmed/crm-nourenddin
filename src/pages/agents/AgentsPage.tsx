@@ -6,7 +6,6 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
   KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, UserAvatar,

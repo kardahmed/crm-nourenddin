@@ -116,7 +116,7 @@ export function TasksPage() {
         agent_nom: `${(agentRes.data as Record<string,string>)?.first_name ?? ''} ${(agentRes.data as Record<string,string>)?.last_name ?? ''}`.trim(),
         agent_prenom: (agentRes.data as Record<string,string>)?.first_name ?? '',
         agent_phone: (agentRes.data as Record<string,string>)?.phone ?? '',
-        agence: (tenantRes.data as Record<string,string>)?.name ?? '',
+        agence: (tenantRes.data as Record<string,string> | null)?.name ?? '',
       }
     },
     enabled: !!userId,

@@ -63,7 +63,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage 
       const { data: templates } = await supabase.from('task_templates').select('*')
         .eq('stage', clientStage).eq('is_active', true).order('sort_order')
 
-      if (!templates || templates.length === 0) { toast.error('Aucun template actif pour cette étape'); return }
+      if (!templates || templates.length === 0) throw new Error('NO_TEMPLATE')
 
       const newTasks = (templates as TaskTemplate[]).map(t => ({
         client_id: clientId,
@@ -81,6 +81,9 @@ export function ClientTasksTab({ clientId, clientName, clientPhone, clientStage 
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ['client-tasks', clientId] }); toast.success('Tâches générées') },
+    onError: (error: Error) => {
+      if (error.message === 'NO_TEMPLATE') toast.error('Aucun template actif pour cette étape')
+    },
   })
 
   const completeTask = useMutation({

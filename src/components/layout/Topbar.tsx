@@ -8,7 +8,7 @@ import { useBranding } from '@/hooks/useBranding'
 import { useDarkMode } from '@/hooks/useDarkMode'
 import { Input } from '@/components/ui/input'
 import { LanguageSwitch } from '@/components/common/LanguageSwitch'
-import { UserAvatar } from '@/components/common'
+import { UserAvatar, InstallPWAButton } from '@/components/common'
 import { NotificationBell } from '@/components/common/NotificationBell'
 import { supabase } from '@/lib/supabase'
 
@@ -91,6 +91,9 @@ export function Topbar({ title, subtitle }: TopbarProps) {
 
         {/* Language switch — hidden on mobile */}
         <div className="hidden md:block"><LanguageSwitch /></div>
+
+        {/* Install PWA — only shown if installable */}
+        <InstallPWAButton />
 
         {/* Notifications */}
         <NotificationBell />

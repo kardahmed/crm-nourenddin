@@ -39,7 +39,7 @@ export function PlaybookSection() {
   const { data: playbook, isLoading } = useQuery({
     queryKey: ['sale-playbook-edit', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('sale_playbooks').select('*').eq('tenant_id', tenantId!).eq('is_active', true).limit(1).maybeSingle()
+      const { data } = await supabase.from('sale_playbooks').select('*').eq('is_active', true).limit(1).maybeSingle()
       return data as {
         id: string; methodology: string; objective: string; tone: string;
         closing_phrases: string[]; objection_rules: ObjectionRule[];

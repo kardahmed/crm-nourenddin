@@ -26,7 +26,7 @@ export function BrandingSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings-branding', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('custom_logo_url, custom_primary_color, custom_app_name').eq('tenant_id', tenantId!).maybeSingle()
+      const { data } = await supabase.from('tenant_settings').select('custom_logo_url, custom_primary_color, custom_app_name').maybeSingle()
       return data as { custom_logo_url: string | null; custom_primary_color: string | null; custom_app_name: string | null } | null
     },
     enabled: !!tenantId,
@@ -66,7 +66,7 @@ export function BrandingSection() {
         custom_primary_color: primaryColor || null,
         custom_app_name: appName || null,
       }
-      const { error } = await supabase.from('tenant_settings').update(payload as never).eq('tenant_id', tenantId!)
+      const { error } = await supabase.from('tenant_settings').update(payload as never)
       if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {

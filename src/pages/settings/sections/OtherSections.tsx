@@ -19,7 +19,7 @@ export function ReservationsSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId!).single()
+      const { data } = await supabase.from('tenant_settings').select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: !!tenantId,
@@ -38,7 +38,7 @@ export function ReservationsSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update({ reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never).eq('tenant_id', tenantId!)
+        await supabase.from('tenant_settings').update({ reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
       } else {
         await supabase.from('tenant_settings').insert({ tenant_id: tenantId, reservation_duration_days: Number(duration), min_deposit_amount: Number(minDeposit) } as never)
       }
@@ -68,7 +68,7 @@ export function TemplatesSection() {
   const { data: templates = [] } = useQuery({
     queryKey: ['doc-templates', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('document_templates').select('*').eq('tenant_id', tenantId!)
+      const { data } = await supabase.from('document_templates').select('*')
       return (data ?? []) as Array<{ id: string; type: string; content: string }>
     },
     enabled: !!tenantId,
@@ -129,7 +129,7 @@ export function NotificationsSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId!).single()
+      const { data } = await supabase.from('tenant_settings').select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: !!tenantId,
@@ -161,7 +161,7 @@ export function NotificationsSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update(toggles as never).eq('tenant_id', tenantId!)
+        await supabase.from('tenant_settings').update(toggles as never)
       } else {
         await supabase.from('tenant_settings').insert({ tenant_id: tenantId, ...toggles } as never)
       }
@@ -226,7 +226,7 @@ export function LanguageSection() {
 
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
-    if (tenantId) await supabase.from('tenant_settings').update({ language: lang } as never).eq('tenant_id', tenantId)
+    if (tenantId) await supabase.from('tenant_settings').update({ language: lang } as never)
     toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 

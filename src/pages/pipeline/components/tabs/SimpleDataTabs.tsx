@@ -95,7 +95,7 @@ export function ScheduleTab({ clientId }: { clientId: string }) {
   const { data: schedules = [] } = useQuery({
     queryKey: ['client-schedules', clientId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('payment_schedules').select('*, sales(units(code))').eq('tenant_id', (await supabase.from('clients').select('tenant_id').eq('id', clientId).single()).data?.tenant_id ?? '').order('due_date')
+      const { data, error } = await supabase.from('payment_schedules').select('*, sales(units(code))').order('due_date')
       if (error) return []
       return data as unknown as Array<Record<string, unknown>>
     },

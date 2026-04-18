@@ -28,7 +28,7 @@ export function PermissionProfilesSection() {
   const { data: profiles = [] } = useQuery({
     queryKey: ['permission-profiles', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('permission_profiles').select('*').eq('tenant_id', tenantId!).order('created_at')
+      const { data } = await supabase.from('permission_profiles').select('*').order('created_at')
       return (data ?? []) as Profile[]
     },
     enabled: !!tenantId,
@@ -38,7 +38,7 @@ export function PermissionProfilesSection() {
   const { data: agentCounts = {} } = useQuery({
     queryKey: ['agent-profile-counts', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('users').select('*').eq('tenant_id', tenantId!).eq('role', 'agent')
+      const { data } = await supabase.from('users').select('*').eq('role', 'agent')
       const counts: Record<string, number> = {}
       for (const u of data ?? []) {
         const pid = (u as unknown as { permission_profile_id: string | null }).permission_profile_id

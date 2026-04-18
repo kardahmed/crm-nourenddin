@@ -62,7 +62,7 @@ export function PlanVisitModal({
   const { data: clientsList = [] } = useQuery({
     queryKey: ['clients-for-visit', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage, tenant_id').eq('tenant_id', tenantId!).order('full_name')
+      const { data } = await supabase.from('clients').select('id, full_name, phone, pipeline_stage, tenant_id').order('full_name')
       return (data ?? []) as ClientInfo[]
     },
     enabled: !client && !!tenantId,

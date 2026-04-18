@@ -40,7 +40,7 @@ export function TaskConfigSection() {
   const { data: bundles = [] } = useQuery({
     queryKey: ['task-bundles', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('task_bundles').select('*').eq('tenant_id', tenantId!).order('sort_order')
+      const { data } = await supabase.from('task_bundles').select('*').order('sort_order')
       return (data ?? []) as Bundle[]
     },
     enabled: !!tenantId,
@@ -49,7 +49,7 @@ export function TaskConfigSection() {
   const { data: templates = [] } = useQuery({
     queryKey: ['task-templates', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('task_templates').select('*').eq('tenant_id', tenantId!).order('sort_order')
+      const { data } = await supabase.from('task_templates').select('*').order('sort_order')
       return (data ?? []) as TaskTemplate[]
     },
     enabled: !!tenantId,
@@ -58,7 +58,7 @@ export function TaskConfigSection() {
   const { data: messages = [] } = useQuery({
     queryKey: ['message-templates', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('message_templates').select('*').eq('tenant_id', tenantId!).order('sort_order')
+      const { data } = await supabase.from('message_templates').select('*').order('sort_order')
       return (data ?? []) as MessageTpl[]
     },
     enabled: !!tenantId,

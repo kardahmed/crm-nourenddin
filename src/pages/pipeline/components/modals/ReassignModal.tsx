@@ -26,7 +26,7 @@ export function ReassignModal({ isOpen, onClose, clientId, currentAgentId, tenan
     queryKey: ['agents-reassign', tenantId],
     queryFn: async () => {
       const { data } = await supabase.from('users').select('id, first_name, last_name, email')
-        .eq('tenant_id', tenantId).in('role', ['agent', 'admin']).eq('status', 'active').order('first_name')
+        .in('role', ['agent', 'admin']).eq('status', 'active').order('first_name')
       return (data ?? []) as Array<{ id: string; first_name: string; last_name: string; email: string }>
     },
     enabled: isOpen,

@@ -129,7 +129,7 @@ export function CallScriptModal({
       if (!response.ok) {
         // Fallback: load default script from DB
         const { data } = await supabase.from('call_scripts')
-          .select('*').eq('tenant_id', tenantId).eq('pipeline_stage', clientStage).eq('is_active', true).maybeSingle()
+          .select('*').eq('pipeline_stage', clientStage).eq('is_active', true).maybeSingle()
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const d = data as any
@@ -171,7 +171,7 @@ export function CallScriptModal({
   const { data: playbook } = useQuery({
     queryKey: ['sale-playbook', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('sale_playbooks').select('*').eq('tenant_id', tenantId).eq('is_active', true).limit(1).maybeSingle()
+      const { data } = await supabase.from('sale_playbooks').select('*').eq('is_active', true).limit(1).maybeSingle()
       return data as { objective: string; tone: string; closing_phrases: string[]; objection_rules: ObjectionRule[]; custom_instructions: string } | null
     },
     enabled: isOpen && !!tenantId,
@@ -731,7 +731,7 @@ function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: st
   const { data: visitSettings } = useQuery({
     queryKey: ['tenant-visit-settings', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('work_days, visit_slots, visit_duration_minutes').eq('tenant_id', tenantId).single()
+      const { data } = await supabase.from('tenant_settings').select('work_days, visit_slots, visit_duration_minutes').single()
       return data as { work_days: number[] | null; visit_slots: string[] | null; visit_duration_minutes: number | null } | null
     },
     staleTime: 300_000,
@@ -747,7 +747,6 @@ function AvailabilityMini({ agentId, tenantId }: { agentId: string; tenantId: st
         .from('visits')
         .select('scheduled_at')
         .eq('agent_id', agentId)
-        .eq('tenant_id', tenantId)
         .gte('scheduled_at', now.toISOString())
         .lte('scheduled_at', nextWeek.toISOString())
         .in('status', ['planned', 'confirmed'])

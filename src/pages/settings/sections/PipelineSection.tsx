@@ -18,7 +18,7 @@ export function PipelineSection() {
   const { data: settings } = useQuery({
     queryKey: ['tenant-settings', tenantId],
     queryFn: async () => {
-      const { data } = await supabase.from('tenant_settings').select('*').eq('tenant_id', tenantId!).single()
+      const { data } = await supabase.from('tenant_settings').select('*').single()
       return data as Record<string, unknown> | null
     },
     enabled: !!tenantId,
@@ -37,7 +37,7 @@ export function PipelineSection() {
   const save = useMutation({
     mutationFn: async () => {
       if (settings) {
-        await supabase.from('tenant_settings').update({ urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never).eq('tenant_id', tenantId!)
+        await supabase.from('tenant_settings').update({ urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
       } else {
         await supabase.from('tenant_settings').insert({ tenant_id: tenantId, urgent_alert_days: Number(urgentDays), relaunch_alert_days: Number(relaunchDays) } as never)
       }

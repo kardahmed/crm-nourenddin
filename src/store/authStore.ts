@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js'
 import type { User, UserRole } from '@/types'
 import type { PermissionProfile } from '@/types/permissions'
 
-interface AuthState {
+export interface AuthState {
   session: Session | null
   userProfile: User | null
   role: UserRole | null

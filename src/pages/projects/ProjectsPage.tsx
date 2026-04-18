@@ -286,7 +286,7 @@ export function ProjectsPage() {
             placeholder="Rechercher un projet..."
             value={search}
             onChange={setSearch}
-            className="w-[260px]"
+            className="w-full sm:w-[260px]"
           />
           <FilterDropdown
             label={t('projects_extra.filter_status')}

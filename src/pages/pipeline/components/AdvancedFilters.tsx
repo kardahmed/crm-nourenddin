@@ -63,7 +63,7 @@ export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersP
       </Button>
 
       {open && (
-        <div className="absolute left-0 top-full z-20 mt-2 w-[400px] rounded-xl border border-immo-border-default bg-immo-bg-card p-4 shadow-lg">
+        <div className="absolute left-0 top-full z-20 mt-2 w-[calc(100vw-2rem)] max-w-[400px] rounded-xl border border-immo-border-default bg-immo-bg-card p-4 shadow-lg sm:w-[400px]">
           <div className="mb-3 flex items-center justify-between">
             <h4 className="text-xs font-semibold text-immo-text-primary">Filtres avances</h4>
             <button onClick={() => setOpen(false)} className="text-immo-text-muted hover:text-immo-text-primary">
@@ -71,7 +71,7 @@ export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersP
             </button>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {/* Agent */}
             <div>
               <label className="mb-1 block text-[10px] font-medium text-immo-text-muted">Agent</label>

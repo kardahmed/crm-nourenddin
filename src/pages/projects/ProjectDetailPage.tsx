@@ -244,8 +244,8 @@ export function ProjectDetailPage() {
           <div>
             {editMode ? (
               <div className="space-y-2">
-                <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nom du projet" className="h-9 w-[300px] border-immo-border-default text-sm" />
-                <Input value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Localisation" className="h-9 w-[300px] border-immo-border-default text-sm" />
+                <Input value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nom du projet" className="h-9 w-full border-immo-border-default text-sm sm:w-[300px]" />
+                <Input value={editLocation} onChange={e => setEditLocation(e.target.value)} placeholder="Localisation" className="h-9 w-full border-immo-border-default text-sm sm:w-[300px]" />
                 <div className="flex gap-2">
                   <Button size="sm" onClick={async () => {
                     await updateProject.mutateAsync({ id: project.id, name: editName, location: editLocation })

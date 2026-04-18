@@ -67,9 +67,9 @@ export function SettingsPage() {
   const [section, setSection] = useState<Section>('profile')
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col gap-6 lg:flex-row">
       {/* Side menu */}
-      <div className="w-[220px] shrink-0 space-y-1">
+      <div className="w-full shrink-0 space-y-1 lg:w-[220px]">
         {SECTION_KEYS.map((key) => {
           const Icon = SECTION_ICONS[key]
           return (

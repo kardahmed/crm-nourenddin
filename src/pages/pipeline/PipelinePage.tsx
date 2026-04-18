@@ -359,7 +359,7 @@ export function PipelinePage() {
           placeholder="Nom, téléphone..."
           value={search}
           onChange={setSearch}
-          className="w-[240px]"
+          className="w-full sm:w-[240px]"
         />
         <FilterDropdown
           label="Projet"

@@ -275,7 +275,7 @@ export function DossiersPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <SearchInput placeholder="Nom, téléphone..." value={search} onChange={setSearch} className="w-[240px]" />
+        <SearchInput placeholder="Nom, téléphone..." value={search} onChange={setSearch} className="w-full sm:w-[240px]" />
         <FilterDropdown label="Projet" options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
         <Button variant="ghost" size="sm" onClick={() => toast('Fonctionnalite d\'import CSV bientot disponible')} className="border border-immo-border-default text-xs text-immo-text-muted">
           <Upload className="mr-1 h-3.5 w-3.5" /> Importer

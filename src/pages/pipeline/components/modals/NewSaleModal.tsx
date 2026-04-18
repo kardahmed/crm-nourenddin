@@ -301,7 +301,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title="Nouvelle vente" size="xl">
-      <div className="flex gap-6">
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left: step content */}
         <div className="min-w-0 flex-1">
           {/* Step bar */}
@@ -434,7 +434,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
         </div>
 
         {/* Right: recap panel */}
-        <div className="w-[260px] shrink-0 space-y-4 rounded-xl border border-immo-border-default bg-immo-bg-card p-4">
+        <div className="w-full shrink-0 space-y-4 rounded-xl border border-immo-border-default bg-immo-bg-card p-4 lg:w-[260px]">
           {/* Progress */}
           <div>
             <div className="mb-2 flex items-center justify-between text-xs">

@@ -169,8 +169,8 @@ export function AgentsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3">
-        <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-[260px]" />
+      <div className="flex flex-wrap items-center gap-3">
+        <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-full sm:w-[260px]" />
         <button
           onClick={() => setShowArchived(v => !v)}
           className={`flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors ${

@@ -181,7 +181,7 @@ export function UnitsTab() {
       {/* Filters */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center gap-3">
-          <SearchInput placeholder="Rechercher par code..." value={search} onChange={setSearch} className="w-[220px]" />
+          <SearchInput placeholder="Rechercher par code..." value={search} onChange={setSearch} className="w-full sm:w-[220px]" />
           <FilterDropdown label="Projet" options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
           <FilterDropdown label="Type" options={TYPE_OPTIONS} value={typeFilter} onChange={setTypeFilter} />
           <FilterDropdown label="Sous-type" options={SUBTYPE_OPTIONS} value={subtypeFilter} onChange={setSubtypeFilter} />

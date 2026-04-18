@@ -28,7 +28,7 @@ export function SidePanel({
     <Sheet open={isOpen} onOpenChange={(open) => { if (!open) onClose() }}>
       <SheetContent
         side={side}
-        className="w-[480px] border-immo-border-default bg-immo-bg-card p-0 sm:max-w-[480px]"
+        className="w-full border-immo-border-default bg-immo-bg-card p-0 sm:w-[480px] sm:max-w-[480px]"
       >
         <SheetHeader className="border-b border-immo-border-default px-6 py-4">
           <SheetTitle className="text-lg font-semibold text-immo-text-primary">

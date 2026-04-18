@@ -119,7 +119,7 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex bg-immo-bg-primary">
       {/* Left: Block palette */}
-      <div className="w-[200px] shrink-0 border-r border-immo-border-default bg-immo-bg-card p-4 space-y-3">
+      <div className="hidden w-[200px] shrink-0 space-y-3 border-r border-immo-border-default bg-immo-bg-card p-4 md:block">
         <h3 className="text-xs font-bold text-immo-text-secondary uppercase tracking-wider">Blocs</h3>
         <div className="space-y-1.5">
           {BLOCK_TYPES.map(({ type, icon: Icon, label }) => (
@@ -140,9 +140,9 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
       {/* Center: Preview */}
       <div className="flex-1 overflow-y-auto p-6">
         {/* Toolbar */}
-        <div className="mb-4 flex items-center gap-3">
-          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du template" className="max-w-[250px] text-sm" />
-          <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Objet de l'email" className="flex-1 text-sm" />
+        <div className="mb-4 flex flex-wrap items-center gap-3">
+          <Input value={name} onChange={e => setName(e.target.value)} placeholder="Nom du template" className="w-full text-sm sm:max-w-[250px]" />
+          <Input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Objet de l'email" className="w-full text-sm sm:flex-1" />
           <Button variant="outline" size="sm" onClick={() => setShowPreview(!showPreview)} className="gap-1 text-xs">
             <Eye className="h-3.5 w-3.5" /> {showPreview ? 'Éditeur' : 'Aperçu'}
           </Button>
@@ -206,7 +206,7 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
       </div>
 
       {/* Right: Properties */}
-      <div className="w-[260px] shrink-0 border-l border-immo-border-default bg-immo-bg-card p-4 overflow-y-auto">
+      <div className="hidden w-[260px] shrink-0 overflow-y-auto border-l border-immo-border-default bg-immo-bg-card p-4 lg:block">
         <h3 className="text-xs font-bold text-immo-text-secondary uppercase tracking-wider mb-3">Propriétés</h3>
         {selectedBlock ? (
           <BlockProperties block={selectedBlock} onChange={(updates) => updateBlock(selectedBlock.id, updates)} />

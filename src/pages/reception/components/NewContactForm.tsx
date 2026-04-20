@@ -1,12 +1,17 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertTriangle, Check, Sparkles, UserCheck } from 'lucide-react'
+import { AlertTriangle, Check, Sparkles, Star, UserCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
-import { SOURCE_LABELS } from '@/types'
-import type { ClientSource } from '@/types'
+import {
+  SOURCE_LABELS,
+  UNIT_TYPE_LABELS,
+  INTEREST_LEVEL_LABELS,
+  PAYMENT_METHOD_LABELS,
+} from '@/types'
+import type { ClientSource, UnitType, InterestLevel, PaymentMethod } from '@/types'
 import {
   useReceptionSettings,
   useAgentLoads,
@@ -20,6 +25,14 @@ const SOURCE_OPTIONS: { value: ClientSource; label: string }[] = (
   Object.keys(SOURCE_LABELS) as ClientSource[]
 ).map(s => ({ value: s, label: SOURCE_LABELS[s] }))
 
+const UNIT_TYPE_OPTIONS: UnitType[] = ['apartment', 'local', 'villa', 'parking']
+
+// Reception only exposes 3 payment methods — LPP & AADL are handled later
+// by the agent when building the reservation, not at first contact.
+const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['comptant', 'credit', 'mixte']
+
+const INTEREST_LEVEL_OPTIONS: InterestLevel[] = ['low', 'medium', 'high']
+
 export function NewContactForm() {
   const qc = useQueryClient()
   const userId = useAuthStore(s => s.session?.user?.id)
@@ -29,12 +42,22 @@ export function NewContactForm() {
 
   const [fullName, setFullName] = useState('')
   const [phone, setPhone] = useState('')
+  const [email, setEmail] = useState('')
   const [source, setSource] = useState<ClientSource>('reception')
   const [notes, setNotes] = useState('')
   const [projectInterest, setProjectInterest] = useState('')
   const [budget, setBudget] = useState('')
+  const [desiredUnitTypes, setDesiredUnitTypes] = useState<UnitType[]>([])
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | ''>('')
+  const [interestLevel, setInterestLevel] = useState<InterestLevel>('medium')
+  const [isPriority, setIsPriority] = useState(false)
   const [overrideAgent, setOverrideAgent] = useState<string | null>(null)
   const [overrideReason, setOverrideReason] = useState('')
+
+  const toggleUnitType = (t: UnitType) =>
+    setDesiredUnitTypes(prev =>
+      prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
+    )
 
   // Auto-suggested agent per configured mode.
   const suggested = useMemo(() => {
@@ -78,12 +101,17 @@ export function NewContactForm() {
       const payload: Record<string, unknown> = {
         full_name: fullName.trim(),
         phone: phone.trim(),
+        email: email.trim() || null,
         source,
         pipeline_stage: 'accueil',
         agent_id: effectiveAgentId,
         notes: notes.trim() || null,
         interested_projects: projectInterest.trim() ? [projectInterest.trim()] : null,
         confirmed_budget: budget ? Number(budget) : null,
+        desired_unit_types: desiredUnitTypes.length ? desiredUnitTypes : null,
+        payment_method: paymentMethod || null,
+        interest_level: interestLevel,
+        is_priority: isPriority,
       }
 
       const { data, error } = await supabase
@@ -127,10 +155,15 @@ export function NewContactForm() {
       toast.success('Client créé et assigné')
       setFullName('')
       setPhone('')
+      setEmail('')
       setSource('reception')
       setNotes('')
       setProjectInterest('')
       setBudget('')
+      setDesiredUnitTypes([])
+      setPaymentMethod('')
+      setInterestLevel('medium')
+      setIsPriority(false)
       setOverrideAgent(null)
       setOverrideReason('')
     },
@@ -148,6 +181,7 @@ export function NewContactForm() {
       <div className="lg:col-span-2 space-y-4 rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
         <h2 className="text-sm font-semibold text-immo-text-primary">Nouveau contact</h2>
 
+        {/* ── Identité ── */}
         <div className="grid gap-3 md:grid-cols-2">
           <label className="flex flex-col gap-1">
             <span className="text-[11px] font-medium text-immo-text-muted">Nom complet *</span>
@@ -168,40 +202,136 @@ export function NewContactForm() {
             />
           </label>
 
-          <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-immo-text-muted">Source</span>
-            <select
-              value={source}
-              onChange={e => setSource(e.target.value as ClientSource)}
-              className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
+          <label className="flex flex-col gap-1 md:col-span-2">
+            <span className="text-[11px] font-medium text-immo-text-muted">Email</span>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="client@exemple.com"
+              className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary focus:border-immo-accent-green focus:outline-none"
+            />
+          </label>
+        </div>
+
+        {/* ── Besoin immobilier ── */}
+        <div className="mt-4 border-t border-immo-border-default pt-4">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-immo-text-muted">
+            Besoin immobilier
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <span className="text-[11px] font-medium text-immo-text-muted">Type de bien recherché</span>
+              <div className="flex flex-wrap gap-1.5">
+                {UNIT_TYPE_OPTIONS.map(t => {
+                  const active = desiredUnitTypes.includes(t)
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => toggleUnitType(t)}
+                      className={`rounded-full border px-3 py-1 text-xs transition ${
+                        active
+                          ? 'border-immo-accent-green bg-immo-accent-green/10 text-immo-accent-green'
+                          : 'border-immo-border-default bg-immo-bg-primary text-immo-text-muted hover:border-immo-accent-green/50'
+                      }`}
+                    >
+                      {UNIT_TYPE_LABELS[t]}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-immo-text-muted">Projet d'intérêt</span>
+              <input
+                value={projectInterest}
+                onChange={e => setProjectInterest(e.target.value)}
+                placeholder="Nom du projet / zone"
+                className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-immo-text-muted">Budget approximatif (DA)</span>
+              <input
+                type="number"
+                value={budget}
+                onChange={e => setBudget(e.target.value)}
+                placeholder="30000000"
+                className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-immo-text-muted">Mode de paiement envisagé</span>
+              <select
+                value={paymentMethod}
+                onChange={e => setPaymentMethod(e.target.value as PaymentMethod | '')}
+                className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
+              >
+                <option value="">— Non précisé —</option>
+                {PAYMENT_METHOD_OPTIONS.map(m => (
+                  <option key={m} value={m}>{PAYMENT_METHOD_LABELS[m]}</option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-immo-text-muted">Niveau d'intérêt</span>
+              <select
+                value={interestLevel}
+                onChange={e => setInterestLevel(e.target.value as InterestLevel)}
+                className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
+              >
+                {INTEREST_LEVEL_OPTIONS.map(l => (
+                  <option key={l} value={l}>{INTEREST_LEVEL_LABELS[l].label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        {/* ── Qualification rapide ── */}
+        <div className="mt-4 border-t border-immo-border-default pt-4">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-immo-text-muted">
+            Qualification rapide
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] font-medium text-immo-text-muted">Source</span>
+              <select
+                value={source}
+                onChange={e => setSource(e.target.value as ClientSource)}
+                className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
+              >
+                {SOURCE_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              type="button"
+              onClick={() => setIsPriority(p => !p)}
+              className={`flex items-center justify-between rounded-md border px-3 text-sm transition ${
+                isPriority
+                  ? 'border-immo-status-red/60 bg-immo-status-red/10 text-immo-status-red'
+                  : 'border-immo-border-default bg-immo-bg-primary text-immo-text-muted hover:border-immo-status-red/40'
+              }`}
             >
-              {SOURCE_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </label>
+              <span className="flex items-center gap-2">
+                <Star className={`h-4 w-4 ${isPriority ? 'fill-current' : ''}`} />
+                Client prioritaire
+              </span>
+              <span className="text-[10px] font-semibold">
+                {isPriority ? 'OUI' : 'NON'}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Notes ── */}
+        <div className="mt-4 border-t border-immo-border-default pt-4">
           <label className="flex flex-col gap-1">
-            <span className="text-[11px] font-medium text-immo-text-muted">Projet d'intérêt</span>
-            <input
-              value={projectInterest}
-              onChange={e => setProjectInterest(e.target.value)}
-              placeholder="Nom du projet / zone"
-              className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 md:col-span-2">
-            <span className="text-[11px] font-medium text-immo-text-muted">Budget approximatif (DA)</span>
-            <input
-              type="number"
-              value={budget}
-              onChange={e => setBudget(e.target.value)}
-              placeholder="30000000"
-              className="h-9 rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
-            />
-          </label>
-
-          <label className="flex flex-col gap-1 md:col-span-2">
             <span className="text-[11px] font-medium text-immo-text-muted">Notes pour l'agent</span>
             <textarea
               value={notes}

@@ -11,6 +11,7 @@ import {
   KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, UserAvatar,
 } from '@/components/common'
 import { TransferAgentModal } from './components/TransferAgentModal'
+import { EditAgentModal } from './components/EditAgentModal'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -37,6 +38,7 @@ interface AgentRow {
   last_activity: string | null
   archived_at: string | null
   avatar_url: string | null
+  permission_profile_id: string | null
   clients_count: number
   sales_count: number
 }
@@ -52,6 +54,7 @@ export function AgentsPage() {
   const [showCreate, setShowCreate] = useState(false)
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
+  const [editId, setEditId] = useState<string | null>(null)
 
   // Fetch agents with counts
   const { data: agents = [], isLoading } = useQuery({
@@ -59,7 +62,7 @@ export function AgentsPage() {
     queryFn: async () => {
       const { data: users, error } = await supabase
         .from('users')
-        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url')
+        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url, permission_profile_id')
         .order('first_name')
       if (error) { handleSupabaseError(error); throw error }
 
@@ -97,6 +100,10 @@ export function AgentsPage() {
   const archiveAgentRow = useMemo(
     () => agents.find(a => a.id === archiveId) ?? null,
     [agents, archiveId],
+  )
+  const editAgentRow = useMemo(
+    () => agents.find(a => a.id === editId) ?? null,
+    [agents, editId],
   )
 
   // Archive mutation — hits the archive_agent RPC which validates
@@ -257,9 +264,11 @@ export function AgentsPage() {
                           <DropdownMenuItem onClick={() => navigate(`/agents/${a.id}`)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                             <Eye className="mr-2 h-3.5 w-3.5" /> Voir profil
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => navigate(`/agents/${a.id}`)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
-                            <Pencil className="mr-2 h-3.5 w-3.5" /> Modifier
-                          </DropdownMenuItem>
+                          {canManageAgents && (
+                            <DropdownMenuItem onClick={() => setEditId(a.id)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                              <Pencil className="mr-2 h-3.5 w-3.5" /> Modifier
+                            </DropdownMenuItem>
+                          )}
                           {a.status === 'active' && canManageAgents && (
                             <DropdownMenuItem onClick={() => setDeactivateId(a.id)} className="text-sm text-immo-status-red focus:bg-immo-status-red-bg">
                               <Ban className="mr-2 h-3.5 w-3.5" /> Désactiver
@@ -283,6 +292,13 @@ export function AgentsPage() {
 
       {/* Create modal */}
       <CreateAgentModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+
+      {/* Edit modal */}
+      <EditAgentModal
+        isOpen={!!editId}
+        onClose={() => setEditId(null)}
+        user={editAgentRow}
+      />
 
       {/* Transfer + deactivate */}
       <TransferAgentModal

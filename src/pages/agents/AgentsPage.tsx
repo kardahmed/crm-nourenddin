@@ -240,6 +240,7 @@ export function AgentsPage() {
               )}
               {filtered.map(a => {
                 const fullName = `${a.first_name} ${a.last_name}`
+<<<<<<< HEAD
                 const inactiveLong = a.last_activity && (nowMs - new Date(a.last_activity).getTime()) > 7 * 86400000
                 const statusCfg = STATUS_BADGE[a.status] ?? STATUS_BADGE.inactive
                 const isArchivedRow = a.status === 'archived'

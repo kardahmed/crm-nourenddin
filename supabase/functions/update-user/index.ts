@@ -83,7 +83,11 @@ Deno.serve(async (req: Request) => {
       return json({ error: `Rôle invalide: ${body.role}` }, 400)
     }
 
-    // 3. If email change requested, update auth.users first
+    // 3. If email change requested, update auth.users first.
+    // Supabase returns different errors depending on project email-confirmation
+    // settings. We use `email_confirm: true` to skip verification — this is an
+    // admin-driven correction, not a user self-change. If that attribute is
+    // rejected by an older library version, retry with a plain email update.
     if (body.email) {
       const newEmail = body.email.trim().toLowerCase()
 
@@ -96,14 +100,34 @@ Deno.serve(async (req: Request) => {
         return json({ error: 'Cet email est déjà utilisé par un autre compte.' }, 409)
       }
 
-      // Update auth.users (admin API, confirms new email without verification
-      // since this is an admin-driven correction, not a user self-change).
-      const { error: authErr } = await admin.auth.admin.updateUserById(user_id, {
-        email: newEmail,
-        email_confirm: true,
-      })
+      let authErr = null
+      try {
+        const res = await admin.auth.admin.updateUserById(user_id, {
+          email: newEmail,
+          email_confirm: true,
+        })
+        authErr = res.error
+      } catch (e) {
+        authErr = e as { message?: string }
+      }
+
+      // Fallback: retry without email_confirm if the first attempt failed
       if (authErr) {
-        return json({ error: `Auth update failed: ${authErr.message}` }, 400)
+        try {
+          const res2 = await admin.auth.admin.updateUserById(user_id, {
+            email: newEmail,
+          })
+          authErr = res2.error
+        } catch (e2) {
+          authErr = e2 as { message?: string }
+        }
+      }
+
+      if (authErr) {
+        return json({
+          error: `Échec de la mise à jour de l'email: ${authErr.message ?? String(authErr)}`,
+          hint: 'Vérifiez que la confirmation email est activée dans Supabase → Auth → Settings, ou demandez à l\'utilisateur de cliquer sur le lien envoyé.',
+        }, 400)
       }
     }
 

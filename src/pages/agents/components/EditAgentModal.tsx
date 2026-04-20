@@ -97,14 +97,24 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
         body: payload,
       })
       if (error) {
-        try {
-          const ctx = (error as unknown as { context?: Response }).context
-          if (ctx && typeof ctx.json === 'function') {
-            const body = await ctx.json()
-            if (body?.error) throw new Error(body.error)
+        // supabase-js wraps the non-2xx response in FunctionsHttpError — the
+        // `context` is the raw Response, so parse the body ourselves to
+        // surface the real server error instead of "non-2xx status code".
+        const ctx = (error as unknown as { context?: Response }).context
+        if (ctx) {
+          try {
+            const text = await ctx.text()
+            try {
+              const parsed = JSON.parse(text)
+              if (parsed?.error) throw new Error(parsed.error)
+              throw new Error(text || error.message)
+            } catch (jsonErr) {
+              if (jsonErr instanceof Error && jsonErr.message !== text) throw jsonErr
+              throw new Error(text || error.message)
+            }
+          } catch (readErr) {
+            if (readErr instanceof Error) throw readErr
           }
-        } catch (parseErr) {
-          if (parseErr instanceof Error && parseErr.message) throw parseErr
         }
         throw error
       }
@@ -129,14 +139,20 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
         body: { user_id: user.id, send_password_reset: true },
       })
       if (error) {
-        try {
-          const ctx = (error as unknown as { context?: Response }).context
-          if (ctx && typeof ctx.json === 'function') {
-            const body = await ctx.json()
-            if (body?.error) throw new Error(body.error)
+        const ctx = (error as unknown as { context?: Response }).context
+        if (ctx) {
+          try {
+            const text = await ctx.text()
+            try {
+              const parsed = JSON.parse(text)
+              if (parsed?.error) throw new Error(parsed.error)
+            } catch (jsonErr) {
+              if (jsonErr instanceof Error && jsonErr.message !== text) throw jsonErr
+              throw new Error(text || error.message)
+            }
+          } catch (readErr) {
+            if (readErr instanceof Error) throw readErr
           }
-        } catch (parseErr) {
-          if (parseErr instanceof Error && parseErr.message) throw parseErr
         }
         throw error
       }

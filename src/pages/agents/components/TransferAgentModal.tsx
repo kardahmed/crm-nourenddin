@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ArrowRightLeft, TriangleAlert, Ban } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -34,13 +35,13 @@ interface CandidateAgent {
 
 type DepartureReason = 'resignation' | 'dismissal' | 'leave' | 'reassignment' | 'other'
 
-const REASON_LABELS: Record<DepartureReason, string> = {
-  resignation: 'Démission',
-  dismissal: 'Licenciement',
-  leave: 'Congé long / absence',
-  reassignment: 'Changement de poste interne',
-  other: 'Autre',
-}
+const DEPARTURE_REASONS: DepartureReason[] = [
+  'resignation',
+  'dismissal',
+  'leave',
+  'reassignment',
+  'other',
+]
 
 /**
  * Transfer-before-deactivate flow. The admin must map every client of
@@ -50,6 +51,8 @@ const REASON_LABELS: Record<DepartureReason, string> = {
  */
 export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Props) {
   const qc = useQueryClient()
+  const { t } = useTranslation()
+  const reasonLabel = (r: DepartureReason) => t(`transfer.reason_${r}`)
 
   const [assignments, setAssignments] = useState<Record<string, string>>({})
   const [bulkAgent, setBulkAgent] = useState<string>('')
@@ -129,8 +132,8 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
         new_agent_id: assignments[c.id],
       }))
       const departureText = reasonNote.trim()
-        ? `${REASON_LABELS[reason]} — ${reasonNote.trim()}`
-        : REASON_LABELS[reason]
+        ? `${reasonLabel(reason)} — ${reasonNote.trim()}`
+        : reasonLabel(reason)
       const { data, error } = await supabase.rpc(
         'transfer_agent_clients_and_deactivate' as never,
         {
@@ -342,9 +345,9 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
                 onChange={e => setReason(e.target.value as DepartureReason)}
                 className="mt-1 h-9 w-full rounded-md border border-immo-border-default bg-immo-bg-primary px-3 text-sm text-immo-text-primary"
               >
-                {(Object.keys(REASON_LABELS) as DepartureReason[]).map(r => (
+                {DEPARTURE_REASONS.map(r => (
                   <option key={r} value={r}>
-                    {REASON_LABELS[r]}
+                    {reasonLabel(r)}
                   </option>
                 ))}
               </select>

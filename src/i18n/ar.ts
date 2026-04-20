@@ -763,4 +763,11 @@ export const ar = {
     status_sent: 'مرسلة',
     status_cancelled: 'ملغاة',
   },
+  transfer: {
+    reason_resignation: 'استقالة',
+    reason_dismissal: 'فصل من العمل',
+    reason_leave: 'إجازة طويلة / غياب',
+    reason_reassignment: 'تغيير منصب داخلي',
+    reason_other: 'أخرى',
+  },
 } as const

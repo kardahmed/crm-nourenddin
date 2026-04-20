@@ -32,3 +32,26 @@ export function handleQueryError(error: unknown): void {
     toast.error('Une erreur inattendue est survenue')
   }
 }
+
+// supabase-js wraps non-2xx Edge Function responses in a FunctionsHttpError
+// whose `context` is the raw Response — without parsing it we only see
+// "non-2xx status code" and lose the server-side error message. This helper
+// extracts the underlying `error` field from the response body.
+export async function parseEdgeError(err: unknown): Promise<Error> {
+  const fallback = err instanceof Error ? err : new Error('Erreur réseau')
+  const ctx = (err as { context?: Response } | null)?.context
+  if (!ctx || typeof ctx.text !== 'function') return fallback
+  try {
+    const text = await ctx.text()
+    if (!text) return fallback
+    try {
+      const parsed = JSON.parse(text) as { error?: string }
+      if (parsed?.error) return new Error(parsed.error)
+    } catch {
+      // non-JSON body — use the raw text
+    }
+    return new Error(text)
+  } catch {
+    return fallback
+  }
+}

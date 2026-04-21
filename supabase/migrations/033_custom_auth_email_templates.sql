@@ -102,6 +102,95 @@
 -- 3. Replace the default template with the HTML above
 -- 4. Note: {{ .ConfirmationURL }} is the Supabase template variable for the reset link
 
+-- For invitation emails, set in Supabase dashboard:
+-- Path: Auth > Email Templates > Sign Up
+-- Replace the default template with custom HTML below.
+
+-- Invitation Template HTML (to be set in Supabase dashboard):
+/*
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bienvenue sur IMMO PRO-X</title>
+  <style>
+    body{margin:0;padding:0;background-color:#F6F9FC;font-family:-apple-system,sans-serif}
+    table{border-spacing:0;border-collapse:collapse}
+    .email-container{max-width:600px;margin:0 auto}
+    .content-cell{padding:24px;background:#ffffff;border:1px solid #E3E8EF;border-radius:12px}
+    .header-cell{text-align:center;padding:32px 20px 16px}
+    .btn{display:inline-block;background:#0579DA;color:#ffffff!important;text-decoration:none;padding:14px 32px;border-radius:8px;font-weight:600;font-size:15px}
+    .success-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:8px;padding:16px;margin:16px 0}
+    @media only screen and (max-width:620px){
+      .email-container{width:100%!important}
+      .content-cell{padding:16px!important}
+    }
+  </style>
+</head>
+<body style="margin:0;padding:0;background-color:#F6F9FC">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding:20px 10px">
+        <table role="presentation" class="email-container" width="600" cellpadding="0" cellspacing="0">
+          <tr>
+            <td class="header-cell">
+              <div style="display:inline-block;background:#0579DA;color:#ffffff;width:48px;height:48px;border-radius:12px;line-height:48px;font-size:20px;font-weight:700;text-align:center;margin-bottom:12px">IP</div>
+              <h1 style="margin:8px 0 0;font-size:20px;font-weight:700;color:#0579DA">IMMO PRO-X</h1>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 0 16px">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td class="content-cell">
+                    <h2 style="margin:0 0 8px;font-size:18px;color:#1A2B3D">Bienvenue sur IMMO PRO-X !</h2>
+                    <p style="margin:0 0 20px;color:#5E6C84;font-size:14px;line-height:1.6">
+                      Vous avez été invité à rejoindre IMMO PRO-X. Cliquez sur le bouton ci-dessous pour créer votre mot de passe et accéder à votre espace.
+                    </p>
+                    <div class="success-box">
+                      <div style="color:#166534;font-size:13px">
+                        <strong>Bienvenue dans notre équipe !</strong>
+                      </div>
+                    </div>
+                    <div style="text-align:center;margin:28px 0">
+                      <a href="{{ .ConfirmationURL }}" class="btn">Accepter l'invitation</a>
+                    </div>
+                    <div style="background:#F9FAFB;border-left:4px solid #0579DA;padding:16px;margin-top:24px;border-radius:4px">
+                      <p style="margin:0;color:#5E6C84;font-size:12px;line-height:1.6">
+                        <strong>Ou copiez ce lien :</strong><br>
+                        <code style="word-break:break-all;color:#0579DA;font-family:monospace;font-size:11px">{{ .ConfirmationURL }}</code>
+                      </p>
+                    </div>
+                    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #E3E8EF">
+                      <h3 style="font-size:13px;color:#1A2B3D;margin:0 0 12px;font-weight:600">Conseils de sécurité :</h3>
+                      <ul style="margin:0;padding-left:20px;color:#5E6C84;font-size:12px;line-height:1.8">
+                        <li>Ce lien est personnel — ne le partagez pas</li>
+                        <li>Choisissez un mot de passe fort (min. 8 caractères)</li>
+                        <li>Contactez votre administrateur si vous avez des questions</li>
+                      </ul>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="text-align:center;padding:20px;color:#8898AA;font-size:11px">
+              <p style="margin:0 0 4px">IMMO PRO-X — CRM Immobilier</p>
+              <p style="margin:0;color:#B0BEC5;font-size:10px">Cet email a été envoyé automatiquement. Merci de ne pas y répondre.</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+*/
+
+-- Note: {{ .ConfirmationURL }} is replaced by Supabase with the actual invitation link.
+
 -- Alternative: Use Supabase API to update email template programmatically
--- POST to: https://<supabase-project>.supabase.co/auth/admin/email-templates/reset
+-- POST to: https://<supabase-project>.supabase.co/auth/admin/email-templates/invite
 -- (Requires service role key)

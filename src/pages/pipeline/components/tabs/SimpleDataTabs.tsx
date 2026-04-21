@@ -413,7 +413,6 @@ export function NotesTab({ clientId }: { clientId: string }) {
 
   if (notes === null && client?.notes != null) setNotes(client.notes)
 
-  // eslint-disable-next-line react-hooks/immutability -- saveTimerRef is a ref; mutating .current is the idiomatic debounce pattern
   const handleChange = useCallback((value: string) => {
     setNotes(value)
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current)

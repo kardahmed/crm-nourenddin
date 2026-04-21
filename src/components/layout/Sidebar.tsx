@@ -15,6 +15,7 @@ import {
   CheckSquare,
   UserPlus,
   UserCircle,
+  Activity,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -38,6 +39,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   CheckSquare,
   UserPlus,
   UserCircle: UserCircle,
+  Activity,
 }
 
 // Map nav path → i18n key
@@ -53,6 +55,7 @@ const NAV_KEYS: Record<string, string> = {
   '/goals': 'nav.goals',
   '/performance': 'nav.performance',
   '/agents': 'nav.agents',
+  '/activity-log': 'nav.activity_log',
   '/reports': 'nav.reports',
   '/marketing-roi': 'nav.marketing_roi',
   '/settings': 'nav.settings',

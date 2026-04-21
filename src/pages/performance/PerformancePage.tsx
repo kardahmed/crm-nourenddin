@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import {
@@ -30,12 +31,12 @@ import { fr } from 'date-fns/locale'
 
 type PeriodKey = 'today' | 'week' | 'month' | 'quarter' | 'year'
 
-const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: 'today', label: "Aujourd'hui" },
-  { key: 'week', label: 'Cette semaine' },
-  { key: 'month', label: 'Ce mois' },
-  { key: 'quarter', label: 'Ce trimestre' },
-  { key: 'year', label: 'Cette année' },
+const PERIODS: { key: PeriodKey; labelKey: string }[] = [
+  { key: 'today', labelKey: 'performance_page.today' },
+  { key: 'week', labelKey: 'performance_page.this_week' },
+  { key: 'month', labelKey: 'performance_page.this_month' },
+  { key: 'quarter', labelKey: 'performance_page.this_quarter' },
+  { key: 'year', labelKey: 'performance_page.this_year' },
 ]
 
 const CHART_COLORS = ['#00D4A0', '#3782FF', '#FF9A1E', '#A855F7', '#06B6D4', '#EAB308', '#F97316', '#EC4899', '#FF4949', '#7F96B7']
@@ -55,6 +56,7 @@ function getPeriodRange(key: PeriodKey) {
 /* ═══ Component ═══ */
 
 export function PerformancePage() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const { isAgent } = usePermissions()
   const userId = useAuthStore((s) => s.session?.user?.id) ?? null
@@ -214,7 +216,7 @@ export function PerformancePage() {
 
   // Filter options
   const agentOptions = [
-    { value: 'all', label: 'Tous les agents' },
+    { value: 'all', label: t('performance_page.all_agents') },
     ...allAgents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` })),
   ]
 
@@ -231,11 +233,11 @@ export function PerformancePage() {
               onClick={() => setPeriod(p.key)}
               className={`rounded-md px-2.5 py-1 text-[11px] font-medium ${period === p.key ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted hover:text-immo-text-secondary'}`}
             >
-              {p.label}
+              {t(p.labelKey)}
             </button>
           ))}
         </div>
-        {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
+        {!isAgent && <FilterDropdown label={t('field.agent')} options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
 
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -248,14 +250,14 @@ export function PerformancePage() {
           </button>
           <Button variant="ghost" size="sm" onClick={() => exportToCsv('performance', sales, [
             { header: 'ID', value: r => r.id },
-            { header: 'Prix final', value: r => r.final_price },
-            { header: 'Date', value: r => r.created_at },
+            { header: t('field.price'), value: r => r.final_price },
+            { header: t('field.date'), value: r => r.created_at },
           ])} className="border border-immo-border-default text-xs text-immo-text-secondary">
-            <Download className="mr-1 h-3.5 w-3.5" /> Export
+            <Download className="mr-1 h-3.5 w-3.5" /> {t('action.export')}
           </Button>
           <Link to="/goals">
             <Button variant="ghost" size="sm" className="border border-immo-border-default text-xs text-immo-text-secondary">
-              <Target className="mr-1 h-3.5 w-3.5" /> Objectifs
+              <Target className="mr-1 h-3.5 w-3.5" /> {t('nav.goals')}
             </Button>
           </Link>
         </div>
@@ -266,7 +268,7 @@ export function PerformancePage() {
         <div className="flex items-center gap-3 rounded-xl border border-immo-status-orange/30 bg-immo-status-orange-bg px-4 py-3">
           <AlertTriangle className="h-4 w-4 shrink-0 text-immo-status-orange" />
           <div className="flex-1 text-xs text-immo-status-orange">
-            <span className="font-semibold">{inactiveAgents.length} agent(s) inactif(s)</span> depuis 7+ jours :
+            <span className="font-semibold">{t('performance_page.inactive_agents', { count: inactiveAgents.length })}</span> {t('performance_page.inactive_since')} :
             {inactiveAgents.slice(0, 3).map((a, i) => (
               <span key={a.name}>{i > 0 ? ', ' : ' '}{a.name} ({a.days}j)</span>
             ))}
@@ -280,19 +282,19 @@ export function PerformancePage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-        <KPICard label="Ventes" value={totalSales} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Revenu" value={formatPriceCompact(totalRevenue)} accent="green" icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Visites terminées" value={completedVisits} accent="blue" icon={<CheckCircle className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Taux conversion" value={`${conversionRate.toFixed(1)}%`} accent={conversionRate > 20 ? 'green' : 'orange'} icon={<Eye className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Nouveaux clients" value={newClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Activités" value={totalActivities} accent="blue" icon={<Activity className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('kpi.sales')} value={totalSales} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('kpi.revenue')} value={formatPriceCompact(totalRevenue)} accent="green" icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('performance_page.completed_visits')} value={completedVisits} accent="blue" icon={<CheckCircle className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('kpi.conversion_rate')} value={`${conversionRate.toFixed(1)}%`} accent={conversionRate > 20 ? 'green' : 'orange'} icon={<Eye className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('kpi.new_clients')} value={newClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('performance_page.activities')} value={totalActivities} accent="blue" icon={<Activity className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
 
       {/* Charts grid */}
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
         {/* Chart 1: Revenue */}
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
-          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Évolution du CA</h3>
+          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">{t('performance_page.revenue_evolution')}</h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={revenueChart}>
@@ -312,7 +314,7 @@ export function PerformancePage() {
 
         {/* Chart 2: Sales & Visits by day */}
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
-          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Ventes & Visites par jour</h3>
+          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">{t('performance_page.sales_visits_by_day')}</h3>
           <div className="h-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salesByDay}>
@@ -330,7 +332,7 @@ export function PerformancePage() {
 
         {/* Chart 3: Pipeline funnel */}
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
-          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Entonnoir Pipeline</h3>
+          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">{t('performance_page.pipeline_funnel')}</h3>
           <div className="space-y-2">
             {funnelData.map((d) => (
               <div key={d.stage} className="flex items-center gap-3">
@@ -355,9 +357,9 @@ export function PerformancePage() {
 
         {/* Chart 4: Sources donut */}
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
-          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Sources Clients</h3>
+          <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">{t('performance_page.client_sources')}</h3>
           {sourceData.length === 0 ? (
-            <div className="flex h-[250px] items-center justify-center text-sm text-immo-text-muted">Aucune donnée</div>
+            <div className="flex h-[250px] items-center justify-center text-sm text-immo-text-muted">{t('common.no_data')}</div>
           ) : (
             <div className="flex items-center gap-6">
               <div className="h-[200px] w-[200px] shrink-0">

@@ -199,6 +199,7 @@ export const ar = {
     fk_constraint: 'لا يمكن الحذف: توجد عناصر مرتبطة',
     boundary_title: 'حدث خطأ',
     boundary_back: 'العودة إلى لوحة التحكم',
+    unsupported_format: 'صيغة غير مدعومة (JPG أو PNG أو WEBP أو GIF فقط)',
   },
 
   // Commun
@@ -524,6 +525,7 @@ export const ar = {
 
   goals_page: {
     new_goal: 'هدف جديد',
+    subtitle_new: 'تحديد هدف مبيعات لوكيل',
     metric: 'المقياس',
     period: 'الفترة',
     target: 'الهدف',
@@ -537,6 +539,21 @@ export const ar = {
     quarterly: 'ربع سنوي',
     yearly: 'سنوي',
     avg_progress: 'متوسط التقدم',
+    sales_count: 'عدد المبيعات',
+    revenue: 'الإيرادات',
+    clients_count: 'عدد العملاء',
+    visits_count: 'عدد الزيارات',
+    reservations_count: 'عدد الحجوزات',
+    total_goals: 'إجمالي الأهداف',
+    achieved_count: 'المحققة',
+    target_value: 'القيمة المستهدفة *',
+    agent_required: 'الوكيل *',
+    metric_required: 'المقياس *',
+    period_required: 'الفترة *',
+    select_agent: 'اختر الوكيل',
+    create_goal: 'إنشاء الهدف',
+    all_statuses: 'جميع الحالات',
+    no_goals: 'لا توجد أهداف',
   },
 
   planning_page: {
@@ -550,9 +567,13 @@ export const ar = {
     no_visits: 'لا توجد زيارات مخططة',
     on_site: 'في الموقع',
     office: 'في المكتب',
+    virtual: 'افتراضية',
     virtual_visit: 'افتراضية',
     hour: 'الساعة',
     total_visits: 'إجمالي الزيارات',
+    confirmed: 'مؤكدة',
+    pending: 'قيد الانتظار',
+    completed: 'منتهية',
   },
 
   dossiers_page: {
@@ -564,6 +585,8 @@ export const ar = {
   },
 
   performance_page: {
+    today: 'اليوم',
+    this_week: 'هذا الأسبوع',
     this_month: 'هذا الشهر',
     this_quarter: 'هذا الربع',
     this_year: 'هذه السنة',
@@ -571,6 +594,16 @@ export const ar = {
     ranking: 'الترتيب',
     conversion_funnel: 'قمع التحويل',
     source_analysis: 'تحليل حسب المصدر',
+    evolution: 'التطور',
+    all_agents: 'جميع الوكلاء',
+    completed_visits: 'زيارات منتهية',
+    activities: 'الأنشطة',
+    revenue_evolution: 'تطور الإيرادات',
+    sales_visits_by_day: 'المبيعات والزيارات اليومية',
+    pipeline_funnel: 'قمع المسار',
+    client_sources: 'مصادر العملاء',
+    inactive_agents: '{{count}} وكيل غير نشط',
+    inactive_since: 'منذ 7 أيام أو أكثر',
   },
 
   reports_page: {
@@ -578,6 +611,7 @@ export const ar = {
     export_pdf: 'تصدير PDF',
     export_csv: 'تصدير CSV',
     date_range: 'الفترة',
+    this_week: 'هذا الأسبوع',
   },
 
   landing_page: {
@@ -630,11 +664,43 @@ export const ar = {
   },
 
   project_detail: {
+    info: 'المعلومات',
+    units: 'وحدات المشروع',
+    activity: 'النشاط الأخير',
+    no_units: 'لا توجد وحدات في هذا المشروع',
     total_units: 'إجمالي الوحدات',
     sold: 'مباعة',
     reserved: 'محجوزة',
     available: 'متاحة',
     code: 'الرمز',
+    status: 'الحالة',
+    delivery: 'التسليم',
+    avg_price_per_unit: 'متوسط السعر / وحدة',
+    created_at: 'تاريخ الإنشاء',
+    description: 'الوصف',
+    location: 'الموقع',
+    delivery_date: 'تاريخ التسليم',
+    project_revenue: 'إيرادات المشروع',
+    marketed: '{{done}} / {{total}} مسوّقة',
+    no_photo: 'لا توجد صورة',
+    cover: 'الغلاف',
+    add_image: 'إضافة',
+    remove: 'إزالة',
+    remove_photo_title: 'إزالة هذه الصورة',
+    cover_updated: 'تم تحديث صورة الغلاف',
+    images_added: 'تمت إضافة {{count}} صورة',
+    image_removed: 'تم حذف الصورة',
+    upload_error: 'خطأ في الرفع: {{message}}',
+    file_too_large: 'الملف كبير جدًا (الحد الأقصى 5 ميغابايت)',
+    project_updated: 'تم تحديث المشروع',
+    project_name_placeholder: 'اسم المشروع',
+    location_placeholder: 'الموقع',
+    compare: 'مقارنة',
+    import_units_title: 'استيراد الوحدات — {{project}}',
+    import_units_subtitle: 'سيتم ربط الوحدات المستوردة بهذا المشروع',
+    import_csv: 'استيراد CSV',
+    import_csv_hint: 'استيراد وحدات من ملف CSV',
+    units_count: 'وحدات المشروع ({{count}})',
   },
 
   units_tab: {
@@ -733,6 +799,7 @@ export const ar = {
     header_status: 'الحالة',
     header_agent: 'الوكيل',
     schedule_title: 'جدول الدفع',
+    no_schedule: 'لا يوجد جدول',
   },
 
   projects_extra: {
@@ -856,6 +923,16 @@ export const ar = {
     reason_leave: 'إجازة طويلة / غياب',
     reason_reassignment: 'تغيير منصب داخلي',
     reason_other: 'أخرى',
+  },
+
+  // Marketing ROI
+  marketing: {
+    all_categories: 'جميع الفئات',
+    no_expenses: 'لا توجد مصاريف مسجلة',
+    saving: 'جارٍ الحفظ...',
+    expense_added: 'تمت إضافة المصروف',
+    expense_deleted: 'تم حذف المصروف',
+    amount_required: 'المبلغ مطلوب',
   },
 
   // Activity Log (admin-only)

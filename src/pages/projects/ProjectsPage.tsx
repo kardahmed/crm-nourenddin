@@ -145,18 +145,18 @@ export function ProjectsPage() {
   const columns: Column<ProjectWithCounts>[] = [
     {
       key: 'code',
-      header: 'Code',
+      header: t('projects_extra.header_code'),
       render: (p) => <span className="font-mono text-xs text-immo-text-muted">{p.code}</span>,
       className: 'w-[100px]',
     },
     {
       key: 'name',
-      header: 'Nom',
+      header: t('projects_extra.header_name'),
       render: (p) => <span className="font-medium">{p.name}</span>,
     },
     {
       key: 'status',
-      header: 'Statut',
+      header: t('projects_extra.header_status'),
       render: (p) => {
         const stType = STATUS_MAP_TYPE[p.status] ?? 'muted'
         const stKey = STATUS_LABEL_KEYS[p.status] ?? STATUS_LABEL_KEYS.inactive
@@ -166,19 +166,19 @@ export function ProjectsPage() {
     },
     {
       key: 'units',
-      header: 'Unités',
+      header: t('projects_extra.header_units'),
       render: (p) => <span>{p.total}</span>,
       className: 'w-[80px]',
     },
     {
       key: 'sold',
-      header: 'Vendues',
+      header: t('projects_extra.header_sold'),
       render: (p) => <span className="text-immo-accent-green">{p.sold}</span>,
       className: 'w-[90px]',
     },
     {
       key: 'delivery',
-      header: 'Livraison',
+      header: t('projects_extra.header_delivery'),
       render: (p) => (
         <span className="text-xs text-immo-text-muted">
           {p.delivery_date ? format(new Date(p.delivery_date), 'MM/yyyy') : '-'}
@@ -188,7 +188,7 @@ export function ProjectsPage() {
     },
     {
       key: 'price',
-      header: 'Prix moy.',
+      header: t('projects_extra.header_avg_price'),
       render: (p) => (
         <span className="text-xs">
           {p.avg_price_per_unit != null ? formatPrice(p.avg_price_per_unit) : '-'}
@@ -213,13 +213,13 @@ export function ProjectsPage() {
             onClick={() => setActiveTab('projects')}
             className="border-b-2 border-transparent px-4 py-2.5 text-sm text-immo-text-muted hover:text-immo-text-primary"
           >
-            <Building2 className="mr-1.5 inline h-4 w-4" /> Projets
+            <Building2 className="mr-1.5 inline h-4 w-4" /> {t('projects_extra.tab_projects')}
           </button>
           <button
             onClick={() => setActiveTab('units')}
             className="border-b-2 border-immo-accent-green px-4 py-2.5 text-sm font-medium text-immo-accent-green"
           >
-            <Home className="mr-1.5 inline h-4 w-4" /> Biens
+            <Home className="mr-1.5 inline h-4 w-4" /> {t('projects_extra.tab_units')}
           </button>
         </div>
         <UnitsTab />
@@ -235,20 +235,20 @@ export function ProjectsPage() {
           onClick={() => setActiveTab('projects')}
           className="border-b-2 border-immo-accent-green px-4 py-2.5 text-sm font-medium text-immo-accent-green"
         >
-          <Building2 className="mr-1.5 inline h-4 w-4" /> Projets
+          <Building2 className="mr-1.5 inline h-4 w-4" /> {t('projects_extra.tab_projects')}
         </button>
         <button
           onClick={() => setActiveTab('units')}
           className="border-b-2 border-transparent px-4 py-2.5 text-sm text-immo-text-muted hover:text-immo-text-primary"
         >
-          <Home className="mr-1.5 inline h-4 w-4" /> Biens
+          <Home className="mr-1.5 inline h-4 w-4" /> {t('projects_extra.tab_units')}
         </button>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
         <KPICard
-          label="Total projets"
+          label={t('projects_extra.kpi_total_projects')}
           value={totalProjects}
           accent="blue"
           icon={<Building2 className="h-5 w-5 text-immo-accent-blue" />}
@@ -260,7 +260,7 @@ export function ProjectsPage() {
           icon={<Building2 className="h-5 w-5 text-immo-accent-green" />}
         />
         <KPICard
-          label="Total unités"
+          label={t('projects_extra.kpi_total_units')}
           value={totalUnits}
           accent="blue"
           icon={<Home className="h-5 w-5 text-immo-accent-blue" />}
@@ -283,7 +283,7 @@ export function ProjectsPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <SearchInput
-            placeholder="Rechercher un projet..."
+            placeholder={t('projects_extra.search_placeholder')}
             value={search}
             onChange={setSearch}
             className="w-full sm:w-[260px]"
@@ -317,17 +317,17 @@ export function ProjectsPage() {
               onClick={() => setShowImport(true)}
               variant="ghost"
               className="border border-immo-border-default text-immo-text-secondary hover:bg-immo-bg-card-hover"
-              title="Importer des projets depuis un CSV"
+              title={t('project_detail.import_csv_hint')}
             >
-              <Upload className="mr-1.5 h-4 w-4" /> Importer
+              <Upload className="mr-1.5 h-4 w-4" /> {t('action.import')}
             </Button>
             <Button
               onClick={() => setShowCreate(true)}
               disabled={!canAddProject}
               className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50 disabled:cursor-not-allowed"
-              title={!canAddProject ? 'Limite atteinte — Passez au plan superieur' : undefined}
+              title={!canAddProject ? t('projects_extra.limit_reached') : undefined}
             >
-              <Plus className="mr-1.5 h-4 w-4" /> Nouveau projet
+              <Plus className="mr-1.5 h-4 w-4" /> {t('projects_extra.btn_new')}
             </Button>
           </div>
         )}
@@ -337,9 +337,9 @@ export function ProjectsPage() {
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Package className="h-10 w-10" />}
-          title="Aucun projet"
-          description="Créez votre premier projet immobilier pour commencer"
-          action={canManageProjects && canAddProject ? { label: 'Nouveau projet', onClick: () => setShowCreate(true) } : undefined}
+          title={t('projects_extra.empty_title')}
+          description={t('projects_extra.empty_desc')}
+          action={canManageProjects && canAddProject ? { label: t('projects_extra.btn_new'), onClick: () => setShowCreate(true) } : undefined}
         />
       ) : view === 'grid' ? (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -369,8 +369,8 @@ export function ProjectsPage() {
       <CsvImportModal
         isOpen={showImport}
         onClose={() => setShowImport(false)}
-        title="Importer des projets"
-        subtitle="Depuis un CSV — migration ou batch"
+        title={t('action.import')}
+        subtitle={t('project_detail.import_csv_hint')}
         table="projects"
         fields={PROJECT_IMPORT_FIELDS}
         templateName="projets"
@@ -382,9 +382,9 @@ export function ProjectsPage() {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Supprimer ce projet ?"
-        description="Toutes les unités, réservations et ventes liées seront supprimées. Cette action est irréversible."
-        confirmLabel="Supprimer"
+        title={t('projects_extra.confirm_delete_title')}
+        description={t('projects_extra.confirm_delete_desc')}
+        confirmLabel={t('action.delete')}
         confirmVariant="danger"
         loading={deleteProject.isPending}
       />

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   ChevronLeft, ChevronRight, CalendarDays, Clock,
@@ -47,6 +48,7 @@ type ViewMode = 'month' | 'week' | 'day'
 /* ═══ Component ═══ */
 
 export function PlanningPage() {
+  const { t } = useTranslation()
   const { session } = useAuthStore()
   const userId = session?.user?.id
   const { isAgent } = usePermissions()
@@ -153,14 +155,14 @@ export function PlanningPage() {
   const planned = visits.filter(v => v.status === 'planned').length
 
   // Filter options
-  const agentOptions = [{ value: 'all', label: 'Tous les agents' }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
-  const projectOptions = [{ value: 'all', label: 'Tous les projets' }, ...projectsList.map(p => ({ value: p.id, label: p.name }))]
+  const agentOptions = [{ value: 'all', label: t('performance_page.all_agents') }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
+  const projectOptions = [{ value: 'all', label: t('dossiers_extra.all_projects') }, ...projectsList.map(p => ({ value: p.id, label: p.name }))]
   const statusOptions = [
-    { value: 'all', label: 'Tous les statuts' },
-    { value: 'planned', label: 'Planifiée' },
-    { value: 'confirmed', label: 'Confirmée' },
-    { value: 'completed', label: 'Terminée' },
-    { value: 'cancelled', label: 'Annulée' },
+    { value: 'all', label: t('goals_page.all_statuses') },
+    { value: 'planned', label: t('status.planned') },
+    { value: 'confirmed', label: t('status.confirmed') },
+    { value: 'completed', label: t('status.completed') },
+    { value: 'cancelled', label: t('status.cancelled') },
   ]
 
   // Navigation
@@ -182,19 +184,19 @@ export function PlanningPage() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs text-immo-text-muted">Ce planning affiche uniquement les visites</p>
+          <p className="text-xs text-immo-text-muted">{t('page.planning_subtitle')}</p>
         </div>
         <Button onClick={() => setShowTasks(true)} variant="ghost" className="border border-immo-border-default text-xs text-immo-text-secondary hover:bg-immo-bg-card-hover">
-          <Bot className="mr-1.5 h-3.5 w-3.5 text-purple-400" /> Tâches AI ({aiTasks.length})
+          <Bot className="mr-1.5 h-3.5 w-3.5 text-purple-400" /> {t('history_type.ai_task')} ({aiTasks.length})
         </Button>
       </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KPICard label="Aujourd'hui" value={todayVisits} accent="green" icon={<CalendarDays className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="À venir" value={upcoming} accent="blue" icon={<Clock className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Confirmées" value={confirmed} accent="green" icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="En attente" value={planned} accent="orange" icon={<AlertCircle className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label={t('planning_page.today')} value={todayVisits} accent="green" icon={<CalendarDays className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('planning_page.upcoming')} value={upcoming} accent="blue" icon={<Clock className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('planning_page.confirmed')} value={confirmed} accent="green" icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('planning_page.pending')} value={planned} accent="orange" icon={<AlertCircle className="h-4 w-4 text-immo-status-orange" />} />
       </div>
 
       {/* Calendar nav + filters */}
@@ -204,7 +206,7 @@ export function PlanningPage() {
             <ChevronLeft className="h-4 w-4" />
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())} className="text-xs text-immo-text-secondary hover:text-immo-text-primary">
-            Aujourd'hui
+            {t('planning_page.today')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => navigate(1)} className="h-8 w-8 p-0 text-immo-text-muted hover:text-immo-text-primary">
             <ChevronRight className="h-4 w-4" />
@@ -222,15 +224,15 @@ export function PlanningPage() {
               onClick={() => setViewMode(m)}
               className={`rounded-md px-2.5 py-1 text-[11px] font-medium ${viewMode === m ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}
             >
-              {m === 'month' ? 'Mois' : m === 'week' ? 'Semaine' : 'Jour'}
+              {m === 'month' ? t('planning_page.month') : m === 'week' ? t('planning_page.week') : t('planning_page.day')}
             </button>
           ))}
         </div>
 
         <div className="ml-auto flex gap-2">
-          {!isAgent && <FilterDropdown label="Agent" options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
-          <FilterDropdown label="Projet" options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
-          <FilterDropdown label="Statut" options={statusOptions} value={statusFilter} onChange={setStatusFilter} />
+          {!isAgent && <FilterDropdown label={t('field.agent')} options={agentOptions} value={agentFilter} onChange={setAgentFilter} />}
+          <FilterDropdown label={t('field.project')} options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
+          <FilterDropdown label={t('field.status')} options={statusOptions} value={statusFilter} onChange={setStatusFilter} />
         </div>
       </div>
 

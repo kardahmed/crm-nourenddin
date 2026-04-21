@@ -199,6 +199,7 @@ export const en = {
     fk_constraint: 'Unable to delete: related items still exist',
     boundary_title: 'An error occurred',
     boundary_back: 'Back to dashboard',
+    unsupported_format: 'Unsupported format (JPG, PNG, WEBP or GIF only)',
   },
 
   // Common
@@ -539,6 +540,7 @@ export const en = {
   // Goals page
   goals_page: {
     new_goal: 'New goal',
+    subtitle_new: 'Set a sales goal for an agent',
     metric: 'Metric',
     period: 'Period',
     target: 'Target',
@@ -557,6 +559,16 @@ export const en = {
     clients_count: 'Number of clients',
     visits_count: 'Number of visits',
     reservations_count: 'Number of reservations',
+    total_goals: 'Total goals',
+    achieved_count: 'Achieved',
+    target_value: 'Target value *',
+    agent_required: 'Agent *',
+    metric_required: 'Metric *',
+    period_required: 'Period *',
+    select_agent: 'Select agent',
+    create_goal: 'Create goal',
+    all_statuses: 'All statuses',
+    no_goals: 'No goals',
   },
 
   // Planning page
@@ -594,6 +606,8 @@ export const en = {
 
   // Performance page
   performance_page: {
+    today: 'Today',
+    this_week: 'This week',
     this_month: 'This month',
     this_quarter: 'This quarter',
     this_year: 'This year',
@@ -602,6 +616,15 @@ export const en = {
     conversion_funnel: 'Conversion funnel',
     source_analysis: 'Analysis by source',
     evolution: 'Evolution',
+    all_agents: 'All agents',
+    completed_visits: 'Completed visits',
+    activities: 'Activities',
+    revenue_evolution: 'Revenue evolution',
+    sales_visits_by_day: 'Sales & Visits per day',
+    pipeline_funnel: 'Pipeline Funnel',
+    client_sources: 'Client sources',
+    inactive_agents: '{{count}} inactive agent(s)',
+    inactive_since: 'for 7+ days',
   },
 
   // Reports page
@@ -615,6 +638,7 @@ export const en = {
     clients_report: 'Clients report',
     agents_report: 'Agents report',
     financial_report: 'Financial report',
+    this_week: 'This week',
   },
 
   // Landing pages manager
@@ -689,6 +713,32 @@ export const en = {
     code: 'Code',
     status: 'Status',
     delivery: 'Delivery',
+    avg_price_per_unit: 'Average price / unit',
+    created_at: 'Created on',
+    description: 'Description',
+    location: 'Location',
+    delivery_date: 'Delivery date',
+    project_revenue: 'Project revenue',
+    marketed: '{{done}} / {{total}} marketed',
+    no_photo: 'No photo',
+    cover: 'Cover',
+    add_image: 'Add',
+    remove: 'Remove',
+    remove_photo_title: 'Remove this photo',
+    cover_updated: 'Cover image updated',
+    images_added: '{{count}} image(s) added',
+    image_removed: 'Image removed',
+    upload_error: 'Upload error: {{message}}',
+    file_too_large: 'File too large (max 5 MB)',
+    project_updated: 'Project updated',
+    project_name_placeholder: 'Project name',
+    location_placeholder: 'Location',
+    compare: 'Compare',
+    import_units_title: 'Import properties — {{project}}',
+    import_units_subtitle: 'The imported properties will be linked to this project',
+    import_csv: 'Import CSV',
+    import_csv_hint: 'Import properties from a CSV',
+    units_count: 'Project properties ({{count}})',
   },
 
   // Units tab
@@ -815,6 +865,7 @@ export const en = {
     header_status: 'Status',
     header_agent: 'Agent',
     schedule_title: 'Schedule',
+    no_schedule: 'No schedule',
   },
 
   // Projects extras
@@ -939,6 +990,16 @@ export const en = {
     reason_leave: 'Long leave / absence',
     reason_reassignment: 'Internal reassignment',
     reason_other: 'Other',
+  },
+
+  // Marketing ROI
+  marketing: {
+    all_categories: 'All categories',
+    no_expenses: 'No expenses recorded',
+    saving: 'Saving...',
+    expense_added: 'Expense added',
+    expense_deleted: 'Expense deleted',
+    amount_required: 'Amount required',
   },
 
   // Activity Log (admin-only)

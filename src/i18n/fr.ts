@@ -199,6 +199,7 @@ export const fr = {
     fk_constraint: 'Impossible de supprimer : des éléments liés existent encore',
     boundary_title: 'Une erreur est survenue',
     boundary_back: 'Retour au tableau de bord',
+    unsupported_format: 'Format non supporté (JPG, PNG, WEBP ou GIF uniquement)',
   },
 
   // Commun
@@ -539,6 +540,7 @@ export const fr = {
   // Goals page
   goals_page: {
     new_goal: 'Nouvel objectif',
+    subtitle_new: 'Définir un objectif de vente pour un agent',
     metric: 'Métrique',
     period: 'Période',
     target: 'Objectif',
@@ -557,6 +559,16 @@ export const fr = {
     clients_count: 'Nombre de clients',
     visits_count: 'Nombre de visites',
     reservations_count: 'Nombre de réservations',
+    total_goals: 'Total objectifs',
+    achieved_count: 'Atteints',
+    target_value: 'Valeur cible *',
+    agent_required: 'Agent *',
+    metric_required: 'Métrique *',
+    period_required: 'Période *',
+    select_agent: 'Sélectionner l\'agent',
+    create_goal: 'Créer l\'objectif',
+    all_statuses: 'Tous les statuts',
+    no_goals: 'Aucun objectif',
   },
 
   // Planning page
@@ -594,6 +606,8 @@ export const fr = {
 
   // Performance page
   performance_page: {
+    today: "Aujourd'hui",
+    this_week: 'Cette semaine',
     this_month: 'Ce mois',
     this_quarter: 'Ce trimestre',
     this_year: 'Cette année',
@@ -602,6 +616,15 @@ export const fr = {
     conversion_funnel: 'Entonnoir de conversion',
     source_analysis: 'Analyse par source',
     evolution: 'Évolution',
+    all_agents: 'Tous les agents',
+    completed_visits: 'Visites terminées',
+    activities: 'Activités',
+    revenue_evolution: 'Évolution du CA',
+    sales_visits_by_day: 'Ventes & Visites par jour',
+    pipeline_funnel: 'Entonnoir Pipeline',
+    client_sources: 'Sources Clients',
+    inactive_agents: '{{count}} agent(s) inactif(s)',
+    inactive_since: 'depuis 7+ jours',
   },
 
   // Reports page
@@ -615,6 +638,7 @@ export const fr = {
     clients_report: 'Rapport clients',
     agents_report: 'Rapport agents',
     financial_report: 'Rapport financier',
+    this_week: 'Cette semaine',
   },
 
   // Landing pages manager
@@ -689,6 +713,32 @@ export const fr = {
     code: 'Code',
     status: 'Statut',
     delivery: 'Livraison',
+    avg_price_per_unit: 'Prix moyen / unité',
+    created_at: 'Créé le',
+    description: 'Description',
+    location: 'Localisation',
+    delivery_date: 'Date de livraison',
+    project_revenue: 'CA projet',
+    marketed: '{{done}} / {{total}} commercialisées',
+    no_photo: 'Aucune photo',
+    cover: 'Couverture',
+    add_image: 'Ajouter',
+    remove: 'Retirer',
+    remove_photo_title: 'Retirer cette photo',
+    cover_updated: 'Image de couverture mise à jour',
+    images_added: '{{count}} image(s) ajoutée(s)',
+    image_removed: 'Image retirée',
+    upload_error: 'Erreur upload : {{message}}',
+    file_too_large: 'Fichier trop volumineux (max 5 Mo)',
+    project_updated: 'Projet mis à jour',
+    project_name_placeholder: 'Nom du projet',
+    location_placeholder: 'Localisation',
+    compare: 'Comparer',
+    import_units_title: 'Importer des biens — {{project}}',
+    import_units_subtitle: 'Les biens importés seront rattachés à ce projet',
+    import_csv: 'Importer CSV',
+    import_csv_hint: 'Importer des biens depuis un CSV',
+    units_count: 'Biens du projet ({{count}})',
   },
 
   // Units tab
@@ -815,6 +865,7 @@ export const fr = {
     header_status: 'Statut',
     header_agent: 'Agent',
     schedule_title: 'Échéancier',
+    no_schedule: 'Aucune échéance',
   },
 
   // Projects extras
@@ -939,6 +990,16 @@ export const fr = {
     reason_leave: 'Congé long / absence',
     reason_reassignment: 'Changement de poste interne',
     reason_other: 'Autre',
+  },
+
+  // Marketing ROI
+  marketing: {
+    all_categories: 'Toutes catégories',
+    no_expenses: 'Aucune dépense enregistrée',
+    saving: 'Enregistrement...',
+    expense_added: 'Dépense ajoutée',
+    expense_deleted: 'Dépense supprimée',
+    amount_required: 'Montant requis',
   },
 
   // Activity Log (admin-only)

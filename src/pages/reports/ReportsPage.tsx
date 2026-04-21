@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -43,11 +44,11 @@ interface HistoryEntry {
   description: string | null
 }
 
-const PERIODS: { key: PeriodKey; label: string }[] = [
-  { key: 'week', label: 'Cette semaine' },
-  { key: 'month', label: 'Ce mois' },
-  { key: 'quarter', label: 'Ce trimestre' },
-  { key: 'year', label: 'Cette année' },
+const PERIODS: { key: PeriodKey; labelKey: string }[] = [
+  { key: 'week', labelKey: 'reports_page.this_week' },
+  { key: 'month', labelKey: 'performance_page.this_month' },
+  { key: 'quarter', labelKey: 'performance_page.this_quarter' },
+  { key: 'year', labelKey: 'performance_page.this_year' },
 ]
 
 const ACTION_TYPES: { key: string; label: string }[] = [
@@ -77,6 +78,7 @@ const PAGE_SIZE = 25
 /* ═══ Component ═══ */
 
 export function ReportsPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { isAgent } = usePermissions()
   const userId = useAuthStore((s) => s.session?.user?.id) ?? ''
@@ -236,8 +238,8 @@ export function ReportsPage() {
   const detailPaged = detailEntries.slice(detailPage * PAGE_SIZE, (detailPage + 1) * PAGE_SIZE)
 
   // Filter options
-  const agentOptions = [{ value: 'all', label: 'Tous les agents' }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
-  const periodOptions = PERIODS.map(p => ({ value: p.key, label: p.label }))
+  const agentOptions = [{ value: 'all', label: t('performance_page.all_agents') }, ...agents.map(a => ({ value: a.id, label: `${a.first_name} ${a.last_name}` }))]
+  const periodOptions = PERIODS.map(p => ({ value: p.key, label: t(p.labelKey) }))
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 

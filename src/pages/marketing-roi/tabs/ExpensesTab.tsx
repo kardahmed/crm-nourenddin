@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, Trash2, Receipt, Save } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -34,7 +35,7 @@ interface Expense {
 }
 
 export function ExpensesTab() {
-  
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [showAdd, setShowAdd] = useState(false)
   const [periodFilter, setPeriodFilter] = useState<'month' | 'quarter' | 'year' | 'all'>('month')
@@ -81,7 +82,7 @@ export function ExpensesTab() {
 
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => { await supabase.from('marketing_expenses').delete().eq('id', id) },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success('Dépense supprimée') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success(t('marketing.expense_deleted')) },
   })
 
   const filtered = catFilter === 'all' ? expenses : expenses.filter(e => e.category === catFilter)
@@ -125,11 +126,11 @@ export function ExpensesTab() {
           ))}
         </div>
         <select value={catFilter} onChange={e => setCatFilter(e.target.value)} className="rounded-lg border border-immo-border-default bg-immo-bg-card px-3 py-1.5 text-xs text-immo-text-primary">
-          <option value="all">Toutes categories</option>
+          <option value="all">{t('marketing.all_categories')}</option>
           {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
         </select>
         <Button onClick={() => setShowAdd(true)} className="ml-auto bg-immo-accent-green text-white text-xs">
-          <Plus className="mr-1.5 h-3.5 w-3.5" /> Ajouter
+          <Plus className="mr-1.5 h-3.5 w-3.5" /> {t('action.add')}
         </Button>
       </div>
 
@@ -195,7 +196,7 @@ export function ExpensesTab() {
             })}
           </tbody>
         </table>
-        {filtered.length === 0 && <div className="py-12 text-center text-sm text-immo-text-muted">Aucune depense enregistree</div>}
+        {filtered.length === 0 && <div className="py-12 text-center text-sm text-immo-text-muted">{t('marketing.no_expenses')}</div>}
       </div>
 
       {/* Add Expense Modal */}
@@ -208,6 +209,7 @@ function AddExpenseModal({ projects, campaigns, onClose, onSaved }: {
    projects: Array<{ id: string; name: string }>; campaigns: Array<{ id: string; name: string }>
   onClose: () => void; onSaved: () => void
 }) {
+  const { t } = useTranslation()
   const [category, setCategory] = useState('ads_digital')
   const [subcategory, setSubcategory] = useState('')
   const [amount, setAmount] = useState('')
@@ -218,15 +220,15 @@ function AddExpenseModal({ projects, campaigns, onClose, onSaved }: {
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
-    if (!amount || Number(amount) <= 0) { toast.error('Montant requis'); return }
+    if (!amount || Number(amount) <= 0) { toast.error(t('marketing.amount_required')); return }
     setSaving(true)
     const { error } = await supabase.from('marketing_expenses').insert({
  category, subcategory: subcategory || null, amount: Number(amount),
       expense_date: date, project_id: projectId || null, campaign_id: campaignId || null, notes: notes || null,
     } as never)
     setSaving(false)
-    if (error) { toast.error('Erreur'); return }
-    toast.success('Dépense ajoutée')
+    if (error) { toast.error(t('error.generic')); return }
+    toast.success(t('marketing.expense_added'))
     onSaved()
   }
 
@@ -274,7 +276,7 @@ function AddExpenseModal({ projects, campaigns, onClose, onSaved }: {
           <Input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optionnel" className="text-sm" />
         </div>
         <Button onClick={handleSave} disabled={saving} className="w-full bg-immo-accent-green text-white">
-          <Save className="mr-1.5 h-4 w-4" /> {saving ? 'Enregistrement...' : 'Ajouter'}
+          <Save className="mr-1.5 h-4 w-4" /> {saving ? t('marketing.saving') : t('action.add')}
         </Button>
       </div>
     </Modal>

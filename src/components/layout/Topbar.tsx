@@ -39,7 +39,15 @@ export function Topbar({ title, subtitle }: TopbarProps) {
   }, [])
 
   return (
-    <header className="flex h-14 md:h-16 shrink-0 items-center justify-between border-b border-immo-border-default bg-immo-bg-sidebar px-3 md:px-6">
+    <header
+      className="flex shrink-0 items-center justify-between border-b border-immo-border-default bg-immo-bg-sidebar"
+      style={{
+        paddingTop: 'env(safe-area-inset-top)',
+        paddingLeft: 'max(0.75rem, env(safe-area-inset-left))',
+        paddingRight: 'max(0.75rem, env(safe-area-inset-right))',
+      }}
+    >
+      <div className="flex h-14 md:h-16 w-full items-center justify-between md:px-3">
       {/* Left: hamburger (mobile) + page title */}
       <div className="flex items-center gap-3">
         {isMobile && (
@@ -106,6 +114,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
           size="sm"
           className="h-9 w-9"
         />
+      </div>
       </div>
     </header>
   )

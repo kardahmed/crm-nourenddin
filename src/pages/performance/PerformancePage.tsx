@@ -147,6 +147,7 @@ export function PerformancePage() {
 
   // Inactive agents alert
   const inactiveAgents = useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity -- inside useMemo callback, runs on deps change
     const now = Date.now()
     return allAgents.filter(a => {
       const lastDate = a.last_activity ?? (a as Record<string, unknown>).created_at as string | null

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw, Eye, Lock, Bell, Mail } from 'lucide-react'
+import { RotateCcw, Lock, Bell, Mail } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
@@ -115,7 +115,6 @@ export function TemplatesSection() {
       <div className="flex gap-2">
         <Button variant="ghost" onClick={() => setContent('')} className="text-xs text-immo-text-muted hover:text-immo-status-red"><RotateCcw className="mr-1 h-3.5 w-3.5" /> {t('action.reset')}</Button>
         <div className="flex-1" />
-        <Button variant="ghost" className="border border-immo-border-default text-xs text-immo-text-secondary"><Eye className="mr-1 h-3.5 w-3.5" /> {t('action.view')}</Button>
         <SaveButton onClick={() => save.mutate()} loading={save.isPending} />
       </div>
     </div>

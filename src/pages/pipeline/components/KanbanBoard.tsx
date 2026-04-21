@@ -101,7 +101,6 @@ export function KanbanBoard({
 
   function toCardClient(c: Client): KanbanCardClient {
     const stageChangeDate = changeDates.get(c.id) ?? c.created_at
-    // eslint-disable-next-line react-hooks/purity -- inside toCardClient helper called from useMemo
     const daysInStage = Math.floor((Date.now() - new Date(stageChangeDate).getTime()) / 86400000)
     let projectName: string | null = null
     if (c.interested_projects?.length && projectMap) projectName = projectMap.get(c.interested_projects[0]) ?? null
@@ -122,7 +121,6 @@ export function KanbanBoard({
       const found = (clientsByStage[stage] ?? []).find(c => c.id === activeId)
       if (found) return toCardClient(found)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- toCardClient closes over stable maps
     return null
     // eslint-disable-next-line react-hooks/exhaustive-deps -- toCardClient closes over stable maps (changeDates, projectMap, agentMap)
   }, [activeId, clientsByStage])

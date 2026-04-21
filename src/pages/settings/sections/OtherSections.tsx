@@ -155,7 +155,6 @@ export function NotificationsSection() {
         tg[n.key] = settings[n.key] !== false
         tg[n.emailKey] = settings[n.emailKey] !== false
       })
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding toggles from async settings
       setToggles(tg)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- NOTIFS is module-level const; stable

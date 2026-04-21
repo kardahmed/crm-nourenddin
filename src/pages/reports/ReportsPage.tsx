@@ -83,7 +83,6 @@ export function ReportsPage() {
 
   const [period, setPeriod] = useState<PeriodKey>('month')
   const [agentFilter, setAgentFilter] = useState('all')
-  const [_projectFilter] = useState('all')
   // Agents get the per-agent view, locked to themselves.
   const [view, setView] = useState<'team' | 'agent'>(isAgent ? 'agent' : 'team')
   const [selectedAgent, setSelectedAgent] = useState(isAgent ? userId : '')

@@ -189,6 +189,7 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
   const selectedUnitTypes = watch('desired_unit_types') ?? []
 
   function toggleArrayItem(field: 'interested_projects' | 'desired_unit_types', value: string) {
+    // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() intentionally used inside handler
     const current = watch(field) ?? []
     const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value]
     setValue(field, next)

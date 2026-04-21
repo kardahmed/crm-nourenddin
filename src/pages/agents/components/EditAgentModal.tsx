@@ -61,6 +61,7 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
   // Sync form state with the selected user whenever the modal opens.
   useEffect(() => {
     if (!user) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async prop; one-shot per user identity change
     setFirstName(user.first_name)
     setLastName(user.last_name)
     setEmail(user.email)

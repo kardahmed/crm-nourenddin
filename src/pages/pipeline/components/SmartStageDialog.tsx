@@ -129,6 +129,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
      client_id: clientId, agent_id: userId,
             title: `Rappel: relancer ${clientName}`,
             stage: toStage, status: 'scheduled', channel: 'whatsapp', priority: 'medium',
+            // eslint-disable-next-line react-hooks/purity -- inside mutation handler, not render
             scheduled_at: new Date(Date.now() + parseInt(reminderDays) * 86400000).toISOString(),
           } as never)
         }

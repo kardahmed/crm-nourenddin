@@ -57,6 +57,7 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
     },
   })
 
+  // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() intentionally used
   const selectedType = watch('type')
 
   async function onSubmit(data: FormData) {

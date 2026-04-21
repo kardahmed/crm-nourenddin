@@ -51,8 +51,8 @@ function whatsappHref(phone: string | null): string | null {
 export function TodayPage() {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
-  // Pinned once per render to keep day-diff calculations pure (React 19 rule).
-  const nowMs = Date.now()
+  // Pinned once per mount so day-diff calculations stay pure (React 19 rule).
+  const nowMs = useMemo(() => Date.now(), [])
 
   const { data, isLoading } = useQuery({
     enabled: !!userId,

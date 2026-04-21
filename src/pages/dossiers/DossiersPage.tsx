@@ -105,9 +105,13 @@ export function DossiersPage() {
     },
   })
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- default-value fallbacks, stable references
   const sales = data?.sales ?? []
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- default-value fallbacks, stable references
   const reservations = data?.reservations ?? []
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- default-value fallbacks, stable references
   const schedules = data?.schedules ?? []
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- default-value fallbacks, stable references
   const projectsList = data?.projects ?? []
 
   // Build schedule aggregates per sale

@@ -48,6 +48,7 @@ export function VisitScheduleSection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
       setWorkDays(settings.work_days ?? [0, 1, 2, 3, 4])
       setStartHour(settings.work_start_hour ?? 9)
       setEndHour(settings.work_end_hour ?? 17)

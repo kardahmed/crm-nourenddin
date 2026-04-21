@@ -13,7 +13,7 @@ import { SectionHeader, Field, SaveButton, inputClass } from './shared'
 /* ═══ Reservations ═══ */
 export function ReservationsSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
@@ -30,6 +30,7 @@ export function ReservationsSection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
       setDuration(String(settings.reservation_duration_days ?? 30))
       setMinDeposit(String(settings.min_deposit_amount ?? 0))
     }
@@ -61,7 +62,7 @@ export function ReservationsSection() {
 /* ═══ Templates ═══ */
 export function TemplatesSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<'contrat_vente' | 'echeancier' | 'bon_reservation'>('contrat_vente')
 
@@ -77,6 +78,7 @@ export function TemplatesSection() {
   const current = templates.find(tp => tp.type === activeTab)
   const [content, setContent] = useState('')
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding content from current doc
   useEffect(() => { setContent(current?.content ?? '') }, [current, activeTab])
 
   const save = useMutation({
@@ -123,7 +125,7 @@ export function TemplatesSection() {
 /* ═══ Notifications ═══ */
 export function NotificationsSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
@@ -154,8 +156,10 @@ export function NotificationsSection() {
         tg[n.key] = settings[n.key] !== false
         tg[n.emailKey] = settings[n.emailKey] !== false
       })
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding toggles from async settings
       setToggles(tg)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- NOTIFS is module-level const; stable
   }, [settings])
 
   const save = useMutation({
@@ -221,12 +225,12 @@ export function NotificationsSection() {
 /* ═══ Language ═══ */
 export function LanguageSection() {
   const { i18n } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const current = i18n.language
 
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
-    if (true) await supabase.from('app_settings' as never).update({ language: lang } as never)
+    await supabase.from('app_settings' as never).update({ language: lang } as never)
     toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 

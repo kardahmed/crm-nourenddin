@@ -12,7 +12,7 @@ import { SectionHeader, Field, SaveButton, inputClass } from './shared'
 
 export function PipelineSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
@@ -29,6 +29,7 @@ export function PipelineSection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
       setUrgentDays(String(settings.urgent_alert_days ?? 7))
       setRelaunchDays(String(settings.relaunch_alert_days ?? 3))
     }

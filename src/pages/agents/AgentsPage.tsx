@@ -63,6 +63,8 @@ export function AgentsPage() {
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
+  // Pinned per render so last-activity diffs are pure (React 19 rule).
+  const nowMs = useMemo(() => Date.now(), [])
 
   // Fetch agents with counts
   const { data: agents = [], isLoading } = useQuery({
@@ -237,7 +239,7 @@ export function AgentsPage() {
               )}
               {filtered.map(a => {
                 const fullName = `${a.first_name} ${a.last_name}`
-                const inactiveLong = a.last_activity && (Date.now() - new Date(a.last_activity).getTime()) > 7 * 86400000
+                const inactiveLong = a.last_activity && (nowMs - new Date(a.last_activity).getTime()) > 7 * 86400000
                 const statusCfg = STATUS_BADGE[a.status] ?? STATUS_BADGE.inactive
                 const isArchivedRow = a.status === 'archived'
 

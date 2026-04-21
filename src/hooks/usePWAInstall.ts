@@ -32,6 +32,7 @@ export function usePWAInstall() {
 
   useEffect(() => {
     if (isInStandaloneMode()) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- initial detection of standalone mode
       setIsInstalled(true)
       return
     }

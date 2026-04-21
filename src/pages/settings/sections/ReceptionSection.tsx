@@ -47,6 +47,7 @@ export function ReceptionSection() {
       reception_max_leads_per_day?: number
       reception_override_requires_reason?: boolean
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
     setMode(s.reception_assignment_mode ?? 'manual')
     setMaxLeads(String(s.reception_max_leads_per_day ?? 10))
     setRequireReason(s.reception_override_requires_reason ?? true)

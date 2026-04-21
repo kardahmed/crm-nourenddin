@@ -192,6 +192,7 @@ export function useAuth() {
       cancelled = true
       clearTimeout(globalTimeout)
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: we only want this effect to run on session identity change
   }, [session?.user?.id, setUserProfile, setPermissionProfile, setLoading, reset])
 
   const signIn = useCallback(async (email: string, password: string) => {

@@ -34,7 +34,7 @@ export function QuickActions({
   const [showCallScript, setShowCallScript] = useState(false)
   const [showMessage, setShowMessage] = useState(false)
 
-  const phone = clientPhone.replace(/[\s\-\(\)]/g, '').replace(/^0/, '213')
+  const phone = clientPhone.replace(/[\s\-()]/g, '').replace(/^0/, '213')
 
   function handleAction(key: string) {
     switch (key) {

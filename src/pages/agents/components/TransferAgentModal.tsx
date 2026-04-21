@@ -113,6 +113,7 @@ export function TransferAgentModal({ isOpen, onClose, agentId, agentName }: Prop
   // Reset local state whenever the modal opens for a new agent.
   useEffect(() => {
     if (!isOpen) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset when opening the modal for a different agent
     setAssignments({})
     setBulkAgent('')
     setReason('resignation')

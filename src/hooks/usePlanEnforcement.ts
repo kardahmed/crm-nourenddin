@@ -24,7 +24,9 @@ export function usePlanEnforcement() {
     canAddProject: true,
     canAddUnit: true,
     canAddClient: true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     hasFeature: (_feature: string) => true,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     isLimitReached: (_type: 'agents' | 'projects' | 'units' | 'clients') => false,
   }
 }

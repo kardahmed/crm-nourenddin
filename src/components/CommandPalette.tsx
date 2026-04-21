@@ -68,6 +68,7 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (open) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional reset on open
       setQuery('')
       setCursor(0)
       setTimeout(() => inputRef.current?.focus(), 20)
@@ -158,6 +159,7 @@ export function CommandPalette() {
     return [...remote, ...filteredNav]
   }, [remoteQuery.data, filteredNav])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- reset cursor when list changes
   useEffect(() => { setCursor(0) }, [items.length])
 
   function run(item: PaletteItem) {

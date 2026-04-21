@@ -239,7 +239,7 @@ export function ClientDetailPage() {
             <span className="flex items-center gap-2">
               {client.phone}
               <a
-                href={`https://wa.me/${client.phone.replace(/[\s\-\(\)]/g, '').replace(/^0/, '213')}`}
+                href={`https://wa.me/${client.phone.replace(/[\s\-()]/g, '').replace(/^0/, '213')}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[#25D366] hover:text-[#128C7E]"

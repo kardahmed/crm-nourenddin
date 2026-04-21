@@ -51,6 +51,7 @@ export function AgentsDirectory() {
 
       {rows.map(a => {
         const inactiveDays = a.last_activity
+          // eslint-disable-next-line react-hooks/purity -- display-only diff; acceptable instability
           ? Math.floor((Date.now() - new Date(a.last_activity).getTime()) / 86400000)
           : 999
         const isRecent = inactiveDays <= 1

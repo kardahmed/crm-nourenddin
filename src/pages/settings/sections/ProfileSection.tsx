@@ -25,6 +25,7 @@ export function ProfileSection() {
 
   useEffect(() => {
     if (userProfile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from profile query
       setFirstName(userProfile.first_name ?? '')
       setLastName(userProfile.last_name ?? '')
       setPhone(userProfile.phone ?? '')

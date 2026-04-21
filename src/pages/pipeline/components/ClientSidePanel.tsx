@@ -69,7 +69,7 @@ export function ClientSidePanel({ clientId, onClose }: ClientSidePanelProps) {
   const color = nameToColor(client.full_name)
   const initials = client.full_name.split(' ').filter(Boolean).map(w => w[0]).join('').toUpperCase().slice(0, 2)
   const isHot = client.interest_level === 'high' && (client.confirmed_budget ?? 0) > 0
-  const waLink = `https://wa.me/${client.phone.replace(/[\s\-\(\)]/g, '').replace(/^0/, '213')}`
+  const waLink = `https://wa.me/${client.phone.replace(/[\s\-()]/g, '').replace(/^0/, '213')}`
 
   return (
     <div className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-immo-border-default bg-immo-bg-card shadow-xl sm:w-[400px]">

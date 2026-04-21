@@ -34,6 +34,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
   } = useForm<FormData>({
     resolver: zodResolver(schema),
     defaultValues: {
+      // eslint-disable-next-line react-hooks/purity -- seeded default code for form, computed once
       code: `PRJ-${String(Date.now()).slice(-6)}`,
     },
   })

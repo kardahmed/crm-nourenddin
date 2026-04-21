@@ -31,7 +31,7 @@ const CHANNEL_LABELS: Record<string, string> = { whatsapp: 'WhatsApp', sms: 'SMS
 const VARIABLES = ['{client_nom}','{client_prenom}','{client_phone}','{client_budget}','{agent_nom}','{agent_prenom}','{agent_phone}','{agence}','{projet}','{prix_min}','{unite_visitee}','{prix_unite}','{date_visite}','{heure_visite}','{adresse_projet}','{lien_maps}','{montant_echeance}','{date_echeance}','{apport}','{nb_echeances}']
 
 export function TaskConfigSection() {
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
   const [expandedStages, setExpandedStages] = useState<Set<string>>(new Set(['accueil']))
   const [editMsg, setEditMsg] = useState<MessageTpl | null>(null)
@@ -100,7 +100,7 @@ export function TaskConfigSection() {
   })
 
   function toggleStage(stage: string) {
-    setExpandedStages(prev => { const n = new Set(prev); n.has(stage) ? n.delete(stage) : n.add(stage); return n })
+    setExpandedStages(prev => { const n = new Set(prev); if (n.has(stage)) n.delete(stage); else n.add(stage); return n })
   }
 
   // Order stages by pipeline order, not alphabetically

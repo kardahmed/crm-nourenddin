@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { ArrowRight, Calendar, MapPin, Building2, Star, DollarSign, RotateCcw, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 // import { handleSupabaseError } from '@/lib/errors'
@@ -25,6 +26,7 @@ interface Props {
 const TIME_SLOTS = ['09:00','10:00','11:00','12:00','14:00','15:00','16:00','17:00']
 
 export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientName, fromStage, toStage, loading }: Props) {
+  const { t } = useTranslation()
   const userId = useAuthStore(s => s.session?.user?.id)
   
   const qc = useQueryClient()
@@ -207,7 +209,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
         {dialogType === 'confirm_visit' && (
           <div className="space-y-3">
             <div className="flex gap-2">
-              {([{v:'confirm' as const,l:'Confirmer',c:'immo-accent-green'},{v:'report' as const,l:'Reporter',c:'immo-status-orange'},{v:'cancel' as const,l:'Annuler',c:'immo-status-red'}]).map(a => (
+              {([{v:'confirm' as const,l:t('action.confirm'),c:'immo-accent-green'},{v:'report' as const,l:t('visit_modal.reschedule'),c:'immo-status-orange'},{v:'cancel' as const,l:t('action.cancel'),c:'immo-status-red'}]).map(a => (
                 <button key={a.v} onClick={() => setConfirmAction(a.v)}
                   className={`flex-1 rounded-lg border-2 py-2.5 text-xs font-semibold transition-all ${confirmAction === a.v ? `border-${a.c} bg-${a.c}/10 text-${a.c}` : 'border-immo-border-default text-immo-text-muted'}`}>
                   {a.l}
@@ -342,10 +344,10 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
 
         {/* Actions */}
         <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
-          <Button variant="ghost" onClick={handleClose} disabled={loading} className="text-immo-text-secondary">Annuler</Button>
+          <Button variant="ghost" onClick={handleClose} disabled={loading} className="text-immo-text-secondary">{t('action.cancel')}</Button>
           <Button onClick={handleConfirm} disabled={loading}
             className={`font-semibold text-white ${toStage === 'perdue' ? 'bg-immo-status-red hover:bg-immo-status-red/90' : 'bg-immo-accent-green hover:bg-immo-accent-green/90'}`}>
-            {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : 'Confirmer'}
+            {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : t('action.confirm')}
           </Button>
         </div>
       </div>

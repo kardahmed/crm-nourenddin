@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Plus, Megaphone, Calendar, Pause, Play, Check, Trash2, Save, ChevronDown, ChevronUp, Receipt } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { LoadingSpinner, StatusBadge, Modal } from '@/components/common'
@@ -35,7 +36,7 @@ interface CampaignExpense {
 }
 
 export function CampaignsTab() {
-  
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [showCreate, setShowCreate] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -72,12 +73,12 @@ export function CampaignsTab() {
       await supabase.from('marketing_expenses').delete().eq('campaign_id', id)
       await supabase.from('marketing_campaigns').delete().eq('id', id)
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-campaigns'] }); qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); toast.success('Campagne supprimée') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['marketing-campaigns'] }); qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); toast.success(t('marketing.campaign_deleted')) },
   })
 
   const deleteExpense = useMutation({
     mutationFn: async (id: string) => { await supabase.from('marketing_expenses').delete().eq('id', id) },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success('Dépense supprimée') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['campaign-expenses'] }); qc.invalidateQueries({ queryKey: ['marketing-expenses'] }); toast.success(t('marketing.expense_deleted')) },
   })
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
@@ -184,7 +185,7 @@ export function CampaignsTab() {
                 <div className="border-t border-immo-border-default bg-immo-bg-primary/50">
                   {expenses.length === 0 ? (
                     <div className="px-5 py-6 text-center text-xs text-immo-text-muted">
-                      Aucune depense enregistree pour cette campagne
+                      {t('marketing.no_expenses_campaign')}
                     </div>
                   ) : (
                     <table className="w-full">
@@ -233,7 +234,7 @@ export function CampaignsTab() {
       {campaigns.length === 0 && (
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-16 text-center">
           <Megaphone className="mx-auto h-10 w-10 text-immo-text-muted/30 mb-3" />
-          <p className="text-sm text-immo-text-muted">Aucune campagne</p>
+          <p className="text-sm text-immo-text-muted">{t('marketing.no_campaigns')}</p>
           <p className="text-xs text-immo-text-muted mt-1">Creez votre premiere campagne et ajoutez-y vos depenses</p>
         </div>
       )}
@@ -248,6 +249,7 @@ export function CampaignsTab() {
 }
 
 function CreateCampaignModal({ onClose, onSaved }: {  onClose: () => void; onSaved: () => void }) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [source, setSource] = useState('facebook_ads')
   const [startDate, setStartDate] = useState(format(new Date(), 'yyyy-MM-dd'))
@@ -266,7 +268,7 @@ function CreateCampaignModal({ onClose, onSaved }: {  onClose: () => void; onSav
   })
 
   async function handleSave() {
-    if (!name.trim()) { toast.error('Nom requis'); return }
+    if (!name.trim()) { toast.error(t('marketing.name_required')); return }
     setSaving(true)
     const { error } = await supabase.from('marketing_campaigns').insert({
  name: name.trim(), source, start_date: startDate,
@@ -274,8 +276,8 @@ function CreateCampaignModal({ onClose, onSaved }: {  onClose: () => void; onSav
       target_leads: Number(targetLeads) || 0, project_id: projectId || null, status: 'active',
     } as never)
     setSaving(false)
-    if (error) { toast.error('Erreur'); return }
-    toast.success('Campagne créée')
+    if (error) { toast.error(t('error.generic')); return }
+    toast.success(t('marketing.campaign_created'))
     onSaved()
   }
 
@@ -332,6 +334,7 @@ function CreateCampaignModal({ onClose, onSaved }: {  onClose: () => void; onSav
 function AddExpenseToCampaignModal({ campaignId, onClose, onSaved }: {
    campaignId: string; onClose: () => void; onSaved: () => void
 }) {
+  const { t } = useTranslation()
   const [category, setCategory] = useState('ads_digital')
   const [subcategory, setSubcategory] = useState('')
   const [amount, setAmount] = useState('')
@@ -340,15 +343,15 @@ function AddExpenseToCampaignModal({ campaignId, onClose, onSaved }: {
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
-    if (!amount || Number(amount) <= 0) { toast.error('Montant requis'); return }
+    if (!amount || Number(amount) <= 0) { toast.error(t('marketing.amount_required')); return }
     setSaving(true)
     const { error } = await supabase.from('marketing_expenses').insert({
  category, subcategory: subcategory || null, amount: Number(amount),
       expense_date: date, campaign_id: campaignId, notes: notes || null,
     } as never)
     setSaving(false)
-    if (error) { toast.error('Erreur'); return }
-    toast.success('Dépense ajoutée à la campagne')
+    if (error) { toast.error(t('error.generic')); return }
+    toast.success(t('marketing.expense_added_campaign'))
     onSaved()
   }
 

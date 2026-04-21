@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, Send, Calendar, Mail, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useEmailCampaigns, useEmailTemplates, useSaveCampaign, useSendCampaign } from '@/hooks/useEmailMarketing'
 import { LoadingSpinner, StatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,7 @@ const CAMPAIGN_STATUS: Record<string, { label: string; type: 'green' | 'orange' 
 }
 
 export function EmailCampaignsTab() {
+  const { t } = useTranslation()
   const { data: campaigns = [], isLoading } = useEmailCampaigns()
   const { data: templates = [] } = useEmailTemplates()
   const saveCampaign = useSaveCampaign()
@@ -41,8 +43,8 @@ export function EmailCampaignsTab() {
   }
 
   const handleCreate = async () => {
-    if (!name.trim() || !subject.trim()) { toast.error('Nom et objet requis'); return }
-    if (!templateId) { toast.error('Sélectionnez un template'); return }
+    if (!name.trim() || !subject.trim()) { toast.error(t('marketing.name_subject_required')); return }
+    if (!templateId) { toast.error(t('marketing.template_required')); return }
     try {
       const id = await saveCampaign.mutateAsync({
         name, subject,
@@ -51,28 +53,28 @@ export function EmailCampaignsTab() {
         scheduled_at: scheduledAt || null,
         status: scheduledAt ? 'scheduled' : 'draft',
       })
-      toast.success('Campagne créée')
+      toast.success(t('marketing.email_campaign_created'))
       setShowCreate(false)
       resetForm()
       // If no schedule, offer to send now
       if (!scheduledAt && id) {
-        const go = window.confirm('Envoyer la campagne maintenant ?')
+        const go = window.confirm(t('marketing.confirm_send_now'))
         if (go) {
           await sendCampaign.mutateAsync(id)
-          toast.success('Campagne en cours d\'envoi')
+          toast.success(t('marketing.email_campaign_sending'))
         }
       }
     } catch {
-      toast.error('Erreur lors de la création')
+      toast.error(t('marketing.error_create'))
     }
   }
 
   const handleSendNow = async (campaignId: string) => {
     try {
       await sendCampaign.mutateAsync(campaignId)
-      toast.success('Campagne en cours d\'envoi')
+      toast.success(t('marketing.email_campaign_sending'))
     } catch {
-      toast.error('Erreur lors de l\'envoi')
+      toast.error(t('marketing.error_send'))
     }
   }
 
@@ -99,7 +101,7 @@ export function EmailCampaignsTab() {
       ) : campaigns.length === 0 ? (
         <div className="rounded-xl border border-dashed border-immo-border-default p-12 text-center">
           <Mail className="mx-auto h-10 w-10 text-immo-text-muted mb-3" />
-          <p className="text-sm font-medium text-immo-text-primary">Aucune campagne</p>
+          <p className="text-sm font-medium text-immo-text-primary">{t('marketing.no_email_campaigns')}</p>
           <p className="text-xs text-immo-text-muted mt-1">Créez votre première campagne email</p>
         </div>
       ) : (
@@ -200,7 +202,7 @@ export function EmailCampaignsTab() {
                 </div>
               </div>
               <div className="flex justify-end">
-                <Button onClick={() => { if (!name || !subject || !templateId) { toast.error('Remplissez tous les champs'); return } setStep(2) }} className="gap-1 text-xs bg-immo-accent-green text-white">
+                <Button onClick={() => { if (!name || !subject || !templateId) { toast.error(t('marketing.fill_all_fields')); return } setStep(2) }} className="gap-1 text-xs bg-immo-accent-green text-white">
                   Suivant <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               </div>

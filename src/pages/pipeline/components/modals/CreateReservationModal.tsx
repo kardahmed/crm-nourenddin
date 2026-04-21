@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   Info, Upload, CheckSquare, Square, X, FileText, Image as ImageIcon,
 } from 'lucide-react'
@@ -63,6 +64,7 @@ const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text
 const labelClass = 'text-[11px] font-medium text-immo-text-muted'
 
 export function CreateReservationModal({ isOpen, onClose, client }: CreateReservationModalProps) {
+  const { t } = useTranslation()
   const userId = useAuthStore((s) => s.session?.user?.id)
   const { projects } = useProjects()
   const qc = useQueryClient()
@@ -224,7 +226,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
       qc.invalidateQueries({ queryKey: ['client-reservations'] })
       qc.invalidateQueries({ queryKey: ['units'] })
       qc.invalidateQueries({ queryKey: ['pipeline-stats'] })
-      toast.success('Réservation créée avec succès')
+      toast.success(t('reservation_modal.toast_created'))
       resetAndClose()
     },
   })
@@ -239,7 +241,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
   if (!client) return null
 
   return (
-    <Modal isOpen={isOpen} onClose={resetAndClose} title="Créer une réservation" size="lg">
+    <Modal isOpen={isOpen} onClose={resetAndClose} title={t('reservation_modal.title')} size="lg">
       <div className="space-y-5">
         {/* Info banner */}
         <div className="flex gap-3 rounded-lg border border-immo-accent-blue/30 bg-immo-accent-blue-bg px-4 py-3">
@@ -331,7 +333,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
             {/* NIN */}
             <div>
               <Label className={labelClass}>NIN / CIN *</Label>
-              <Input value={ninCin} onChange={(e) => setNinCin(e.target.value)} placeholder="Numéro d'identité nationale" className={`mt-1 ${inputClass}`} />
+              <Input value={ninCin} onChange={(e) => setNinCin(e.target.value)} placeholder={t('reservation_modal.placeholder_nin')} className={`mt-1 ${inputClass}`} />
             </div>
           </div>
 
@@ -395,7 +397,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
                 <div className={`flex h-5 w-9 items-center rounded-full p-0.5 transition-colors ${showDeposit ? 'bg-immo-accent-green' : 'bg-immo-border-default'}`}>
                   <div className={`h-4 w-4 rounded-full bg-white transition-transform ${showDeposit ? 'translate-x-4' : 'translate-x-0'}`} />
                 </div>
-                Ajouter un acompte
+                {t('reservation_modal.add_deposit')}
               </button>
             </div>
 
@@ -495,7 +497,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
             onClick={resetAndClose}
             className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
-            Annuler
+            {t('action.cancel')}
           </Button>
           <Button
             onClick={() => mutation.mutate()}
@@ -505,7 +507,7 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
             {mutation.isPending ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
             ) : (
-              'Créer la réservation'
+              t('reservation_modal.title')
             )}
           </Button>
         </div>

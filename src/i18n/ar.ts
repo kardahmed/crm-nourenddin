@@ -393,6 +393,8 @@ export const ar = {
     profession: 'المهنة',
     change_stage: 'تغيير المرحلة؟',
     move_to: 'نقل هذا العميل إلى "{{stage}}"؟',
+    cin_uploaded: 'موثق',
+    cin_missing: 'غير موثق — قم برفع المستند',
   },
 
   client_form: {
@@ -404,6 +406,64 @@ export const ar = {
     phone_required: 'الهاتف مطلوب',
     select_source: 'اختر المصدر',
     select_agent: 'اختر الوكيل',
+    add_client: 'إضافة العميل',
+    placeholder_nin: 'رقم الهوية',
+    placeholder_nationality: 'جزائرية',
+    placeholder_profession: 'مهندس، تاجر...',
+  },
+
+  call_modal: {
+    title: 'تسجيل مكالمة',
+    toast_saved: 'تم تسجيل المكالمة',
+  },
+
+  call_script: {
+    response_interested: 'مهتم',
+    response_callback: 'معاودة الاتصال',
+    response_not_interested: 'غير مهتم',
+    response_qualified: 'مؤهل',
+    response_yes_urgent: 'نعم، عاجل',
+    response_yes_not_pressed: 'نعم، غير مستعجل',
+    response_just_watching: 'فقط للمراقبة',
+    toast_saved: 'تم تسجيل المكالمة وتحديث بيانات العميل',
+    toast_visit_planned: 'تم تخطيط الزيارة!',
+    error_save: 'خطأ أثناء الحفظ',
+  },
+
+  reservation_modal: {
+    title: 'إنشاء حجز',
+    add_deposit: 'إضافة عربون',
+    toast_created: 'تم إنشاء الحجز بنجاح',
+    placeholder_nin: 'رقم الهوية الوطنية',
+  },
+
+  visit_modal: {
+    cancel_visit: 'إلغاء الزيارة',
+    reschedule: 'تأجيل',
+    visit_confirmed_title: 'زيارة مؤكدة ليوم {{date}}',
+    toast_confirmed: 'تم تأكيد الزيارة',
+    toast_cancelled: 'تم إلغاء الزيارة',
+    toast_planned: 'تم تخطيط الزيارة بنجاح',
+  },
+
+  sale_modal: {
+    title: 'بيع جديد',
+    toast_created: 'تم إنشاء البيع بنجاح',
+  },
+
+  whatsapp: {
+    toast_opened: 'تم فتح واتساب — تم تسجيل الرسالة',
+  },
+
+  reception_form: {
+    name_phone_required: 'الاسم والهاتف مطلوبان',
+    no_agent_available: 'لا يوجد وكيل متاح (تم بلوغ الحد). اضبط الإعدادات.',
+    override_reason_required: 'السبب مطلوب عند تغيير الوكيل المقترح.',
+    phone_duplicate: 'هذا الرقم مخصص بالفعل لعميل آخر. حوّل المكالمة إلى الوكيل الحالي.',
+    bypass_required: 'السبب مطلوب عند تجاوز الوكيل المقترح.',
+    toast_created: 'تم إنشاء العميل وتعيينه',
+    toast_assigned: 'تم تعيين العميل',
+    toast_checked_in: 'تم استقبال العميل — تم إشعار الوكيل',
   },
 
   quick_actions: {
@@ -933,6 +993,44 @@ export const ar = {
     expense_added: 'تمت إضافة المصروف',
     expense_deleted: 'تم حذف المصروف',
     amount_required: 'المبلغ مطلوب',
+    name_required: 'الاسم مطلوب',
+    campaign_created: 'تم إنشاء الحملة',
+    campaign_deleted: 'تم حذف الحملة',
+    expense_added_campaign: 'تمت إضافة المصروف إلى الحملة',
+    no_campaigns: 'لا توجد حملات',
+    no_expenses_campaign: 'لا توجد مصاريف مسجلة لهذه الحملة',
+    name_subject_required: 'الاسم والموضوع مطلوبان',
+    template_required: 'اختر قالبًا',
+    fill_all_fields: 'املأ جميع الحقول',
+    email_campaign_created: 'تم إنشاء الحملة',
+    email_campaign_sending: 'جاري إرسال الحملة',
+    error_create: 'خطأ أثناء الإنشاء',
+    error_send: 'خطأ أثناء الإرسال',
+    confirm_send_now: 'إرسال الحملة الآن؟',
+    no_email_campaigns: 'لا توجد حملات',
+    create_first_campaign: 'أنشئ أول حملة بريد إلكتروني',
+    template_saved: 'تم حفظ القالب',
+    template_duplicated: 'تم نسخ القالب',
+    template_deleted: 'تم حذف القالب',
+    error_save: 'خطأ أثناء الحفظ',
+    error_generic: 'خطأ',
+    error_upload: 'خطأ في الرفع',
+    image_uploaded: 'تم رفع الصورة',
+    image_refused: 'الصورة مرفوضة: {{reason}}',
+    no_templates: 'لا توجد قوالب',
+    create_first_template: 'أنشئ أول قالب بريد تسويقي',
+    no_recipients: 'لا يوجد مستلمون',
+    no_filter_all_clients: 'بدون فلتر = جميع العملاء مع بريد إلكتروني',
+    no_data: 'لا توجد بيانات',
+  },
+
+  task_detail_modal: {
+    error_ai_generation: 'خطأ في توليد الذكاء الاصطناعي',
+    toast_message_generated: 'تم توليد الرسالة بواسطة الذكاء الاصطناعي',
+    toast_message_copied: 'تم نسخ الرسالة',
+    session_expired: 'انتهت الجلسة',
+    toast_executed: 'تم تنفيذ المهمة',
+    toast_rejected: 'تم رفض المهمة',
   },
 
   // Activity Log (admin-only)

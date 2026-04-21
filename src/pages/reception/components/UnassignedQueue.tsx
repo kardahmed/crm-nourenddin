@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import { Inbox, Phone, Sparkles, UserCheck } from 'lucide-react'
@@ -27,6 +28,7 @@ interface UnassignedClient {
 }
 
 export function UnassignedQueue() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const userId = useAuthStore(s => s.session?.user?.id)
   const { data: settings } = useReceptionSettings()
@@ -64,7 +66,7 @@ export function UnassignedQueue() {
         settings?.overrideRequiresReason &&
         reason.length < 3
       ) {
-        throw new Error('Un motif est obligatoire quand vous bypassez l\'agent suggéré.')
+        throw new Error(t('reception_form.bypass_required'))
       }
 
       const { error: upErr } = await supabase
@@ -96,10 +98,10 @@ export function UnassignedQueue() {
       qc.invalidateQueries({ queryKey: ['unassigned-queue'] })
       qc.invalidateQueries({ queryKey: ['reception-metrics'] })
       qc.invalidateQueries({ queryKey: ['reception-agent-loads'] })
-      toast.success('Client assigné')
+      toast.success(t('reception_form.toast_assigned'))
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Erreur'
+      const msg = err instanceof Error ? err.message : t('error.generic')
       toast.error(msg)
     },
   })

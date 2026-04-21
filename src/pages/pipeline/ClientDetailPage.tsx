@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   ArrowLeft,
   ChevronRight,
@@ -67,6 +68,7 @@ function nameToColor(name: string): string {
 }
 
 export function ClientDetailPage() {
+  const { t } = useTranslation()
   const { clientId } = useParams<{ clientId: string }>()
   const [searchParams] = useSearchParams()
   const returnTo = searchParams.get('from') ?? 'pipeline'
@@ -274,13 +276,13 @@ export function ClientDetailPage() {
                 onClick={() => setShowEditModal(true)}
                 className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover"
               >
-                Modifier le client
+                {t('client_detail.edit_client')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => navigate(`/pipeline/clients/${clientId}?from=${returnTo}#documents`)}
                 className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover"
               >
-                Generer un document
+                {t('client_detail.generate_doc')}
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => {
@@ -290,7 +292,7 @@ export function ClientDetailPage() {
                 }}
                 className="text-sm text-immo-status-red focus:bg-immo-status-red-bg"
               >
-                Marquer comme perdu
+                {t('client_detail.mark_lost')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -327,9 +329,9 @@ export function ClientDetailPage() {
           className="flex w-full items-center justify-between px-5 py-3"
         >
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-immo-text-primary">Informations client</h3>
+            <h3 className="text-sm font-semibold text-immo-text-primary">{t('client_detail.client_info')}</h3>
             <span className="rounded-full bg-immo-bg-card-hover px-2 py-0.5 text-[10px] text-immo-text-muted">
-              {filledFields}/21 champs
+              {t('client_detail.fields_filled', { count: filledFields })}
             </span>
           </div>
           {showInfo ? <ChevronUp className="h-4 w-4 text-immo-text-muted" /> : <ChevronDown className="h-4 w-4 text-immo-text-muted" />}
@@ -340,36 +342,36 @@ export function ClientDetailPage() {
             <div className="grid grid-cols-1 gap-x-8 gap-y-3 md:grid-cols-3">
               {/* Col 1: Identity */}
               <div className="space-y-3">
-                <InfoField label="Nom complet" value={client.full_name} />
-                <InfoField label="Téléphone" value={client.phone} />
-                <InfoField label="Email" value={client.email} />
-                <InfoField label="NIN / CIN" value={client.nin_cin} />
-                <InfoField label="Type client" value={client.client_type === 'company' ? 'Entreprise' : 'Particulier'} />
-                <InfoField label="Date de naissance" value={client.birth_date ? format(new Date(client.birth_date), 'dd/MM/yyyy') : null} />
-                <InfoField label="Nationalité" value={client.nationality} />
+                <InfoField label={t('client_detail.full_name')} value={client.full_name} />
+                <InfoField label={t('client_detail.phone')} value={client.phone} />
+                <InfoField label={t('client_detail.email')} value={client.email} />
+                <InfoField label={t('client_detail.nin_cin')} value={client.nin_cin} />
+                <InfoField label={t('client_detail.client_type')} value={client.client_type === 'company' ? t('client_detail.company') : t('client_detail.individual')} />
+                <InfoField label={t('client_detail.birth_date')} value={client.birth_date ? format(new Date(client.birth_date), 'dd/MM/yyyy') : null} />
+                <InfoField label={t('client_detail.nationality')} value={client.nationality} />
               </div>
 
               {/* Col 2: Commercial */}
               <div className="space-y-3">
-                <InfoField label="Étape pipeline" value={stage?.label} badge badgeColor={stage?.color} />
-                <InfoField label="Types unités" value={client.desired_unit_types?.map(t => UNIT_TYPE_LABELS[t as UnitType] ?? t).join(', ')} />
-                <InfoField label="Projets intérêt" value={client.interested_projects?.map(id => projectMap?.get(id) ?? id).join(', ')} />
-                <InfoField label="Budget confirmé" value={client.confirmed_budget != null ? formatPrice(client.confirmed_budget) : null} highlight />
-                <InfoField label="Niveau intérêt" value={client.interest_level ? INTEREST_LEVEL_LABELS[client.interest_level as InterestLevel]?.label : null} />
-                <InfoField label="Note visite" value={client.visit_note != null ? `${client.visit_note}/5` : null} />
-                <InfoField label="Feedback visite" value={client.visit_feedback} />
-                <InfoField label="Modalités paiement" value={client.payment_method ? PAYMENT_METHOD_LABELS[client.payment_method as PaymentMethod] : null} />
+                <InfoField label={t('client_detail.pipeline_stage')} value={stage?.label} badge badgeColor={stage?.color} />
+                <InfoField label={t('client_detail.unit_types')} value={client.desired_unit_types?.map(u => UNIT_TYPE_LABELS[u as UnitType] ?? u).join(', ')} />
+                <InfoField label={t('client_detail.interested_projects')} value={client.interested_projects?.map(id => projectMap?.get(id) ?? id).join(', ')} />
+                <InfoField label={t('client_detail.confirmed_budget')} value={client.confirmed_budget != null ? formatPrice(client.confirmed_budget) : null} highlight />
+                <InfoField label={t('client_detail.interest_level')} value={client.interest_level ? INTEREST_LEVEL_LABELS[client.interest_level as InterestLevel]?.label : null} />
+                <InfoField label={t('client_detail.visit_note')} value={client.visit_note != null ? `${client.visit_note}/5` : null} />
+                <InfoField label={t('client_detail.visit_feedback')} value={client.visit_feedback} />
+                <InfoField label={t('client_detail.payment_method')} value={client.payment_method ? PAYMENT_METHOD_LABELS[client.payment_method as PaymentMethod] : null} />
               </div>
 
               {/* Col 3: Admin */}
               <div className="space-y-3">
-                <InfoField label="Agent assigné" value={agentName} />
-                <InfoField label="Date création" value={format(new Date(client.created_at), 'dd/MM/yyyy HH:mm')} />
-                <InfoField label="CIN vérifié" value={client.cin_verified ? 'Oui' : 'Non'} badge badgeColor={client.cin_verified ? '#00D4A0' : '#FF4949'} />
-                <InfoField label="Notes" value={client.notes} />
-                <InfoField label="Profession" value={client.profession} />
-                <InfoField label="Source" value={SOURCE_LABELS[client.source as ClientSource]} />
-                <InfoField label="Adresse" value={client.address} />
+                <InfoField label={t('client_detail.assigned_agent')} value={agentName} />
+                <InfoField label={t('field.created_at')} value={format(new Date(client.created_at), 'dd/MM/yyyy HH:mm')} />
+                <InfoField label={t('client_detail.cin_verified')} value={client.cin_verified ? t('common.yes') : t('common.no')} badge badgeColor={client.cin_verified ? '#00D4A0' : '#FF4949'} />
+                <InfoField label={t('field.notes')} value={client.notes} />
+                <InfoField label={t('client_detail.profession')} value={client.profession} />
+                <InfoField label={t('field.source')} value={SOURCE_LABELS[client.source as ClientSource]} />
+                <InfoField label={t('field.address')} value={client.address} />
               </div>
             </div>
           </div>
@@ -389,9 +391,9 @@ export function ClientDetailPage() {
         isOpen={!!stageConfirm}
         onClose={() => setStageConfirm(null)}
         onConfirm={confirmStageChange}
-        title="Changer l'étape ?"
-        description={`Déplacer ce client vers "${stageConfirm ? PIPELINE_STAGES[stageConfirm].label : ''}" ?`}
-        confirmLabel="Confirmer"
+        title={t('client_detail.change_stage')}
+        description={t('client_detail.move_to', { stage: stageConfirm ? PIPELINE_STAGES[stageConfirm].label : '' })}
+        confirmLabel={t('action.confirm')}
         loading={updateClientStage.isPending}
       />
 

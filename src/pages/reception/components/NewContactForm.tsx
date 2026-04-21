@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Check, Sparkles, Star, UserCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
@@ -34,6 +35,7 @@ const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['comptant', 'credit', 'mixte']
 const INTEREST_LEVEL_OPTIONS: InterestLevel[] = ['low', 'medium', 'high']
 
 export function NewContactForm() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const userId = useAuthStore(s => s.session?.user?.id)
 
@@ -85,17 +87,17 @@ export function NewContactForm() {
   const create = useMutation({
     mutationFn: async () => {
       if (!fullName.trim() || !phone.trim()) {
-        throw new Error('Nom et téléphone requis')
+        throw new Error(t('reception_form.name_phone_required'))
       }
       if (!effectiveAgentId && settings?.mode !== 'manual') {
-        throw new Error('Aucun agent disponible (plafond atteint). Ajustez les paramètres.')
+        throw new Error(t('reception_form.no_agent_available'))
       }
       if (
         isOverriding &&
         settings?.overrideRequiresReason &&
         overrideReason.trim().length < 3
       ) {
-        throw new Error('Un motif est obligatoire quand vous changez l\'agent suggéré.')
+        throw new Error(t('reception_form.override_reason_required'))
       }
 
       const payload: Record<string, unknown> = {
@@ -121,7 +123,7 @@ export function NewContactForm() {
         .single()
       if (error) {
         if (error.code === '23505' && error.message?.includes('uq_clients_phone_normalized')) {
-          throw new Error('Ce numéro est déjà attribué à un autre client. Transférez l\'appel à l\'agent existant.')
+          throw new Error(t('reception_form.phone_duplicate'))
         }
         handleSupabaseError(error); throw error
       }
@@ -152,7 +154,7 @@ export function NewContactForm() {
       qc.invalidateQueries({ queryKey: ['reception-metrics'] })
       qc.invalidateQueries({ queryKey: ['reception-agent-loads'] })
       qc.invalidateQueries({ queryKey: ['unassigned-queue'] })
-      toast.success('Client créé et assigné')
+      toast.success(t('reception_form.toast_created'))
       setFullName('')
       setPhone('')
       setEmail('')
@@ -168,7 +170,7 @@ export function NewContactForm() {
       setOverrideReason('')
     },
     onError: (err: unknown) => {
-      const msg = err instanceof Error ? err.message : 'Erreur'
+      const msg = err instanceof Error ? err.message : t('error.generic')
       toast.error(msg)
     },
   })

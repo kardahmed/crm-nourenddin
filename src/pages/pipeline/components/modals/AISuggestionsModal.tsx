@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   RotateCcw, ArrowUpDown, Check, Trophy, Award, ChevronDown, ChevronUp, BadgeCheck,
 } from 'lucide-react'
@@ -50,6 +51,7 @@ interface AISuggestionsModalProps {
 /* ═══ Component ═══ */
 
 export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: AISuggestionsModalProps) {
+  const { t } = useTranslation()
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
   const [subtypeFilter, setSubtypeFilter] = useState('all')
@@ -369,7 +371,7 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
           </span>
           <div className="flex gap-2">
             <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">
-              Fermer
+              {t('action.close')}
             </Button>
             {onSelectUnits && selectedIds.length > 0 && (
               <Button

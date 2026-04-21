@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { CheckCircle, CalendarClock, XCircle, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -34,6 +35,7 @@ interface ManageVisitModalProps {
 }
 
 export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisitModalProps) {
+  const { t } = useTranslation()
   const userId = useAuthStore((s) => s.session?.user?.id)
   const qc = useQueryClient()
 
@@ -64,13 +66,13 @@ export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisit
         client_id: client.id,
         agent_id: userId,
         type: 'visit_confirmed',
-        title: `Visite confirmée pour le ${format(new Date(visit.scheduled_at), 'dd/MM/yyyy HH:mm')}`,
+        title: t('visit_modal.visit_confirmed_title', { date: format(new Date(visit.scheduled_at), 'dd/MM/yyyy HH:mm') }),
         metadata: { visit_id: visit.id },
       } as never)
     },
     onSuccess: () => {
       invalidateAll()
-      toast.success('Visite confirmée')
+      toast.success(t('visit_modal.toast_confirmed'))
       onClose()
     },
   })
@@ -103,7 +105,7 @@ export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisit
     },
     onSuccess: () => {
       invalidateAll()
-      toast.success('Visite annulée')
+      toast.success(t('visit_modal.toast_cancelled'))
       setShowCancelConfirm(false)
       onClose()
     },
@@ -191,7 +193,7 @@ export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisit
                 <XCircle className="h-5 w-5 text-immo-status-red" />
               </div>
               <div className="text-left">
-                <p className="text-sm font-medium text-immo-text-primary">Annuler la visite</p>
+                <p className="text-sm font-medium text-immo-text-primary">{t('visit_modal.cancel_visit')}</p>
                 <p className="text-[11px] text-immo-text-muted">La visite ne sera pas effectuée</p>
               </div>
               <ArrowRight className="ml-auto h-4 w-4 text-immo-text-muted" />
@@ -207,7 +209,7 @@ export function ManageVisitModal({ isOpen, onClose, visit, client }: ManageVisit
         onConfirm={() => cancelVisit.mutate()}
         title="Annuler cette visite ?"
         description="La visite sera marquée comme annulée."
-        confirmLabel="Annuler la visite"
+        confirmLabel={t('visit_modal.cancel_visit')}
         confirmVariant="danger"
         loading={cancelVisit.isPending}
       >

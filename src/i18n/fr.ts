@@ -395,6 +395,8 @@ export const fr = {
     profession: 'Profession',
     change_stage: 'Changer l\'étape ?',
     move_to: 'Déplacer ce client vers "{{stage}}" ?',
+    cin_uploaded: 'Vérifié',
+    cin_missing: 'Non vérifié — uploadez le document',
   },
 
   // Client form
@@ -407,6 +409,71 @@ export const fr = {
     phone_required: 'Téléphone requis (min 8 chiffres)',
     select_source: 'Sélectionner la source',
     select_agent: 'Sélectionner l\'agent',
+    add_client: 'Ajouter le client',
+    placeholder_nin: 'Numéro identité',
+    placeholder_nationality: 'Algérienne',
+    placeholder_profession: 'Ingénieur, Commerçant...',
+  },
+
+  // Call log modal
+  call_modal: {
+    title: 'Enregistrer un appel',
+    toast_saved: 'Appel enregistré',
+  },
+
+  // Call script modal
+  call_script: {
+    response_interested: 'Intéressé',
+    response_callback: 'À rappeler',
+    response_not_interested: 'Pas intéressé',
+    response_qualified: 'Qualifié',
+    response_yes_urgent: 'Oui, urgent',
+    response_yes_not_pressed: 'Oui, pas pressé',
+    response_just_watching: 'Juste en veille',
+    toast_saved: 'Appel enregistré et fiche client mise à jour',
+    toast_visit_planned: 'Visite planifiée !',
+    error_save: 'Erreur lors de la sauvegarde',
+  },
+
+  // Reservation modal
+  reservation_modal: {
+    title: 'Créer une réservation',
+    add_deposit: 'Ajouter un acompte',
+    toast_created: 'Réservation créée avec succès',
+    placeholder_nin: 'Numéro d\'identité nationale',
+  },
+
+  // Visit modal
+  visit_modal: {
+    cancel_visit: 'Annuler la visite',
+    reschedule: 'Reporter',
+    visit_confirmed_title: 'Visite confirmée pour le {{date}}',
+    toast_confirmed: 'Visite confirmée',
+    toast_cancelled: 'Visite annulée',
+    toast_planned: 'Visite planifiée avec succès',
+  },
+
+  // Sale modal
+  sale_modal: {
+    title: 'Nouvelle vente',
+    toast_created: 'Vente créée avec succès',
+  },
+
+  // WhatsApp
+  whatsapp: {
+    toast_opened: 'WhatsApp ouvert — message enregistré',
+  },
+
+  // Reception form
+  reception_form: {
+    name_phone_required: 'Nom et téléphone requis',
+    no_agent_available: 'Aucun agent disponible (plafond atteint). Ajustez les paramètres.',
+    override_reason_required: 'Un motif est obligatoire quand vous changez l\'agent suggéré.',
+    phone_duplicate: 'Ce numéro est déjà attribué à un autre client. Transférez l\'appel à l\'agent existant.',
+    bypass_required: 'Un motif est obligatoire quand vous bypassez l\'agent suggéré.',
+    toast_created: 'Client créé et assigné',
+    toast_assigned: 'Client assigné',
+    toast_checked_in: 'Client accueilli — agent notifié',
   },
 
   // Quick actions
@@ -1000,6 +1067,45 @@ export const fr = {
     expense_added: 'Dépense ajoutée',
     expense_deleted: 'Dépense supprimée',
     amount_required: 'Montant requis',
+    name_required: 'Nom requis',
+    campaign_created: 'Campagne créée',
+    campaign_deleted: 'Campagne supprimée',
+    expense_added_campaign: 'Dépense ajoutée à la campagne',
+    no_campaigns: 'Aucune campagne',
+    no_expenses_campaign: 'Aucune dépense enregistrée pour cette campagne',
+    name_subject_required: 'Nom et objet requis',
+    template_required: 'Sélectionnez un template',
+    fill_all_fields: 'Remplissez tous les champs',
+    email_campaign_created: 'Campagne créée',
+    email_campaign_sending: 'Campagne en cours d\'envoi',
+    error_create: 'Erreur lors de la création',
+    error_send: 'Erreur lors de l\'envoi',
+    confirm_send_now: 'Envoyer la campagne maintenant ?',
+    no_email_campaigns: 'Aucune campagne',
+    create_first_campaign: 'Créez votre première campagne email',
+    template_saved: 'Template sauvegardé',
+    template_duplicated: 'Template dupliqué',
+    template_deleted: 'Template supprimé',
+    error_save: 'Erreur lors de la sauvegarde',
+    error_generic: 'Erreur',
+    error_upload: 'Erreur upload',
+    image_uploaded: 'Image uploadée',
+    image_refused: 'Image refusée: {{reason}}',
+    no_templates: 'Aucun template',
+    create_first_template: 'Créez votre premier template d\'email marketing',
+    no_recipients: 'Aucun destinataire',
+    no_filter_all_clients: 'Aucun filtre = tous les clients avec un email',
+    no_data: 'Aucune donnée',
+  },
+
+  // Task detail modal
+  task_detail_modal: {
+    error_ai_generation: 'Erreur génération IA',
+    toast_message_generated: 'Message généré par IA',
+    toast_message_copied: 'Message copié',
+    session_expired: 'Session expirée',
+    toast_executed: 'Tâche marquée comme exécutée',
+    toast_rejected: 'Tâche rejetée',
   },
 
   // Activity Log (admin-only)

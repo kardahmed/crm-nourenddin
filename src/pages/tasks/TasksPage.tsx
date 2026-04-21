@@ -92,7 +92,7 @@ export function TasksPage() {
       const { error } = await supabase.from('client_tasks').update({ status: 'completed', completed_at: new Date().toISOString(), executed_at: new Date().toISOString() } as never).eq('id', taskId)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche terminée') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success(t('tasks_page.status_done')) },
   })
 
   const skipTask = useMutation({
@@ -192,10 +192,10 @@ export function TasksPage() {
     } else if (task.channel === 'sms') {
       window.open(`sms:${phone}?body=${encodeURIComponent(message)}`, '_blank')
       completeTask.mutate(task.id)
-      toast.success('SMS ouvert avec le message')
+      toast.success(t('tasks_page.toast_sms'))
     } else if (task.channel === 'call') {
       window.open(`tel:${phone}`, '_blank')
-      toast('Appel lance — marquez la tache quand termine')
+      toast(t('tasks_page.toast_call'))
     } else if (task.channel === 'email') {
       const subject = encodeURIComponent(task.title)
       const body = encodeURIComponent(message)
@@ -466,6 +466,7 @@ const CHANNEL_LABELS_MSG: Record<string, string> = { whatsapp: 'WhatsApp', sms: 
 const VARIABLES_LIST = ['{client_nom}','{client_prenom}','{client_phone}','{client_budget}','{agent_nom}','{agent_prenom}','{agent_phone}','{agence}','{projet}','{prix_min}','{unite_visitee}','{prix_unite}','{date_visite}','{heure_visite}','{adresse_projet}','{lien_maps}','{montant_echeance}','{date_echeance}','{apport}','{nb_echeances}']
 
 function MessagesTemplateTab() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [editId, setEditId] = useState<string | null>(null)
   const [editBody, setEditBody] = useState('')
@@ -488,7 +489,7 @@ function MessagesTemplateTab() {
       } as never).eq('id', editId)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); setEditId(null); toast.success('Message sauvegardé') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); setEditId(null); toast.success(t('success.saved')) },
   })
 
   const addMutation = useMutation({
@@ -500,7 +501,7 @@ function MessagesTemplateTab() {
       } as never)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success('Template ajouté') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success(t('tasks_page.toast_template_added')) },
   })
 
   const deleteMutation = useMutation({
@@ -508,7 +509,7 @@ function MessagesTemplateTab() {
       const { error } = await supabase.from('message_templates').delete().eq('id', id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success('Supprimé') },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-message-templates'] }); toast.success(t('success.deleted')) },
   })
 
   function startEdit(msg: MsgTpl) {

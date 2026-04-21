@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   X, MessageCircle, Phone, Mail, Copy, ExternalLink, Sparkles,
   CheckCircle, XCircle, User, Building2, GitBranch, Clock, History,
@@ -46,6 +47,7 @@ interface Props {
 }
 
 export function TaskDetailModal({ task, isOpen, onClose }: Props) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
@@ -284,7 +286,7 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
         } as never)
       }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche marquée comme exécutée'); onClose() },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success(t('task_detail_modal.toast_executed')); onClose() },
   })
 
   const rejectTask = useMutation({
@@ -292,7 +294,7 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
       const { error } = await supabase.from('client_tasks').update({ status: 'skipped' } as never).eq('id', task.id)
       if (error) { handleSupabaseError(error); throw error }
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success('Tâche rejetée'); onClose() },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ['all-tasks'] }); toast.success(t('task_detail_modal.toast_rejected')); onClose() },
   })
 
   function openWhatsApp() {
@@ -301,13 +303,13 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
   }
   function openSMS() { window.open(`sms:${task.client?.phone ?? ''}?body=${encodeURIComponent(message)}`, '_blank') }
   function openCall() { window.open(`tel:${task.client?.phone ?? ''}`, '_blank') }
-  function copyMessage() { navigator.clipboard.writeText(message); toast.success('Message copié') }
+  function copyMessage() { navigator.clipboard.writeText(message); toast.success(t('task_detail_modal.toast_message_copied')) }
 
   async function generateWithAI() {
     setGeneratingAI(true)
     try {
       const { data: { session } } = await supabase.auth.getSession()
-      if (!session) { toast.error('Session expirée'); return }
+      if (!session) { toast.error(t('task_detail_modal.session_expired')); return }
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-call-script`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
@@ -322,9 +324,9 @@ export function TaskDetailModal({ task, isOpen, onClose }: Props) {
       if (res.ok) {
         const data = await res.json()
         setMessage(`${data.intro ?? ''}\n\n${data.outro ?? ''}`)
-        toast.success('Message généré par IA')
-      } else { toast.error('Erreur génération IA') }
-    } catch { toast.error('Erreur génération IA') }
+        toast.success(t('task_detail_modal.toast_message_generated'))
+      } else { toast.error(t('task_detail_modal.error_ai_generation')) }
+    } catch { toast.error(t('task_detail_modal.error_ai_generation')) }
     finally { setGeneratingAI(false) }
   }
 

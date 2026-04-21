@@ -301,8 +301,12 @@ export function genericTemplate(params: TemplateParams & {
 
 export type TemplateName = 'payment_reminder' | 'payment_overdue' | 'reservation_expiring' | 'reservation_expired' | 'client_relaunch' | 'welcome' | 'generic'
 
-// deno-lint-ignore no-explicit-any
-const templateMap: Record<TemplateName, (params: any) => { subject: string; html: string }> = {
+// Each template has an extended param shape — renderTemplate() validates at
+// the boundary via TemplateParams, so accepting a permissive input here is
+// intentional. We still constrain the return shape.
+type AnyTemplateFn = (params: TemplateParams & Record<string, unknown>) => { subject: string; html: string }
+
+const templateMap: Record<TemplateName, AnyTemplateFn> = {
   payment_reminder: paymentReminderTemplate,
   payment_overdue: paymentOverdueTemplate,
   reservation_expiring: reservationExpiringTemplate,

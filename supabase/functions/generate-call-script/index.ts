@@ -237,6 +237,7 @@ ${JSON.stringify((playbook as Record<string, unknown>).closing_phrases ?? [], nu
     // payloads typically rely on (hidden "\n\nIgnore previous instructions" tricks).
     const scrub = (v: unknown, depth = 0): unknown => {
       if (depth > 6 || v == null) return v ?? null
+      // eslint-disable-next-line no-control-regex -- intentionally strips C0/C1 controls
       if (typeof v === 'string') return v.replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, 1000)
       if (Array.isArray(v)) return v.slice(0, 50).map(x => scrub(x, depth + 1))
       if (typeof v === 'object') {

@@ -51,6 +51,8 @@ function whatsappHref(phone: string | null): string | null {
 export function TodayPage() {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
+  // Pinned once per render to keep day-diff calculations pure (React 19 rule).
+  const nowMs = Date.now()
 
   const { data, isLoading } = useQuery({
     enabled: !!userId,
@@ -278,7 +280,7 @@ export function TodayPage() {
           ) : (
             data.toFollowUp.map(c => {
               const days = c.last_contact_at
-                ? Math.floor((Date.now() - new Date(c.last_contact_at).getTime()) / 86400000)
+                ? Math.floor((nowMs - new Date(c.last_contact_at).getTime()) / 86400000)
                 : null
               return (
                 <ClientRowLink key={c.id} client={c} trailing={

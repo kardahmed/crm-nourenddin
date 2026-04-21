@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
 
     // 6. Get template HTML
     const template = campaign.email_templates as { html_cache: string; subject: string } | null
-    let htmlTemplate = template?.html_cache ?? ''
+    const htmlTemplate = template?.html_cache ?? ''
     const emailSubject = campaign.subject || template?.subject || 'Email'
 
     // 7. Send in batches

@@ -43,22 +43,22 @@ const SECTION_ICONS: Record<Section, typeof Building2> = {
 }
 
 const SECTION_LABELS: Record<Section, string> = {
-  company: 'Agence',
-  pipeline: 'Pipeline',
-  reception: 'Réception',
-  playbook: 'Playbook IA',
-  tasks: 'Taches auto',
-  visits: 'Visites',
-  profiles: 'Permissions',
-  features: 'Fonctionnalites',
-  whatsapp: 'WhatsApp',
-  branding: 'Personnalisation',
-  reservations: 'Reservations',
-  templates: 'Documents',
-  notifications: 'Notifications',
-  language: 'Langue',
-  security: 'Securite',
-  ai_key: 'Clé API IA',
+  company: 'settings_section.company',
+  pipeline: 'settings_section.pipeline',
+  reception: 'settings_section.reception',
+  playbook: 'settings_section.playbook',
+  tasks: 'settings_section.tasks',
+  visits: 'settings_section.visits',
+  profiles: 'settings_section.profiles',
+  features: 'settings_section.features',
+  whatsapp: 'settings_section.whatsapp',
+  branding: 'settings_section.branding',
+  reservations: 'settings_section.reservations',
+  templates: 'settings_section.templates',
+  notifications: 'settings_section.notifications',
+  language: 'settings_section.language',
+  security: 'settings_section.security',
+  ai_key: 'settings_section.ai_key',
 }
 
 const BASE_SECTION_KEYS: Section[] = ['company', 'pipeline', 'reception', 'tasks', 'visits', 'features', 'whatsapp', 'branding', 'reservations', 'templates', 'notifications', 'language', 'security']

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Users,
   Calendar,
@@ -57,6 +58,7 @@ import { PipelineAnalytics } from './components/PipelineAnalytics'
 type ViewMode = 'kanban' | 'cards' | 'table' | 'analytics'
 
 export function PipelinePage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { clients: rawClients, isLoading: loadingClients, updateClientStage } = useClients()
   const { generateForStage } = useAutoTasks()
@@ -289,7 +291,7 @@ export function PipelinePage() {
             onClick={clearAlertFilter}
             className="text-xs text-immo-status-orange underline hover:no-underline"
           >
-            Effacer
+            {t('action.clear')}
           </button>
         </div>
       )}
@@ -298,49 +300,49 @@ export function PipelinePage() {
       {stats && (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-8">
           <KPICard
-            label="Clients"
+            label={t('kpi.total_clients')}
             value={stats.kpis.totalClients}
             accent="blue"
             icon={<Users className="h-4 w-4 text-immo-accent-blue" />}
           />
           <KPICard
-            label="Visites en attente"
+            label={t('kpi.pending_visits')}
             value={stats.kpis.pendingVisits}
             accent="orange"
             icon={<Calendar className="h-4 w-4 text-immo-status-orange" />}
           />
           <KPICard
-            label="En négociation"
+            label={t('kpi.in_negotiation')}
             value={stats.kpis.inNegotiation}
             accent="blue"
             icon={<Handshake className="h-4 w-4 text-immo-accent-blue" />}
           />
           <KPICard
-            label="Convertis"
+            label={t('kpi.converted')}
             value={stats.kpis.converted}
             accent="green"
             icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />}
           />
           <KPICard
-            label="Potentiel total"
+            label={t('kpi.total_potential')}
             value={formatPriceCompact(stats.kpis.totalPotential)}
             accent="blue"
             icon={<DollarSign className="h-4 w-4 text-immo-accent-blue" />}
           />
           <KPICard
-            label="En négo DA"
+            label={t('kpi.negotiation_value')}
             value={formatPriceCompact(stats.kpis.negotiationValue)}
             accent="orange"
             icon={<TrendingUp className="h-4 w-4 text-immo-status-orange" />}
           />
           <KPICard
-            label="Valeur convertie"
+            label={t('kpi.converted_value')}
             value={formatPriceCompact(stats.kpis.convertedValue)}
             accent="green"
             icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />}
           />
           <KPICard
-            label="Budget moyen"
+            label={t('kpi.avg_budget')}
             value={formatPriceCompact(stats.kpis.avgBudget)}
             accent="blue"
             icon={<Wallet className="h-4 w-4 text-immo-accent-blue" />}
@@ -356,7 +358,7 @@ export function PipelinePage() {
       {/* 5. Filters toolbar */}
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput
-          placeholder="Nom, téléphone..."
+          placeholder={t('dossiers_extra.search_placeholder')}
           value={search}
           onChange={setSearch}
           className="w-full sm:w-[240px]"

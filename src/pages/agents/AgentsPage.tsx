@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal, Archive,
@@ -22,7 +23,7 @@ import { USER_ROLE_LABELS } from '@/types'
 import type { UserRole } from '@/types'
 import { PermissionProfilesSection } from '@/pages/settings/sections/PermissionProfilesSection'
 import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr as frLocale, ar as arLocale, enUS as enLocale } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 
 const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted'
@@ -45,13 +46,15 @@ interface AgentRow {
   sales_count: number
 }
 
-const STATUS_BADGE: Record<AgentStatus, { label: string; type: 'green' | 'red' | 'muted' }> = {
-  active: { label: 'Actif', type: 'green' },
-  inactive: { label: 'Inactif', type: 'red' },
-  archived: { label: 'Archivé', type: 'muted' },
+const STATUS_BADGE_TYPE: Record<AgentStatus, 'green' | 'red' | 'muted'> = {
+  active: 'green',
+  inactive: 'red',
+  archived: 'muted',
 }
 
 export function AgentsPage() {
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'ar' ? arLocale : i18n.language === 'en' ? enLocale : frLocale
   const navigate = useNavigate()
   const { canManageAgents } = usePermissions()
 
@@ -127,11 +130,11 @@ export function AgentsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
-      toast.success('Utilisateur archivé. Historique conservé.')
+      toast.success(t('agents_page.toast_archived'))
       setArchiveId(null)
     },
     onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : 'Échec de l\'archivage')
+      toast.error(err instanceof Error ? err.message : t('agents_page.toast_archive_failed'))
     },
   })
 
@@ -165,11 +168,11 @@ export function AgentsPage() {
         <div className="flex gap-1 border-b border-immo-border-default">
           <button onClick={() => setActiveTab('agents')}
             className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-xs font-medium transition-colors ${activeTab === 'agents' ? 'border-immo-accent-green text-immo-accent-green' : 'border-transparent text-immo-text-muted hover:text-immo-text-primary'}`}>
-            <Users className="h-3.5 w-3.5" /> Agents
+            <Users className="h-3.5 w-3.5" /> {t('nav.agents')}
           </button>
           <button onClick={() => setActiveTab('permissions')}
             className={`flex items-center gap-1.5 border-b-2 px-4 py-2.5 text-xs font-medium transition-colors ${activeTab === 'permissions' ? 'border-immo-accent-green text-immo-accent-green' : 'border-transparent text-immo-text-muted hover:text-immo-text-primary'}`}>
-            <Shield className="h-3.5 w-3.5" /> Profils de permissions
+            <Shield className="h-3.5 w-3.5" /> {t('agents_page.permission_profiles_tab')}
           </button>
         </div>
       )}
@@ -180,15 +183,15 @@ export function AgentsPage() {
       <>
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <KPICard label="Total agents" value={total} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Actifs" value={active} accent="green" icon={<UserCheck className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Inactifs" value={inactive} accent="red" icon={<UserX className="h-4 w-4 text-immo-status-red" />} />
-        <KPICard label="Clients assignés" value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('agents_page.total_agents')} value={total} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('agents_page.active_agents')} value={active} accent="green" icon={<UserCheck className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('agents_page.inactive_agents')} value={inactive} accent="red" icon={<UserX className="h-4 w-4 text-immo-status-red" />} />
+        <KPICard label={t('agents_page.assigned_clients')} value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3">
-        <SearchInput placeholder="Rechercher un agent..." value={search} onChange={setSearch} className="w-full sm:w-[260px]" />
+        <SearchInput placeholder={t('agents_page.search_agent')} value={search} onChange={setSearch} className="w-full sm:w-[260px]" />
         <button
           onClick={() => setShowArchived(v => !v)}
           className={`flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors ${
@@ -199,15 +202,15 @@ export function AgentsPage() {
         >
           <Archive className="h-3.5 w-3.5" />
           {showArchived
-            ? `Masquer les archivés${archivedCount > 0 ? ` (${archivedCount})` : ''}`
-            : `Afficher les archivés${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
+            ? `${t('agents_page.hide_archived')}${archivedCount > 0 ? ` (${archivedCount})` : ''}`
+            : `${t('agents_page.show_archived')}${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
         </button>
         {canManageAgents && !showArchived && (
           <Button
             onClick={() => setShowCreate(true)}
             className="ml-auto bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
           >
-            <Plus className="mr-1.5 h-4 w-4" /> Ajouter un agent
+            <Plus className="mr-1.5 h-4 w-4" /> {t('agents_page.add_agent')}
           </Button>
         )}
       </div>
@@ -219,8 +222,8 @@ export function AgentsPage() {
             <thead>
               <tr className="bg-immo-bg-card-hover">
                 {(showArchived
-                  ? ['Agent', 'Rôle', 'Email', 'Clients', 'Ventes', 'Archivé le', 'Statut', '']
-                  : ['Agent', 'Rôle', 'Téléphone', 'Email', 'Clients', 'Ventes', 'Dernière activité', 'Statut', '']
+                  ? [t('field.agent'), t('agents_page.role'), t('field.email'), t('agents_page.clients_count'), t('agents_page.sales_count'), t('agents_page.archived_at'), t('field.status'), '']
+                  : [t('field.agent'), t('agents_page.role'), t('field.phone'), t('field.email'), t('agents_page.clients_count'), t('agents_page.sales_count'), t('dashboard.last_activity'), t('field.status'), '']
                 ).map(h => (
                   <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">{h}</th>
                 ))}
@@ -231,17 +234,18 @@ export function AgentsPage() {
                 <tr>
                   <td colSpan={showArchived ? 8 : 9} className="px-4 py-10 text-center text-sm text-immo-text-muted">
                     {search
-                      ? 'Aucun agent ne correspond à votre recherche.'
+                      ? t('agents_page.no_search_match')
                       : showArchived
-                        ? 'Aucun agent archivé.'
-                        : 'Aucun agent. Cliquez sur "Ajouter un agent" pour créer le premier compte.'}
+                        ? t('agents_page.no_archived')
+                        : t('agents_page.no_agents_hint')}
                   </td>
                 </tr>
               )}
               {filtered.map(a => {
                 const fullName = `${a.first_name} ${a.last_name}`
                 const inactiveLong = a.last_activity && (nowMs - new Date(a.last_activity).getTime()) > 7 * 86400000
-                const statusCfg = STATUS_BADGE[a.status] ?? STATUS_BADGE.inactive
+                const statusType = STATUS_BADGE_TYPE[a.status] ?? 'red'
+                const statusLabel = t(`status.${a.status}`)
                 const isArchivedRow = a.status === 'archived'
 
                 return (
@@ -268,17 +272,17 @@ export function AgentsPage() {
                       {showArchived ? (
                         <span className="text-xs text-immo-text-muted">
                           {a.archived_at
-                            ? formatDistanceToNow(new Date(a.archived_at), { addSuffix: true, locale: fr })
+                            ? formatDistanceToNow(new Date(a.archived_at), { addSuffix: true, locale: dateLocale })
                             : '-'}
                         </span>
                       ) : (
                         <span className={`text-xs ${inactiveLong ? 'font-medium text-immo-status-red' : 'text-immo-text-muted'}`}>
-                          {a.last_activity ? formatDistanceToNow(new Date(a.last_activity), { addSuffix: true, locale: fr }) : 'Jamais'}
+                          {a.last_activity ? formatDistanceToNow(new Date(a.last_activity), { addSuffix: true, locale: dateLocale }) : t('agents_page.never')}
                         </span>
                       )}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <StatusBadge label={statusCfg.label} type={statusCfg.type} />
+                      <StatusBadge label={statusLabel} type={statusType} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-2">
                       <DropdownMenu>
@@ -287,21 +291,21 @@ export function AgentsPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="border-immo-border-default bg-immo-bg-card">
                           <DropdownMenuItem onClick={() => navigate(`/agents/${a.id}`)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
-                            <Eye className="mr-2 h-3.5 w-3.5" /> Voir profil
+                            <Eye className="mr-2 h-3.5 w-3.5" /> {t('agents_page.view_profile')}
                           </DropdownMenuItem>
                           {canManageAgents && !isArchivedRow && (
                             <DropdownMenuItem onClick={() => setEditId(a.id)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
-                              <Pencil className="mr-2 h-3.5 w-3.5" /> Modifier
+                              <Pencil className="mr-2 h-3.5 w-3.5" /> {t('action.edit')}
                             </DropdownMenuItem>
                           )}
                           {a.status === 'active' && canManageAgents && (
                             <DropdownMenuItem onClick={() => setDeactivateId(a.id)} className="text-sm text-immo-status-red focus:bg-immo-status-red-bg">
-                              <Ban className="mr-2 h-3.5 w-3.5" /> Désactiver
+                              <Ban className="mr-2 h-3.5 w-3.5" /> {t('agents_page.deactivate')}
                             </DropdownMenuItem>
                           )}
                           {a.status === 'inactive' && canManageAgents && (
                             <DropdownMenuItem onClick={() => setArchiveId(a.id)} className="text-sm text-immo-text-muted focus:bg-immo-bg-card-hover">
-                              <Archive className="mr-2 h-3.5 w-3.5" /> Archiver définitivement
+                              <Archive className="mr-2 h-3.5 w-3.5" /> {t('agents_page.archive_permanent')}
                             </DropdownMenuItem>
                           )}
                         </DropdownMenuContent>
@@ -337,22 +341,22 @@ export function AgentsPage() {
       <Modal
         isOpen={!!archiveId}
         onClose={() => (!archive.isPending ? setArchiveId(null) : undefined)}
-        title="Archiver définitivement"
+        title={t('agents_page.archive_permanent')}
         subtitle={archiveAgentRow ? `${archiveAgentRow.first_name} ${archiveAgentRow.last_name}` : ''}
         size="sm"
       >
         <div className="space-y-4">
           <div className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3 text-[12px] leading-relaxed text-immo-text-primary">
-            <p className="mb-2 font-medium">L'archivage est définitif. Ce que cela implique:</p>
+            <p className="mb-2 font-medium">{t('agents_page.archive_warning_title')}</p>
             <ul className="list-disc space-y-1 pl-5 text-immo-text-secondary">
-              <li>Le compte disparaît de la liste principale (visible uniquement dans "Archivés").</li>
-              <li>Toutes les ventes, visites, appels et historique passés restent visibles au nom de cet utilisateur.</li>
-              <li>Aucune réactivation prévue. Si la personne revient, crée un nouveau compte.</li>
+              <li>{t('agents_page.archive_warning_1')}</li>
+              <li>{t('agents_page.archive_warning_2')}</li>
+              <li>{t('agents_page.archive_warning_3')}</li>
             </ul>
           </div>
           <div className="flex justify-end gap-2 border-t border-immo-border-default pt-4">
             <Button variant="ghost" onClick={() => setArchiveId(null)} disabled={archive.isPending}>
-              Annuler
+              {t('action.cancel')}
             </Button>
             <Button
               onClick={() => archiveId && archive.mutate(archiveId)}
@@ -363,7 +367,7 @@ export function AgentsPage() {
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
               ) : (
                 <>
-                  <Archive className="mr-1.5 h-4 w-4" /> Archiver
+                  <Archive className="mr-1.5 h-4 w-4" /> {t('agents_page.archive_button')}
                 </>
               )}
             </Button>
@@ -379,6 +383,7 @@ export function AgentsPage() {
 /* ═══ Create Agent Modal ═══ */
 
 function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -417,16 +422,16 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
       if (error) throw await parseEdgeError(error)
       const payload = data as { error?: string; user_id?: string; invitation_sent?: boolean }
       if (payload?.error) throw new Error(payload.error)
-      if (!payload?.user_id) throw new Error('Réponse serveur invalide')
+      if (!payload?.user_id) throw new Error(t('agents_page.invalid_server_response'))
       return payload as { user_id: string; invitation_sent: boolean }
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['agents-list'] })
-      const roleLabel = role === 'reception' ? 'Compte réception' : role === 'admin' ? 'Admin' : 'Agent'
+      const roleLabel = t(`role.${role}`)
       toast.success(
         data.invitation_sent
-          ? `${roleLabel} créé. Email d'invitation envoyé à ${email} — il définira son mot de passe en cliquant sur le lien.`
-          : `${roleLabel} créé, mais l'envoi de l'email d'invitation a échoué. Demandez-lui d'utiliser "Mot de passe oublié" sur la page de connexion.`,
+          ? t('agents_page.created_with_invitation', { role: roleLabel, email })
+          : t('agents_page.created_no_invitation', { role: roleLabel }),
         { duration: 15000 },
       )
       resetAndClose()
@@ -443,48 +448,48 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={resetAndClose} title="Ajouter un utilisateur" subtitle="Créer un compte agent, réception ou administrateur" size="sm">
+    <Modal isOpen={isOpen} onClose={resetAndClose} title={t('agents_page.add_user')} subtitle={t('agents_page.add_user_subtitle')} size="sm">
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <Label className="text-[11px] font-medium text-immo-text-muted">Prénom *</Label>
+            <Label className="text-[11px] font-medium text-immo-text-muted">{t('agents_page.first_name_required')}</Label>
             <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Mohamed" className={`mt-1 ${inputClass}`} />
           </div>
           <div>
-            <Label className="text-[11px] font-medium text-immo-text-muted">Nom *</Label>
+            <Label className="text-[11px] font-medium text-immo-text-muted">{t('agents_page.last_name_required')}</Label>
             <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Ali" className={`mt-1 ${inputClass}`} />
           </div>
         </div>
         <div>
-          <Label className="text-[11px] font-medium text-immo-text-muted">Email *</Label>
+          <Label className="text-[11px] font-medium text-immo-text-muted">{t('agents_page.email_required')}</Label>
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="agent@agence.com" className={`mt-1 ${inputClass}`} />
         </div>
         <div>
-          <Label className="text-[11px] font-medium text-immo-text-muted">Téléphone</Label>
+          <Label className="text-[11px] font-medium text-immo-text-muted">{t('field.phone')}</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0555 123 456" className={`mt-1 ${inputClass}`} />
         </div>
         <div>
-          <Label className="text-[11px] font-medium text-immo-text-muted">Rôle *</Label>
+          <Label className="text-[11px] font-medium text-immo-text-muted">{t('agents_page.role_required')}</Label>
           <select value={role} onChange={(e) => setRole(e.target.value as 'admin' | 'agent' | 'reception')} className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
-            <option value="agent">Agent commercial</option>
-            <option value="reception">Réception</option>
-            <option value="admin">Administrateur</option>
+            <option value="agent">{t('role.agent')}</option>
+            <option value="reception">{t('role.reception')}</option>
+            <option value="admin">{t('role.admin')}</option>
           </select>
           {role === 'reception' && (
             <p className="mt-1 text-[11px] text-immo-text-muted">
-              Accès limité à la réception: saisie de leads, accueil des visites, assignation aux agents. Ne voit pas les ventes, réservations ni le pipeline commercial.
+              {t('agents_page.reception_hint')}
             </p>
           )}
         </div>
         {role !== 'reception' && profiles.length > 0 && (
           <div>
-            <Label className="text-[11px] font-medium text-immo-text-muted">Profil de permissions</Label>
+            <Label className="text-[11px] font-medium text-immo-text-muted">{t('agents_page.permission_profile')}</Label>
             <select
               value={permissionProfileId}
               onChange={(e) => setPermissionProfileId(e.target.value)}
               className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}
             >
-              <option value="">— Aucun (défaut) —</option>
+              <option value="">{t('agents_page.permission_default')}</option>
               {profiles.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}
@@ -492,9 +497,9 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
           </div>
         )}
         <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
-          <Button variant="ghost" onClick={resetAndClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">Annuler</Button>
+          <Button variant="ghost" onClick={resetAndClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">{t('action.cancel')}</Button>
           <Button onClick={() => create.mutate()} disabled={!firstName || !lastName || !email || create.isPending} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
-            {create.isPending ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" /> : 'Créer le compte'}
+            {create.isPending ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" /> : t('agents_page.create_account')}
           </Button>
         </div>
       </div>

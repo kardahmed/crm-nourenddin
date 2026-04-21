@@ -243,6 +243,47 @@ export function clientRelaunchTemplate(params: TemplateParams & {
   }
 }
 
+// ─── Template: Password Reset ──────────────────────────────────────────────
+
+export function passwordResetTemplate(params: TemplateParams & {
+  reset_link: string
+  user_name?: string
+}): { subject: string; html: string } {
+  const platformName = params.platform_name ?? 'IMMO PRO-X'
+  const content = `
+    <h2 style="margin:0 0 8px;font-size:18px;color:#1A2B3D">Reinitialiser votre mot de passe</h2>
+    <p style="margin:0 0 20px;color:#5E6C84;font-size:14px;line-height:1.6">
+      ${params.user_name ? `Bonjour <strong>${params.user_name}</strong>, ` : ''}vous avez demande a reinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour creer un nouveau mot de passe.
+    </p>
+    <div class="warning-box">
+      <div style="color:#92400E;font-size:13px;margin-bottom:12px">
+        <strong>Ce lien expire dans 1 heure.</strong> Si vous n'avez pas demande cette reinitialisation, ignorez cet email.
+      </div>
+    </div>
+    <div style="text-align:center;margin:28px 0">
+      <a href="${params.reset_link}" class="btn" style="background:#0579DA;padding:14px 32px;font-size:15px">Creer un nouveau mot de passe</a>
+    </div>
+    <div style="background:#F9FAFB;border-left:4px solid #0579DA;padding:16px;margin-top:24px;border-radius:4px">
+      <p style="margin:0;color:#5E6C84;font-size:12px;line-height:1.6">
+        <strong>Ou copiez ce lien dans votre navigateur :</strong><br>
+        <code style="word-break:break-all;color:#0579DA;font-family:monospace;font-size:11px">${params.reset_link}</code>
+      </p>
+    </div>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid #E3E8EF">
+      <h3 style="font-size:13px;color:#1A2B3D;margin:0 0 12px;font-weight:600">Pour votre securite :</h3>
+      <ul style="margin:0;padding-left:20px;color:#5E6C84;font-size:12px;line-height:1.8">
+        <li>Ne partagez jamais ce lien avec quelqu'un d'autre</li>
+        <li>Choisissez un mot de passe fort (min. 8 caracteres)</li>
+        <li>Si vous ne reconnaissez pas cette demande, change votre mot de passe immediatement</li>
+      </ul>
+    </div>`
+
+  return {
+    subject: `Reinitialiser votre mot de passe ${platformName}`,
+    html: baseLayout(platformName, content, `Reinitialiser votre mot de passe ${platformName}`),
+  }
+}
+
 // ─── Template: Welcome ──────────────────────────────────────────────────────
 
 export function welcomeTemplate(params: TemplateParams & {
@@ -299,7 +340,7 @@ export function genericTemplate(params: TemplateParams & {
 
 // ─── Template registry ──────────────────────────────────────────────────────
 
-export type TemplateName = 'payment_reminder' | 'payment_overdue' | 'reservation_expiring' | 'reservation_expired' | 'client_relaunch' | 'welcome' | 'generic'
+export type TemplateName = 'payment_reminder' | 'payment_overdue' | 'reservation_expiring' | 'reservation_expired' | 'client_relaunch' | 'password_reset' | 'welcome' | 'generic'
 
 // Each template has an extended param shape — renderTemplate() validates at
 // the boundary via TemplateParams, so accepting a permissive input here is
@@ -312,6 +353,7 @@ const templateMap: Record<TemplateName, AnyTemplateFn> = {
   reservation_expiring: reservationExpiringTemplate,
   reservation_expired: reservationExpiredTemplate,
   client_relaunch: clientRelaunchTemplate,
+  password_reset: passwordResetTemplate,
   welcome: welcomeTemplate,
   generic: genericTemplate,
 }

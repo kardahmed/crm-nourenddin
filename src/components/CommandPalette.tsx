@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   Search, ArrowRight, User, Building2, Target, Users, ClipboardList,
   Calendar, BarChart3, Settings, Briefcase, Megaphone, PhoneCall,
@@ -20,39 +21,48 @@ interface PaletteItem {
   icon: typeof User
 }
 
-const NAV_ITEMS_BASE: PaletteItem[] = [
-  { id: 'nav-dashboard', kind: 'nav', label: 'Tableau de bord', sublabel: 'Vue d’ensemble', url: '/dashboard', icon: BarChart3 },
-  { id: 'nav-pipeline', kind: 'nav', label: 'Pipeline', sublabel: 'Clients & stades', url: '/pipeline', icon: Users },
-  { id: 'nav-projects', kind: 'nav', label: 'Projets', sublabel: 'Promotions & unités', url: '/projects', icon: Building2 },
-  { id: 'nav-tasks', kind: 'nav', label: 'Tâches', sublabel: 'Actions du jour', url: '/tasks', icon: ClipboardList },
-  { id: 'nav-planning', kind: 'nav', label: 'Planning', sublabel: 'Visites & RDV', url: '/planning', icon: Calendar },
-  { id: 'nav-dossiers', kind: 'nav', label: 'Dossiers', sublabel: 'Documents clients', url: '/dossiers', icon: Briefcase },
-  { id: 'nav-reception', kind: 'nav', label: 'Réception', sublabel: 'Accueil comptoir', url: '/reception', icon: PhoneCall },
-]
-
-const NAV_ITEMS_ADMIN: PaletteItem[] = [
-  { id: 'nav-agents', kind: 'nav', label: 'Agents', sublabel: 'Annuaire équipe', url: '/agents', icon: Users },
-  { id: 'nav-goals', kind: 'nav', label: 'Objectifs', sublabel: 'KPIs mensuels', url: '/goals', icon: Target },
-  { id: 'nav-performance', kind: 'nav', label: 'Performance', sublabel: 'Classements agents', url: '/performance', icon: BarChart3 },
-  { id: 'nav-reports', kind: 'nav', label: 'Rapports', url: '/reports', icon: BarChart3 },
-  { id: 'nav-marketing', kind: 'nav', label: 'Marketing ROI', url: '/marketing-roi', icon: Megaphone },
-  { id: 'nav-settings', kind: 'nav', label: 'Paramètres', url: '/settings', icon: Settings },
-]
-
-const KIND_LABEL: Record<ItemKind, string> = {
-  client: 'Client',
-  project: 'Projet',
-  agent: 'Agent',
-  nav: 'Navigation',
+interface NavItemDef {
+  id: string
+  labelKey: string
+  sublabelKey?: string
+  url: string
+  icon: typeof User
 }
 
+const NAV_ITEMS_BASE: NavItemDef[] = [
+  { id: 'nav-dashboard', labelKey: 'nav.dashboard', sublabelKey: 'command.sub_dashboard', url: '/dashboard', icon: BarChart3 },
+  { id: 'nav-pipeline', labelKey: 'nav.pipeline', sublabelKey: 'command.sub_pipeline', url: '/pipeline', icon: Users },
+  { id: 'nav-projects', labelKey: 'nav.projects', sublabelKey: 'command.sub_projects', url: '/projects', icon: Building2 },
+  { id: 'nav-tasks', labelKey: 'nav.tasks', sublabelKey: 'command.sub_tasks', url: '/tasks', icon: ClipboardList },
+  { id: 'nav-planning', labelKey: 'nav.planning', sublabelKey: 'command.sub_planning', url: '/planning', icon: Calendar },
+  { id: 'nav-dossiers', labelKey: 'nav.dossiers', sublabelKey: 'command.sub_dossiers', url: '/dossiers', icon: Briefcase },
+  { id: 'nav-reception', labelKey: 'nav.reception', sublabelKey: 'command.sub_reception', url: '/reception', icon: PhoneCall },
+]
+
+const NAV_ITEMS_ADMIN: NavItemDef[] = [
+  { id: 'nav-agents', labelKey: 'nav.agents', sublabelKey: 'command.sub_agents', url: '/agents', icon: Users },
+  { id: 'nav-goals', labelKey: 'nav.goals', sublabelKey: 'command.sub_goals', url: '/goals', icon: Target },
+  { id: 'nav-performance', labelKey: 'nav.performance', sublabelKey: 'command.sub_performance', url: '/performance', icon: BarChart3 },
+  { id: 'nav-reports', labelKey: 'nav.reports', url: '/reports', icon: BarChart3 },
+  { id: 'nav-marketing', labelKey: 'nav.marketing_roi', url: '/marketing-roi', icon: Megaphone },
+  { id: 'nav-settings', labelKey: 'nav.settings', url: '/settings', icon: Settings },
+]
+
 export function CommandPalette() {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const [cursor, setCursor] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const navigate = useNavigate()
   const role = useAuthStore(s => s.role)
+
+  const KIND_LABEL: Record<ItemKind, string> = {
+    client: t('command.kind_client'),
+    project: t('command.kind_project'),
+    agent: t('command.kind_agent'),
+    nav: t('command.kind_nav'),
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -143,8 +153,16 @@ export function CommandPalette() {
 
   const navItems = useMemo<PaletteItem[]>(() => {
     const base = role === 'reception' ? NAV_ITEMS_BASE.filter(n => n.url === '/reception') : NAV_ITEMS_BASE
-    return role === 'admin' ? [...base, ...NAV_ITEMS_ADMIN] : base
-  }, [role])
+    const defs = role === 'admin' ? [...base, ...NAV_ITEMS_ADMIN] : base
+    return defs.map(d => ({
+      id: d.id,
+      kind: 'nav' as const,
+      label: t(d.labelKey),
+      sublabel: d.sublabelKey ? t(d.sublabelKey) : undefined,
+      url: d.url,
+      icon: d.icon,
+    }))
+  }, [role, t])
 
   const filteredNav = useMemo(() => {
     if (!trimmed) return navItems
@@ -198,7 +216,7 @@ export function CommandPalette() {
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
-            placeholder="Chercher un client, projet, agent… ou une page"
+            placeholder={t('command.placeholder')}
             className="flex-1 bg-transparent text-sm text-immo-text-primary outline-none placeholder:text-immo-text-muted"
           />
           <kbd className="rounded border border-immo-border-default bg-immo-bg-primary px-1.5 py-0.5 text-[10px] text-immo-text-muted">ESC</kbd>
@@ -206,11 +224,11 @@ export function CommandPalette() {
 
         <div className="max-h-[420px] overflow-y-auto py-1">
           {trimmed.length >= 2 && remoteQuery.isFetching && items.length === 0 && (
-            <div className="px-4 py-6 text-center text-xs text-immo-text-muted">Recherche…</div>
+            <div className="px-4 py-6 text-center text-xs text-immo-text-muted">{t('command.searching')}</div>
           )}
           {items.length === 0 && !remoteQuery.isFetching && (
             <div className="px-4 py-6 text-center text-xs text-immo-text-muted">
-              {trimmed ? 'Aucun résultat' : 'Tape pour chercher ou utilise les flèches'}
+              {trimmed ? t('command.no_results') : t('command.hint')}
             </div>
           )}
 
@@ -256,10 +274,10 @@ export function CommandPalette() {
           <div className="flex items-center gap-3">
             <span>
               <kbd className="rounded border border-immo-border-default bg-immo-bg-card px-1">↑</kbd>{' '}
-              <kbd className="rounded border border-immo-border-default bg-immo-bg-card px-1">↓</kbd> naviguer
+              <kbd className="rounded border border-immo-border-default bg-immo-bg-card px-1">↓</kbd> {t('command.navigate')}
             </span>
             <span>
-              <kbd className="rounded border border-immo-border-default bg-immo-bg-card px-1">↵</kbd> ouvrir
+              <kbd className="rounded border border-immo-border-default bg-immo-bg-card px-1">↵</kbd> {t('command.open')}
             </span>
           </div>
           <div>

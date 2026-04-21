@@ -3,26 +3,23 @@ import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useTranslation } from 'react-i18next'
 import { Lock, Eye, EyeOff, Save, AlertCircle, CheckCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 
 const schema = z.object({
-  password: z.string().min(8, 'Au moins 8 caractères'),
+  password: z.string().min(8, 'reset_password.min_length'),
   confirm: z.string(),
 }).refine((d) => d.password === d.confirm, {
-  message: 'Les mots de passe ne correspondent pas',
+  message: 'reset_password.mismatch',
   path: ['confirm'],
 })
 
 type FormData = z.infer<typeof schema>
 
-/**
- * Accept user invitation page. Handles the link from invitation email.
- * Supabase auto-creates a recovery session via the token in the URL,
- * so we just need to call updateUser to set the password.
- */
 export function AcceptInvitePage() {
   const navigate = useNavigate()
+  const { t } = useTranslation()
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -31,12 +28,11 @@ export function AcceptInvitePage() {
 
   const { register, handleSubmit, formState: { errors } } = useForm<FormData>({ resolver: zodResolver(schema) })
 
-  // Check if we have an active session from the invitation link
   useEffect(() => {
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession()
       if (!data?.session?.user) {
-        setError('Lien d\'invitation invalide ou expiré. Demandez une nouvelle invitation.')
+        setError(t('accept_invite.invalid_link'))
       } else {
         setUserInfo({
           email: data.session.user.email,
@@ -46,7 +42,7 @@ export function AcceptInvitePage() {
       }
     }
     checkSession()
-  }, [])
+  }, [t])
 
   async function onSubmit(data: FormData) {
     setError('')
@@ -55,12 +51,11 @@ export function AcceptInvitePage() {
       const { error: updateErr } = await supabase.auth.updateUser({ password: data.password })
       if (updateErr) throw updateErr
       setSuccess(true)
-      // Redirect after short delay for UX
       setTimeout(() => {
         navigate('/dashboard', { replace: true })
       }, 2000)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur lors de la configuration du mot de passe')
+      setError(err instanceof Error ? err.message : t('accept_invite.config_error'))
     } finally {
       setLoading(false)
     }
@@ -75,12 +70,12 @@ export function AcceptInvitePage() {
               <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-[#00D4A0]/10">
                 <CheckCircle className="h-8 w-8 text-[#00D4A0]" />
               </div>
-              <h1 className="text-[20px]" style={{ fontWeight: 800, color: '#0A2540' }}>Compte configuré !</h1>
+              <h1 className="text-[20px]" style={{ fontWeight: 800, color: '#0A2540' }}>{t('accept_invite.success_title')}</h1>
               <p className="mt-3 text-[14px] leading-relaxed text-[#8898AA]">
-                Votre mot de passe a été défini avec succès. Vous allez être redirigé vers votre espace.
+                {t('accept_invite.success_desc')}
               </p>
               <div className="mt-6 text-[13px] text-[#8898AA]">
-                Redirection en cours...
+                {t('accept_invite.redirecting')}
               </div>
             </div>
           </div>
@@ -94,11 +89,11 @@ export function AcceptInvitePage() {
       <div className="w-full max-w-[420px]">
         <div className="rounded-2xl border border-[#E3E8EF] bg-white p-8 shadow-xl shadow-black/[0.03] sm:p-10">
           <div className="mb-6">
-            <h1 className="text-[22px]" style={{ fontWeight: 800, color: '#0A2540', letterSpacing: '-0.3px' }}>Bienvenue !</h1>
-            <p className="mt-1 text-[14px] text-[#8898AA]">Configurez votre mot de passe pour accéder à votre espace.</p>
+            <h1 className="text-[22px]" style={{ fontWeight: 800, color: '#0A2540', letterSpacing: '-0.3px' }}>{t('accept_invite.welcome')}</h1>
+            <p className="mt-1 text-[14px] text-[#8898AA]">{t('accept_invite.subtitle')}</p>
             {userInfo?.email && (
               <p className="mt-2 text-[12px] text-[#8898AA]">
-                Email: <strong>{userInfo.email}</strong>
+                {t('login.email_label')}: <strong>{userInfo.email}</strong>
               </p>
             )}
           </div>
@@ -111,10 +106,9 @@ export function AcceptInvitePage() {
           )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            {/* Password */}
             <div>
               <label htmlFor="password" className="mb-1.5 block text-[12px] text-[#425466]" style={{ fontWeight: 600 }}>
-                Mot de passe
+                {t('login.password_label')}
               </label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#8898AA]" />
@@ -137,14 +131,13 @@ export function AcceptInvitePage() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-[11px] text-[#CD3D64]">{errors.password.message}</p>}
-              <p className="mt-1 text-[11px] text-[#8898AA]">Minimum 8 caractères</p>
+              {errors.password && <p className="mt-1 text-[11px] text-[#CD3D64]">{t(errors.password.message ?? '')}</p>}
+              <p className="mt-1 text-[11px] text-[#8898AA]">{t('accept_invite.min_chars')}</p>
             </div>
 
-            {/* Confirm Password */}
             <div>
               <label htmlFor="confirm" className="mb-1.5 block text-[12px] text-[#425466]" style={{ fontWeight: 600 }}>
-                Confirmer le mot de passe
+                {t('accept_invite.confirm_password')}
               </label>
               <div className="relative">
                 <Lock className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-[#8898AA]" />
@@ -159,7 +152,7 @@ export function AcceptInvitePage() {
                   style={{ fontFamily: 'inherit' }}
                 />
               </div>
-              {errors.confirm && <p className="mt-1 text-[11px] text-[#CD3D64]">{errors.confirm.message}</p>}
+              {errors.confirm && <p className="mt-1 text-[11px] text-[#CD3D64]">{t(errors.confirm.message ?? '')}</p>}
             </div>
 
             <button
@@ -171,12 +164,12 @@ export function AcceptInvitePage() {
               {loading ? (
                 <>
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                  <span>Configuration…</span>
+                  <span>{t('accept_invite.configuring')}</span>
                 </>
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  <span>Définir le mot de passe</span>
+                  <span>{t('accept_invite.set_password')}</span>
                 </>
               )}
             </button>
@@ -184,7 +177,7 @@ export function AcceptInvitePage() {
 
           <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #E3E8EF' }}>
             <p style={{ fontSize: '12px', color: '#8898AA', lineHeight: '1.6', margin: 0 }}>
-              Ce lien d'invitation est personnel et ne doit pas être partagé. Il expire après utilisation.
+              {t('accept_invite.disclaimer')}
             </p>
           </div>
         </div>

@@ -48,7 +48,7 @@ interface Props {
 }
 
 export function TemplateEditor({ initialTemplate, onClose }: Props) {
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const [name, setName] = useState(initialTemplate?.name ?? 'Nouveau template')
   const [subject, setSubject] = useState(initialTemplate?.subject ?? '')
   const [blocks, setBlocks] = useState<EmailBlock[]>(initialTemplate?.blocks ?? [...STARTER_BLOCKS])
@@ -106,6 +106,7 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
     if (!file) return
     const check = await validateFile(file, { maxSizeMB: 5, allowedMimes: ['image/*'] })
     if (!check.ok) { toast.error(`Image refusée: ${check.reason}`); return }
+    // eslint-disable-next-line react-hooks/purity -- inside async upload handler, not render
     const path = `email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${check.detected.ext}`
     const { error } = await supabase.storage
       .from('email-assets')

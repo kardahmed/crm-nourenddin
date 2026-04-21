@@ -122,6 +122,7 @@ export function KanbanBoard({
       if (found) return toCardClient(found)
     }
     return null
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- toCardClient closes over stable maps (changeDates, projectMap, agentMap)
   }, [activeId, clientsByStage])
 
   function handleDragStart(event: DragStartEvent) {

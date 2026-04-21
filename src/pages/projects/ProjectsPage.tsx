@@ -129,7 +129,7 @@ export function ProjectsPage() {
 
   // Handlers
   function handleView(id: string) { navigate(`/projects/${id}`) }
-  function handleViewUnits(_id: string) { setActiveTab('units') }
+  function handleViewUnits() { setActiveTab('units') }
   function handleEdit(id: string) { navigate(`/projects/${id}`) }
   function handleArchive(id: string) {
     updateProject.mutate({ id, status: 'archived' })

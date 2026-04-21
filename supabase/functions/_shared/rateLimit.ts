@@ -27,7 +27,7 @@ export function rateLimit(
 }
 
 export function rateLimitResponse(ip: string, maxRequests = 30, windowMs = 60_000) {
-  const { allowed, remaining, resetAt } = rateLimit(ip, maxRequests, windowMs)
+  const { allowed, resetAt } = rateLimit(ip, maxRequests, windowMs)
 
   if (!allowed) {
     return new Response(JSON.stringify({ error: 'Too many requests. Please try again later.' }), {

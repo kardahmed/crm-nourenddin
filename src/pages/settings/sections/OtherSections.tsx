@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { RotateCcw, Eye, Lock, Bell, Mail } from 'lucide-react'
+import { RotateCcw, Lock, Bell, Mail } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
@@ -13,7 +13,7 @@ import { SectionHeader, Field, SaveButton, inputClass } from './shared'
 /* ═══ Reservations ═══ */
 export function ReservationsSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
@@ -30,6 +30,7 @@ export function ReservationsSection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
       setDuration(String(settings.reservation_duration_days ?? 30))
       setMinDeposit(String(settings.min_deposit_amount ?? 0))
     }
@@ -61,7 +62,7 @@ export function ReservationsSection() {
 /* ═══ Templates ═══ */
 export function TemplatesSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
   const [activeTab, setActiveTab] = useState<'contrat_vente' | 'echeancier' | 'bon_reservation'>('contrat_vente')
 
@@ -77,6 +78,7 @@ export function TemplatesSection() {
   const current = templates.find(tp => tp.type === activeTab)
   const [content, setContent] = useState('')
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding content from current doc
   useEffect(() => { setContent(current?.content ?? '') }, [current, activeTab])
 
   const save = useMutation({
@@ -113,7 +115,6 @@ export function TemplatesSection() {
       <div className="flex gap-2">
         <Button variant="ghost" onClick={() => setContent('')} className="text-xs text-immo-text-muted hover:text-immo-status-red"><RotateCcw className="mr-1 h-3.5 w-3.5" /> {t('action.reset')}</Button>
         <div className="flex-1" />
-        <Button variant="ghost" className="border border-immo-border-default text-xs text-immo-text-secondary"><Eye className="mr-1 h-3.5 w-3.5" /> {t('action.view')}</Button>
         <SaveButton onClick={() => save.mutate()} loading={save.isPending} />
       </div>
     </div>
@@ -123,7 +124,7 @@ export function TemplatesSection() {
 /* ═══ Notifications ═══ */
 export function NotificationsSection() {
   const { t } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
 
   const { data: settings } = useQuery({
@@ -156,6 +157,7 @@ export function NotificationsSection() {
       })
       setToggles(tg)
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- NOTIFS is module-level const; stable
   }, [settings])
 
   const save = useMutation({
@@ -221,12 +223,12 @@ export function NotificationsSection() {
 /* ═══ Language ═══ */
 export function LanguageSection() {
   const { i18n } = useTranslation()
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const current = i18n.language
 
   async function changeLang(lang: string) {
     i18n.changeLanguage(lang)
-    if (true) await supabase.from('app_settings' as never).update({ language: lang } as never)
+    await supabase.from('app_settings' as never).update({ language: lang } as never)
     toast.success(lang === 'fr' ? 'Langue changée' : 'تم تغيير اللغة')
   }
 

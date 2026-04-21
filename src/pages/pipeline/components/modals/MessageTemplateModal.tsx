@@ -62,7 +62,7 @@ export function MessageTemplateModal({ isOpen, onClose, clientName, clientPhone,
   }
 
   function handleWhatsApp() {
-    const phone = clientPhone.replace(/[\s\-\(\)]/g, '').replace(/^0/, '213')
+    const phone = clientPhone.replace(/[\s\-()]/g, '').replace(/^0/, '213')
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(message)}`, '_blank')
   }
 

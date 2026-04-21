@@ -24,6 +24,7 @@ const MAX_STRING = 500
 function sanitizeForPrompt(v: unknown, depth = 0): unknown {
   if (depth > 3) return null
   if (v == null) return null
+  // eslint-disable-next-line no-control-regex -- intentionally strips C0/C1 controls
   if (typeof v === 'string') return v.replace(/[\u0000-\u001F\u007F]/g, ' ').slice(0, MAX_STRING)
   if (typeof v === 'number' || typeof v === 'boolean') return v
   if (Array.isArray(v)) return v.slice(0, 100).map(x => sanitizeForPrompt(x, depth + 1))

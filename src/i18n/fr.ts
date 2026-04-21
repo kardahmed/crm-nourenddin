@@ -863,4 +863,11 @@ export const fr = {
     status_sent: 'Envoyée',
     status_cancelled: 'Annulée',
   },
+  transfer: {
+    reason_resignation: 'Démission',
+    reason_dismissal: 'Licenciement',
+    reason_leave: 'Congé long / absence',
+    reason_reassignment: 'Changement de poste interne',
+    reason_other: 'Autre',
+  },
 } as const

@@ -77,4 +77,5 @@ function TabsContent({ className, ...props }: TabsPrimitive.Panel.Props) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- shadcn convention: components + cva variants live together
 export { Tabs, TabsList, TabsTrigger, TabsContent, tabsListVariants }

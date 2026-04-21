@@ -333,6 +333,7 @@ function CreateGoalModal({ isOpen, onClose, agents }: {
       case 'quarterly': return { start: startOfQuarter(now), end: endOfQuarter(now) }
       case 'yearly': return { start: startOfYear(now), end: endOfYear(now) }
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- `now` is mount-stable
   }, [period])
 
   const createGoal = useMutation({

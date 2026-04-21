@@ -100,6 +100,7 @@ export function usePushNotifications() {
     if (!isSupported) return
     // Best-effort: if permission already granted from a previous visit,
     // make sure this browser's subscription is stored on the current user.
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- best-effort subscribe if permission already granted
     if (Notification.permission === 'granted' && userId) subscribeWebPush()
   }, [isSupported, userId, subscribeWebPush])
 

@@ -147,6 +147,7 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     const map = new Map<string, number>()
     filtered.forEach(u => map.set(u.id, scoreUnit(u)))
     return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scoreUnit closes over `client`; listing it is sufficient
   }, [filtered, client])
 
   // Sort

@@ -53,6 +53,7 @@ export function ClientTabs({ clientId }: ClientTabsProps) {
   // Sync with URL param
   useEffect(() => {
     if (urlTab && TAB_KEYS.includes(urlTab as typeof TAB_KEYS[number])) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- sync tab from URL
       setActiveTab(urlTab)
     }
   }, [urlTab])

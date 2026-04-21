@@ -54,7 +54,7 @@ export function PlanVisitModal({
   const [notes, setNotes] = useState(prefillNotes)
 
   const userId = useAuthStore((s) => s.session?.user?.id)
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
   const [selectedClientId, setSelectedClientId] = useState('')
 

@@ -33,7 +33,7 @@ const OBJECTION_TRIGGERS = [
 ]
 
 export function PlaybookSection() {
-  const {} = useAuthStore()
+  useAuthStore() // keep store subscription active
   const qc = useQueryClient()
 
   const { data: playbook, isLoading } = useQuery({
@@ -59,6 +59,7 @@ export function PlaybookSection() {
 
   useEffect(() => {
     if (playbook) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
       setMethodology(playbook.methodology ?? 'custom')
       setObjective(playbook.objective ?? '')
       setTone(playbook.tone ?? '')

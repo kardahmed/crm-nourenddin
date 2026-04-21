@@ -422,6 +422,7 @@ export function NotesTab({ clientId }: { clientId: string }) {
       if (error) handleSupabaseError(error)
       setSaving(false)
     }, 1000)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- saveTimerRef is a ref, intentionally omitted from deps
   }, [clientId])
 
   return (

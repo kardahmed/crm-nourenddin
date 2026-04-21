@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
-import { KeyRound } from 'lucide-react'
+import { Archive, KeyRound } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { parseEdgeError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
 import { Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,8 @@ import toast from 'react-hot-toast'
 const inputClass =
   'border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted'
 
+type AgentStatus = 'active' | 'inactive' | 'archived'
+
 interface EditAgentModalProps {
   isOpen: boolean
   onClose: () => void
@@ -23,7 +26,7 @@ interface EditAgentModalProps {
     email: string
     phone: string | null
     role: UserRole
-    status: string
+    status: AgentStatus | string
     permission_profile_id?: string | null
   } | null
 }
@@ -32,6 +35,7 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
   const qc = useQueryClient()
   const currentUserId = useAuthStore(s => s.session?.user?.id)
   const isSelf = user?.id === currentUserId
+  const isArchived = user?.status === 'archived'
 
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -57,13 +61,16 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
   // Sync form state with the selected user whenever the modal opens.
   useEffect(() => {
     if (!user) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async prop; one-shot per user identity change
     setFirstName(user.first_name)
     setLastName(user.last_name)
     setEmail(user.email)
     setPhone(user.phone ?? '')
     setRole(user.role)
     setPermissionProfileId(user.permission_profile_id ?? null)
-    setStatus((user.status as 'active' | 'inactive') ?? 'active')
+    // Archived users keep their status (we never flip them back to active
+    // from this modal — reactivation isn't supported by design).
+    setStatus(user.status === 'inactive' ? 'inactive' : 'active')
   }, [user])
 
   const save = useMutation({
@@ -84,8 +91,9 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
       if (email.trim().toLowerCase() !== user.email.toLowerCase()) {
         payload.email = email.trim().toLowerCase()
       }
-      // Only send role/status if not self-editing
-      if (!isSelf) {
+      // Only send role/status if not self-editing and not archived.
+      // Archived users are frozen — never flip them back to active via Edit.
+      if (!isSelf && !isArchived) {
         if (role !== user.role) payload.role = role
         if (status !== user.status) payload.status = status
       }
@@ -96,28 +104,7 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
       const { data, error } = await supabase.functions.invoke('update-user', {
         body: payload,
       })
-      if (error) {
-        // supabase-js wraps the non-2xx response in FunctionsHttpError — the
-        // `context` is the raw Response, so parse the body ourselves to
-        // surface the real server error instead of "non-2xx status code".
-        const ctx = (error as unknown as { context?: Response }).context
-        if (ctx) {
-          try {
-            const text = await ctx.text()
-            try {
-              const parsed = JSON.parse(text)
-              if (parsed?.error) throw new Error(parsed.error)
-              throw new Error(text || error.message)
-            } catch (jsonErr) {
-              if (jsonErr instanceof Error && jsonErr.message !== text) throw jsonErr
-              throw new Error(text || error.message)
-            }
-          } catch (readErr) {
-            if (readErr instanceof Error) throw readErr
-          }
-        }
-        throw error
-      }
+      if (error) throw await parseEdgeError(error)
       const res = data as { error?: string; success?: boolean }
       if (res?.error) throw new Error(res.error)
       return res
@@ -138,24 +125,7 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
       const { data, error } = await supabase.functions.invoke('update-user', {
         body: { user_id: user.id, send_password_reset: true },
       })
-      if (error) {
-        const ctx = (error as unknown as { context?: Response }).context
-        if (ctx) {
-          try {
-            const text = await ctx.text()
-            try {
-              const parsed = JSON.parse(text)
-              if (parsed?.error) throw new Error(parsed.error)
-            } catch (jsonErr) {
-              if (jsonErr instanceof Error && jsonErr.message !== text) throw jsonErr
-              throw new Error(text || error.message)
-            }
-          } catch (readErr) {
-            if (readErr instanceof Error) throw readErr
-          }
-        }
-        throw error
-      }
+      if (error) throw await parseEdgeError(error)
       return data as { password_reset_sent?: boolean }
     },
     onSuccess: (data) => {
@@ -181,6 +151,18 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
       size="sm"
     >
       <div className="space-y-4">
+        {isArchived && (
+          <div className="flex items-start gap-2 rounded-lg border border-immo-border-default bg-immo-bg-card p-3 text-[11px] text-immo-text-secondary">
+            <Archive className="mt-0.5 h-4 w-4 shrink-0 text-immo-text-muted" />
+            <div>
+              <p className="font-medium text-immo-text-primary">Compte archivé</p>
+              <p className="mt-0.5">
+                Les informations de contact restent modifiables, mais le rôle et le statut sont verrouillés.
+                Pour réintégrer cette personne, créez un nouveau compte.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label className="text-[11px] font-medium text-immo-text-muted">Prénom *</Label>
@@ -228,11 +210,12 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
         <div>
           <Label className="text-[11px] font-medium text-immo-text-muted">
             Rôle {isSelf && <span className="text-immo-status-orange">(non modifiable sur soi-même)</span>}
+            {isArchived && <span className="text-immo-text-muted"> (verrouillé — compte archivé)</span>}
           </Label>
           <select
             value={role}
             onChange={e => setRole(e.target.value as UserRole)}
-            disabled={isSelf}
+            disabled={isSelf || isArchived}
             className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass} disabled:opacity-50`}
           >
             <option value="agent">Agent commercial</option>
@@ -260,16 +243,23 @@ export function EditAgentModal({ isOpen, onClose, user }: EditAgentModalProps) {
         <div>
           <Label className="text-[11px] font-medium text-immo-text-muted">
             Statut {isSelf && <span className="text-immo-status-orange">(non modifiable sur soi-même)</span>}
+            {isArchived && <span className="text-immo-text-muted"> (archivé)</span>}
           </Label>
-          <select
-            value={status}
-            onChange={e => setStatus(e.target.value as 'active' | 'inactive')}
-            disabled={isSelf}
-            className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass} disabled:opacity-50`}
-          >
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
-          </select>
+          {isArchived ? (
+            <div className={`mt-1 flex h-9 items-center rounded-md border px-3 text-sm ${inputClass} opacity-60`}>
+              Archivé
+            </div>
+          ) : (
+            <select
+              value={status}
+              onChange={e => setStatus(e.target.value as 'active' | 'inactive')}
+              disabled={isSelf}
+              className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass} disabled:opacity-50`}
+            >
+              <option value="active">Actif</option>
+              <option value="inactive">Inactif</option>
+            </select>
+          )}
         </div>
 
         {/* Password reset action */}

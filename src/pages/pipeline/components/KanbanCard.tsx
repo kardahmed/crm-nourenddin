@@ -153,7 +153,7 @@ export function KanbanCard({
           <div className="flex items-center gap-1.5">
             <p className="text-[11px] text-immo-text-muted">{client.phone}</p>
             <a
-              href={`https://wa.me/${client.phone.replace(/[\s\-\(\)]/g, '').replace(/^0/, '213')}`}
+              href={`https://wa.me/${client.phone.replace(/[\s\-()]/g, '').replace(/^0/, '213')}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}

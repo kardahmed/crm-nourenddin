@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  ArrowLeft, ChevronRight, Phone, Mail,
+  ArrowLeft, ChevronRight, Phone, Mail, Pencil, Ban,
   Users, Calendar, Bookmark, DollarSign, CheckCircle, Target,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
+import { usePermissions } from '@/hooks/usePermissions'
 import { KPICard, StatusBadge, LoadingSpinner, UserAvatar } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -15,6 +17,24 @@ import type { UserRole, GoalMetric, GoalStatus, PipelineStage, HistoryType } fro
 import { formatPriceCompact } from '@/lib/constants'
 import { format, startOfMonth, endOfMonth, formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
+import { EditAgentModal } from './components/EditAgentModal'
+import { TransferAgentModal } from './components/TransferAgentModal'
+
+type AgentStatus = 'active' | 'inactive' | 'archived'
+
+const STATUS_BADGE: Record<AgentStatus, { label: string; type: 'green' | 'red' | 'muted' }> = {
+  active: { label: 'Actif', type: 'green' },
+  inactive: { label: 'Inactif', type: 'red' },
+  archived: { label: 'Archivé', type: 'muted' },
+}
+
+interface HistoryRow {
+  id: string
+  type: HistoryType
+  title: string | null
+  created_at: string
+  clients: { full_name: string } | null
+}
 
 const STATUS_CONFIG: Record<GoalStatus, { label: string; type: 'blue' | 'green' | 'red' }> = {
   in_progress: { label: 'En cours', type: 'blue' },
@@ -27,6 +47,9 @@ export function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>()
   const navigate = useNavigate()
   useAuthStore() // keep store subscription active
+  const { canManageAgents } = usePermissions()
+  const [editing, setEditing] = useState(false)
+  const [deactivating, setDeactivating] = useState(false)
 
   const now = new Date()
   const monthStart = format(startOfMonth(now), 'yyyy-MM-dd')
@@ -36,9 +59,25 @@ export function AgentDetailPage() {
   const { data: agent, isLoading } = useQuery({
     queryKey: ['agent-detail', agentId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('users').select('*').eq('id', agentId!).single()
+      const { data, error } = await supabase
+        .from('users')
+        .select('id, first_name, last_name, email, phone, role, status, last_activity, avatar_url, archived_at, permission_profile_id')
+        .eq('id', agentId!)
+        .single()
       if (error) { handleSupabaseError(error); throw error }
-      return data as { id: string; first_name: string; last_name: string; email: string; phone: string | null; role: UserRole; status: string; last_activity: string | null; avatar_url: string | null }
+      return data as {
+        id: string
+        first_name: string
+        last_name: string
+        email: string
+        phone: string | null
+        role: UserRole
+        status: AgentStatus
+        last_activity: string | null
+        avatar_url: string | null
+        archived_at: string | null
+        permission_profile_id: string | null
+      }
     },
     enabled: !!agentId,
   })
@@ -90,8 +129,13 @@ export function AgentDetailPage() {
   const { data: history = [] } = useQuery({
     queryKey: ['agent-history', agentId],
     queryFn: async () => {
-      const { data } = await supabase.from('history').select('id, type, title, created_at, clients(full_name)').eq('agent_id', agentId!).order('created_at', { ascending: false }).limit(20)
-      return (data ?? []) as unknown as Array<Record<string, unknown>>
+      const { data } = await supabase
+        .from('history')
+        .select('id, type, title, created_at, clients(full_name)')
+        .eq('agent_id', agentId!)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      return (data ?? []) as unknown as HistoryRow[]
     },
     enabled: !!agentId,
   })
@@ -99,6 +143,8 @@ export function AgentDetailPage() {
   if (isLoading || !agent) return <LoadingSpinner size="lg" className="h-96" />
 
   const fullName = `${agent.first_name} ${agent.last_name}`
+  const statusCfg = STATUS_BADGE[agent.status] ?? STATUS_BADGE.inactive
+  const isArchived = agent.status === 'archived'
 
   return (
     <div className="space-y-5">
@@ -125,13 +171,39 @@ export function AgentDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-immo-text-primary">{fullName}</h1>
             <StatusBadge label={USER_ROLE_LABELS[agent.role]} type="blue" />
-            <StatusBadge label={agent.status === 'active' ? 'Actif' : 'Inactif'} type={agent.status === 'active' ? 'green' : 'red'} />
+            <StatusBadge label={statusCfg.label} type={statusCfg.type} />
           </div>
           <div className="mt-1 flex items-center gap-4 text-sm text-immo-text-muted">
             {agent.phone && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{agent.phone}</span>}
             <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{agent.email}</span>
+            {isArchived && agent.archived_at && (
+              <span className="text-immo-text-muted">
+                Archivé {formatDistanceToNow(new Date(agent.archived_at), { addSuffix: true, locale: fr })}
+              </span>
+            )}
           </div>
         </div>
+        {canManageAgents && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setEditing(true)}
+              className="text-immo-text-secondary hover:bg-immo-bg-card-hover"
+            >
+              <Pencil className="mr-1.5 h-3.5 w-3.5" /> Modifier
+            </Button>
+            {agent.status === 'active' && (
+              <Button
+                size="sm"
+                onClick={() => setDeactivating(true)}
+                className="bg-immo-status-red/10 text-immo-status-red hover:bg-immo-status-red/20"
+              >
+                <Ban className="mr-1.5 h-3.5 w-3.5" /> Désactiver
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPIs */}
@@ -222,17 +294,16 @@ export function AgentDetailPage() {
         ) : (
           <div className="space-y-1.5">
             {history.map(h => {
-              const meta = HISTORY_TYPE_LABELS[h.type as HistoryType]
-              const client = h.clients as { full_name: string } | null
+              const meta = HISTORY_TYPE_LABELS[h.type]
               return (
-                <div key={h.id as string} className="flex items-center gap-3 rounded-lg border border-immo-border-default bg-immo-bg-card px-4 py-2.5">
+                <div key={h.id} className="flex items-center gap-3 rounded-lg border border-immo-border-default bg-immo-bg-card px-4 py-2.5">
                   <div className="h-2 w-2 shrink-0 rounded-full bg-immo-accent-green" />
                   <div className="min-w-0 flex-1">
-                    <span className="text-sm text-immo-text-primary">{meta?.label ?? (h.title as string)}</span>
-                    {client && <span className="ml-2 text-[11px] text-immo-text-muted">— {client.full_name}</span>}
+                    <span className="text-sm text-immo-text-primary">{meta?.label ?? h.title}</span>
+                    {h.clients && <span className="ml-2 text-[11px] text-immo-text-muted">— {h.clients.full_name}</span>}
                   </div>
                   <span className="shrink-0 text-[11px] text-immo-text-muted">
-                    {formatDistanceToNow(new Date(h.created_at as string), { addSuffix: true, locale: fr })}
+                    {formatDistanceToNow(new Date(h.created_at), { addSuffix: true, locale: fr })}
                   </span>
                 </div>
               )
@@ -240,6 +311,22 @@ export function AgentDetailPage() {
           </div>
         )}
       </div>
+
+      {canManageAgents && (
+        <>
+          <EditAgentModal
+            isOpen={editing}
+            onClose={() => setEditing(false)}
+            user={agent}
+          />
+          <TransferAgentModal
+            isOpen={deactivating}
+            onClose={() => setDeactivating(false)}
+            agentId={deactivating ? agent.id : null}
+            agentName={fullName}
+          />
+        </>
+      )}
     </div>
   )
 }

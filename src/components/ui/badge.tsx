@@ -49,4 +49,5 @@ function Badge({
   })
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- shadcn convention: component + cva variants live together
 export { Badge, badgeVariants }

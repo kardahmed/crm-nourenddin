@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
     }
 
     // Clean phone number (ensure format: 213XXXXXXXXX)
-    let phone = to.replace(/[\s\-\(\)\+]/g, '')
+    let phone = to.replace(/[\s\-()+]/g, '')
     if (phone.startsWith('0')) phone = '213' + phone.slice(1)
     if (!phone.startsWith('213')) phone = '213' + phone
 

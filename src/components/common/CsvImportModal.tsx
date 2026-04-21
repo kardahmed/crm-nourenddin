@@ -31,7 +31,7 @@ export interface CsvFieldSpec {
   example?: string
 }
 
-export interface CsvImportProps<_T extends object = object> {
+export interface CsvImportProps {
   isOpen: boolean
   onClose: () => void
   title: string

@@ -50,7 +50,7 @@ export function ExpensesTab() {
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ['marketing-expenses', periodFilter],
     queryFn: async () => {
-      let q = supabase.from('marketing_expenses')
+      const q = supabase.from('marketing_expenses')
         .select('*, projects(name), marketing_campaigns(name)')
         
         .gte('expense_date', dateFrom.toISOString().split('T')[0])

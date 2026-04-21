@@ -37,6 +37,7 @@ export function BrandingSection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query
       setLogoUrl(settings.custom_logo_url ?? '')
       setPrimaryColor(settings.custom_primary_color ?? '#0579DA')
       setAppName(settings.custom_app_name ?? '')

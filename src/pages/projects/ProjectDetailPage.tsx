@@ -85,6 +85,7 @@ export function ProjectDetailPage() {
       toast.error('Fichier trop volumineux (max 5 Mo)')
       return null
     }
+    // eslint-disable-next-line react-hooks/purity -- inside async upload handler, not render
     const path = `projects/${projectId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
     const { error } = await supabase.storage.from('landing-assets').upload(path, file, { upsert: false })
     if (error) {

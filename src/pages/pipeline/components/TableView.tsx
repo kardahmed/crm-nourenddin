@@ -9,6 +9,28 @@ import { Button } from '@/components/ui/button'
 type SortCol = 'full_name' | 'pipeline_stage' | 'confirmed_budget' | 'days' | 'created_at'
 type SortDir = 'asc' | 'desc'
 
+interface SortHeaderProps {
+  col: SortCol
+  label: string
+  className?: string
+  active: boolean
+  onToggle: (col: SortCol) => void
+}
+
+function SortHeader({ col, label, className, active, onToggle }: SortHeaderProps) {
+  return (
+    <th
+      className={`cursor-pointer select-none whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted hover:text-immo-text-secondary ${className ?? ''}`}
+      onClick={() => onToggle(col)}
+    >
+      <span className="flex items-center gap-1">
+        {label}
+        <ArrowUpDown className={`h-3 w-3 ${active ? 'text-immo-accent-green' : 'opacity-30'}`} />
+      </span>
+    </th>
+  )
+}
+
 interface TableViewProps {
   clients: Client[]
   daysInStageMap: Map<string, number>
@@ -58,21 +80,6 @@ export function TableView({ clients, daysInStageMap, agentMap, projectMap, urgen
   const totalPages = Math.ceil(sorted.length / PAGE_SIZE)
   const paged = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
 
-  function SortHeader({ col, label, className }: { col: SortCol; label: string; className?: string }) {
-    const active = sortCol === col
-    return (
-      <th
-        className={`cursor-pointer select-none whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted hover:text-immo-text-secondary ${className ?? ''}`}
-        onClick={() => toggleSort(col)}
-      >
-        <span className="flex items-center gap-1">
-          {label}
-          <ArrowUpDown className={`h-3 w-3 ${active ? 'text-immo-accent-green' : 'opacity-30'}`} />
-        </span>
-      </th>
-    )
-  }
-
   return (
     <div className="space-y-3">
       <div className="overflow-hidden rounded-xl border border-immo-border-default">
@@ -80,15 +87,15 @@ export function TableView({ clients, daysInStageMap, agentMap, projectMap, urgen
           <table className="w-full">
             <thead>
               <tr className="bg-immo-bg-card-hover">
-                <SortHeader col="full_name" label="Client" />
+                <SortHeader col="full_name" label="Client" active={sortCol === 'full_name'} onToggle={toggleSort} />
                 <th className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">Téléphone</th>
                 <th className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">Source</th>
                 <th className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">Projet</th>
-                <SortHeader col="confirmed_budget" label="Budget" />
-                <SortHeader col="pipeline_stage" label="Étape" />
+                <SortHeader col="confirmed_budget" label="Budget" active={sortCol === 'confirmed_budget'} onToggle={toggleSort} />
+                <SortHeader col="pipeline_stage" label="Étape" active={sortCol === 'pipeline_stage'} onToggle={toggleSort} />
                 <th className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">Agent</th>
-                <SortHeader col="days" label="Jours" />
-                <SortHeader col="created_at" label="Dernière action" />
+                <SortHeader col="days" label="Jours" active={sortCol === 'days'} onToggle={toggleSort} />
+                <SortHeader col="created_at" label="Dernière action" active={sortCol === 'created_at'} onToggle={toggleSort} />
                 <th className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">Actions</th>
               </tr>
             </thead>

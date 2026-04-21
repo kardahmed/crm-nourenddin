@@ -42,7 +42,6 @@ const CHANNEL_ICONS: Record<string, typeof Phone> = { whatsapp: MessageCircle, s
 export function TasksPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const {} = useAuthStore()
   const userId = useAuthStore(s => s.session?.user?.id)
   const { isAgent, isAdmin } = usePermissions()
   const qc = useQueryClient()

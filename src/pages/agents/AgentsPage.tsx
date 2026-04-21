@@ -5,7 +5,7 @@ import {
   Users, UserCheck, UserX, Plus, Eye, Pencil, Ban, Shield, MoreHorizontal, Archive,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { handleSupabaseError } from '@/lib/errors'
+import { handleSupabaseError, parseEdgeError } from '@/lib/errors'
 import { usePermissions } from '@/hooks/usePermissions'
 import {
   KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, UserAvatar,
@@ -27,6 +27,8 @@ import toast from 'react-hot-toast'
 
 const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted'
 
+type AgentStatus = 'active' | 'inactive' | 'archived'
+
 interface AgentRow {
   id: string
   first_name: string
@@ -34,13 +36,19 @@ interface AgentRow {
   email: string
   phone: string | null
   role: UserRole
-  status: string
+  status: AgentStatus
   last_activity: string | null
   archived_at: string | null
   avatar_url: string | null
   permission_profile_id: string | null
   clients_count: number
   sales_count: number
+}
+
+const STATUS_BADGE: Record<AgentStatus, { label: string; type: 'green' | 'red' | 'muted' }> = {
+  active: { label: 'Actif', type: 'green' },
+  inactive: { label: 'Inactif', type: 'red' },
+  archived: { label: 'Archivé', type: 'muted' },
 }
 
 export function AgentsPage() {
@@ -55,6 +63,9 @@ export function AgentsPage() {
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
+  // Pinned once per mount so last-activity diffs stay stable across re-renders.
+  // eslint-disable-next-line react-hooks/purity -- Date.now() inside an empty-deps useMemo is effectively a mount constant
+  const nowMs = useMemo(() => Date.now(), [])
 
   // Fetch agents with counts
   const { data: agents = [], isLoading } = useQuery({
@@ -86,6 +97,7 @@ export function AgentsPage() {
       return (users ?? []).map((u): AgentRow => ({
         ...u,
         role: u.role as UserRole,
+        status: (u.status ?? 'active') as AgentStatus,
         clients_count: clientCounts.get(u.id) ?? 0,
         sales_count: saleCounts.get(u.id) ?? 0,
       }))
@@ -171,7 +183,7 @@ export function AgentsPage() {
         <KPICard label="Total agents" value={total} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
         <KPICard label="Actifs" value={active} accent="green" icon={<UserCheck className="h-4 w-4 text-immo-accent-green" />} />
         <KPICard label="Inactifs" value={inactive} accent="red" icon={<UserX className="h-4 w-4 text-immo-status-red" />} />
-        <KPICard label={archivedCount > 0 ? `Archivés (${archivedCount})` : 'Clients assignés'} value={archivedCount > 0 ? archivedCount : totalClients} accent="blue" icon={archivedCount > 0 ? <Archive className="h-4 w-4 text-immo-accent-blue" /> : <Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label="Clients assignés" value={totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
       </div>
 
       {/* Toolbar */}
@@ -186,7 +198,9 @@ export function AgentsPage() {
           }`}
         >
           <Archive className="h-3.5 w-3.5" />
-          {showArchived ? `Archivés (${archivedCount})` : 'Voir archivés'}
+          {showArchived
+            ? `Masquer les archivés${archivedCount > 0 ? ` (${archivedCount})` : ''}`
+            : `Afficher les archivés${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
         </button>
         {canManageAgents && !showArchived && (
           <Button
@@ -204,15 +218,31 @@ export function AgentsPage() {
           <table className="w-full">
             <thead>
               <tr className="bg-immo-bg-card-hover">
-                {['Agent', 'Rôle', 'Téléphone', 'Email', 'Clients', 'Ventes', 'Dernière activité', 'Statut', ''].map(h => (
+                {(showArchived
+                  ? ['Agent', 'Rôle', 'Email', 'Clients', 'Ventes', 'Archivé le', 'Statut', '']
+                  : ['Agent', 'Rôle', 'Téléphone', 'Email', 'Clients', 'Ventes', 'Dernière activité', 'Statut', '']
+                ).map(h => (
                   <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-immo-border-default">
+              {filtered.length === 0 && (
+                <tr>
+                  <td colSpan={showArchived ? 8 : 9} className="px-4 py-10 text-center text-sm text-immo-text-muted">
+                    {search
+                      ? 'Aucun agent ne correspond à votre recherche.'
+                      : showArchived
+                        ? 'Aucun agent archivé.'
+                        : 'Aucun agent. Cliquez sur "Ajouter un agent" pour créer le premier compte.'}
+                  </td>
+                </tr>
+              )}
               {filtered.map(a => {
                 const fullName = `${a.first_name} ${a.last_name}`
-                const inactiveLong = a.last_activity && (Date.now() - new Date(a.last_activity).getTime()) > 7 * 86400000
+                const inactiveLong = a.last_activity && (nowMs - new Date(a.last_activity).getTime()) > 7 * 86400000
+                const statusCfg = STATUS_BADGE[a.status] ?? STATUS_BADGE.inactive
+                const isArchivedRow = a.status === 'archived'
 
                 return (
                   <tr key={a.id} className="bg-immo-bg-card transition-colors hover:bg-immo-bg-card-hover">
@@ -228,32 +258,27 @@ export function AgentsPage() {
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-secondary">{USER_ROLE_LABELS[a.role]}</td>
-                    <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-muted">{a.phone ?? '-'}</td>
+                    {!showArchived && (
+                      <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-muted">{a.phone ?? '-'}</td>
+                    )}
                     <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-muted">{a.email}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-xs font-medium text-immo-text-primary">{a.clients_count}</td>
                     <td className="whitespace-nowrap px-4 py-3 text-xs font-medium text-immo-accent-green">{a.sales_count}</td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <span className={`text-xs ${inactiveLong ? 'font-medium text-immo-status-red' : 'text-immo-text-muted'}`}>
-                        {a.last_activity ? formatDistanceToNow(new Date(a.last_activity), { addSuffix: true, locale: fr }) : 'Jamais'}
-                      </span>
+                      {showArchived ? (
+                        <span className="text-xs text-immo-text-muted">
+                          {a.archived_at
+                            ? formatDistanceToNow(new Date(a.archived_at), { addSuffix: true, locale: fr })
+                            : '-'}
+                        </span>
+                      ) : (
+                        <span className={`text-xs ${inactiveLong ? 'font-medium text-immo-status-red' : 'text-immo-text-muted'}`}>
+                          {a.last_activity ? formatDistanceToNow(new Date(a.last_activity), { addSuffix: true, locale: fr }) : 'Jamais'}
+                        </span>
+                      )}
                     </td>
                     <td className="whitespace-nowrap px-4 py-3">
-                      <StatusBadge
-                        label={
-                          a.status === 'active'
-                            ? 'Actif'
-                            : a.status === 'archived'
-                              ? 'Archivé'
-                              : 'Inactif'
-                        }
-                        type={
-                          a.status === 'active'
-                            ? 'green'
-                            : a.status === 'archived'
-                              ? 'muted'
-                              : 'red'
-                        }
-                      />
+                      <StatusBadge label={statusCfg.label} type={statusCfg.type} />
                     </td>
                     <td className="whitespace-nowrap px-4 py-2">
                       <DropdownMenu>
@@ -264,7 +289,7 @@ export function AgentsPage() {
                           <DropdownMenuItem onClick={() => navigate(`/agents/${a.id}`)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                             <Eye className="mr-2 h-3.5 w-3.5" /> Voir profil
                           </DropdownMenuItem>
-                          {canManageAgents && (
+                          {canManageAgents && !isArchivedRow && (
                             <DropdownMenuItem onClick={() => setEditId(a.id)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                               <Pencil className="mr-2 h-3.5 w-3.5" /> Modifier
                             </DropdownMenuItem>
@@ -360,28 +385,36 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [role, setRole] = useState<'admin' | 'agent' | 'reception'>('agent')
+  const [permissionProfileId, setPermissionProfileId] = useState<string>('')
+
+  // Permission profiles dropdown — only meaningful for admin/agent; hidden
+  // for reception which always uses the front-desk scope.
+  const { data: profiles = [] } = useQuery({
+    queryKey: ['permission-profiles-list'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('permission_profiles')
+        .select('id, name')
+        .order('name')
+      return (data ?? []) as Array<{ id: string; name: string }>
+    },
+    enabled: isOpen,
+  })
 
   const create = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.functions.invoke('create-user', {
-        body: { email, first_name: firstName, last_name: lastName, phone: phone || null, role },
-      })
-      if (error) {
-        // Extract the actual error body from the edge function response.
-        // supabase-js wraps non-2xx responses in a FunctionsHttpError whose
-        // `context` is the raw Response — we parse it to surface the real
-        // server-side message instead of "non-2xx status code".
-        try {
-          const ctx = (error as unknown as { context?: Response }).context
-          if (ctx && typeof ctx.json === 'function') {
-            const body = await ctx.json()
-            if (body?.error) throw new Error(body.error)
-          }
-        } catch (parseErr) {
-          if (parseErr instanceof Error && parseErr.message) throw parseErr
-        }
-        throw error
+      const body: Record<string, unknown> = {
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone || null,
+        role,
       }
+      if (role !== 'reception' && permissionProfileId) {
+        body.permission_profile_id = permissionProfileId
+      }
+      const { data, error } = await supabase.functions.invoke('create-user', { body })
+      if (error) throw await parseEdgeError(error)
       const payload = data as { error?: string; user_id?: string; invitation_sent?: boolean }
       if (payload?.error) throw new Error(payload.error)
       if (!payload?.user_id) throw new Error('Réponse serveur invalide')
@@ -404,7 +437,8 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
   })
 
   function resetAndClose() {
-    setFirstName(''); setLastName(''); setEmail(''); setPhone(''); setRole('agent' as 'admin' | 'agent' | 'reception')
+    setFirstName(''); setLastName(''); setEmail(''); setPhone('')
+    setRole('agent'); setPermissionProfileId('')
     onClose()
   }
 
@@ -442,6 +476,21 @@ function CreateAgentModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =>
             </p>
           )}
         </div>
+        {role !== 'reception' && profiles.length > 0 && (
+          <div>
+            <Label className="text-[11px] font-medium text-immo-text-muted">Profil de permissions</Label>
+            <select
+              value={permissionProfileId}
+              onChange={(e) => setPermissionProfileId(e.target.value)}
+              className={`mt-1 h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}
+            >
+              <option value="">— Aucun (défaut) —</option>
+              {profiles.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
           <Button variant="ghost" onClick={resetAndClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">Annuler</Button>
           <Button onClick={() => create.mutate()} disabled={!firstName || !lastName || !email || create.isPending} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">

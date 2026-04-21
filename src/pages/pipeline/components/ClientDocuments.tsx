@@ -61,6 +61,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
 
     setUploading(true)
     const ext = file.name.split('.').pop() ?? 'pdf'
+    // eslint-disable-next-line react-hooks/purity -- inside async upload handler, not render
     const fileName = `${docType}-${Date.now()}.${ext}`
     const path = `${clientId}/${fileName}`
 

@@ -45,6 +45,7 @@ export function FeaturesSection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding toggles from async query
       setFeatures({
         feature_payment_tracking: settings.feature_payment_tracking ?? true,
         feature_charges: settings.feature_charges ?? true,

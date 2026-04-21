@@ -47,6 +47,7 @@ export function CompanySection() {
 
   useEffect(() => {
     if (settings) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding form state from async query; one-shot per settings identity
       setForm({
         company_name: settings.company_name ?? '',
         company_phone: settings.company_phone ?? '',

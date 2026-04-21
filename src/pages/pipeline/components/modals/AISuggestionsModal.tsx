@@ -59,7 +59,6 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
   // Prefill filters from client profile
   useEffect(() => {
     if (client && isOpen) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- seeding filters from client on open
       setProjectFilter(client.interested_projects?.[0] ?? '')
       setTypeFilter(client.desired_unit_types?.[0] ?? '')
       setSubtypeFilter('all')
@@ -144,11 +143,11 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
     return score
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps, react-hooks/preserve-manual-memoization -- scoreUnit closes over `client`; listing it is sufficient
   const scoreMap = useMemo(() => {
     const map = new Map<string, number>()
     filtered.forEach(u => map.set(u.id, scoreUnit(u)))
     return map
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- scoreUnit closes over `client`; listing it is sufficient
   }, [filtered, client])
 
   // Sort

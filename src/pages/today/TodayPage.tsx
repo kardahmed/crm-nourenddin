@@ -51,7 +51,8 @@ function whatsappHref(phone: string | null): string | null {
 export function TodayPage() {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
-  // Pinned once per mount so day-diff calculations stay pure (React 19 rule).
+  // Pinned once per mount so day-diff calculations stay stable across re-renders.
+  // eslint-disable-next-line react-hooks/purity -- Date.now() inside an empty-deps useMemo is effectively a mount constant
   const nowMs = useMemo(() => Date.now(), [])
 
   const { data, isLoading } = useQuery({

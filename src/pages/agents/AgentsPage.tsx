@@ -63,7 +63,8 @@ export function AgentsPage() {
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
   const [editId, setEditId] = useState<string | null>(null)
-  // Pinned per render so last-activity diffs are pure (React 19 rule).
+  // Pinned once per mount so last-activity diffs stay stable across re-renders.
+  // eslint-disable-next-line react-hooks/purity -- Date.now() inside an empty-deps useMemo is effectively a mount constant
   const nowMs = useMemo(() => Date.now(), [])
 
   // Fetch agents with counts

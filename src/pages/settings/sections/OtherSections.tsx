@@ -236,7 +236,7 @@ export function LanguageSection() {
     <div className="space-y-5">
       <SectionHeader title={i18n.language === 'ar' ? 'اللغة' : 'Langue'} subtitle="" />
       <div className="flex gap-3">
-        {[{ code: 'fr', label: 'Francais', flag: 'FR' }, { code: 'ar', label: 'العربية', flag: 'AR' }].map(lang => (
+        {[{ code: 'fr', label: 'Francais', flag: 'FR' }, { code: 'ar', label: 'العربية', flag: 'AR' }, { code: 'en', label: 'English', flag: 'EN' }].map(lang => (
           <button key={lang.code} onClick={() => changeLang(lang.code)}
             className={`flex items-center gap-3 rounded-xl border p-4 transition-colors ${current === lang.code ? 'border-immo-accent-green bg-immo-accent-green/5' : 'border-immo-border-default hover:border-immo-text-muted'}`}>
             <span className="text-lg font-bold text-immo-text-muted">{lang.flag}</span>

@@ -5,8 +5,30 @@ project_id = "crm-nourenddin"
 
 # Per-function settings
 #
-# create-user: we do our own admin-role verification inside the function
-# (with service role privileges), so we disable the gateway JWT check to
-# keep the auth logic in one place and surface meaningful 4xx responses.
+# The gateway's `verify_jwt = true` default rejects tokens signed with
+# Supabase's new ES256 asymmetric keys with UNAUTHORIZED_UNSUPPORTED_TOKEN.
+# Every user-facing function below already verifies the caller with
+# `supabase.auth.getUser(token)` + a role check from public.users, so the
+# gateway pre-check is redundant. Disabling it restores access and keeps
+# the meaningful 4xx responses surfaced by the function code itself.
+
 [functions.create-user]
+verify_jwt = false
+
+[functions.update-user]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.send-whatsapp]
+verify_jwt = false
+
+[functions.send-campaign]
+verify_jwt = false
+
+[functions.ai-suggestions]
+verify_jwt = false
+
+[functions.generate-call-script]
 verify_jwt = false

@@ -25,7 +25,14 @@ export function AppLayout() {
 
       <div className="flex flex-1 flex-col overflow-hidden">
         <Topbar title={title} subtitle={subtitle} />
-        <main className="flex-1 overflow-y-auto p-3 md:p-6">
+        <main
+          className="flex-1 overflow-y-auto p-3 md:p-6"
+          style={{
+            paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom))',
+            paddingLeft: 'max(0.75rem, env(safe-area-inset-left))',
+            paddingRight: 'max(0.75rem, env(safe-area-inset-right))',
+          }}
+        >
           {role === 'admin' && <OnboardingWizard />}
           <div className="animate-in fade-in duration-200">
             <Outlet />

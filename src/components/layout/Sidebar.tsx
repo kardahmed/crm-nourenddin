@@ -15,6 +15,7 @@ import {
   CheckSquare,
   UserPlus,
   UserCircle,
+  Activity,
 } from 'lucide-react'
 import { useAuthStore } from '@/store/authStore'
 import { useAuth } from '@/hooks/useAuth'
@@ -38,6 +39,7 @@ const ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
   CheckSquare,
   UserPlus,
   UserCircle: UserCircle,
+  Activity,
 }
 
 // Map nav path → i18n key
@@ -53,6 +55,7 @@ const NAV_KEYS: Record<string, string> = {
   '/goals': 'nav.goals',
   '/performance': 'nav.performance',
   '/agents': 'nav.agents',
+  '/activity-log': 'nav.activity_log',
   '/reports': 'nav.reports',
   '/marketing-roi': 'nav.marketing_roi',
   '/settings': 'nav.settings',
@@ -178,9 +181,15 @@ export function MobileSidebar() {
         <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={close} />
       )}
       {/* Drawer */}
-      <aside className={`fixed left-0 top-0 z-50 h-screen w-[260px] border-r border-immo-border-default bg-immo-bg-sidebar transition-transform duration-300 md:hidden rtl:left-auto rtl:right-0 ${
-        isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
-      }`}>
+      <aside
+        className={`fixed left-0 top-0 z-50 h-screen w-[260px] border-r border-immo-border-default bg-immo-bg-sidebar transition-transform duration-300 md:hidden rtl:left-auto rtl:right-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full rtl:translate-x-full'
+        }`}
+        style={{
+          paddingTop: 'env(safe-area-inset-top)',
+          paddingBottom: 'env(safe-area-inset-bottom)',
+        }}
+      >
         <SidebarContent onNavClick={close} />
       </aside>
     </>

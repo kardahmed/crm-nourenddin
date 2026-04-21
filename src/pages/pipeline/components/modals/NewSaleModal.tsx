@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   Check, Search, LayoutGrid, List, Plus, X,
   Building2, FileText, Download, Printer, Eye, CheckCircle,
@@ -95,6 +96,7 @@ const labelClass = 'text-[11px] font-medium text-immo-text-muted'
 /* ═══ Main Component ═══ */
 
 export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
+  const { t } = useTranslation()
   const [step, setStep] = useState(0)
   const [formData, setFormData] = useState<SaleFormData>({
     projectId: '',
@@ -282,7 +284,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
       qc.invalidateQueries({ queryKey: ['client-sales'] })
       qc.invalidateQueries({ queryKey: ['pipeline-stats'] })
       qc.invalidateQueries({ queryKey: ['dashboard-stats'] })
-      toast.success('Vente créée avec succès')
+      toast.success(t('sale_modal.toast_created'))
       handleClose()
     },
   })
@@ -300,7 +302,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
   if (!client) return null
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Nouvelle vente" size="xl">
+    <Modal isOpen={isOpen} onClose={handleClose} title={t('sale_modal.title')} size="xl">
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* Left: step content */}
         <div className="min-w-0 flex-1">
@@ -398,7 +400,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
                   onClick={() => setStep((s) => s - 1)}
                   className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
                 >
-                  ← Précédent
+                  ← {t('action.previous')}
                 </Button>
               )}
               <Button
@@ -406,7 +408,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
                 onClick={handleClose}
                 className="text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
               >
-                Annuler
+                {t('action.cancel')}
               </Button>
             </div>
             {isLastStep ? (
@@ -427,7 +429,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
                 disabled={!canProceed}
                 className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90 disabled:opacity-50"
               >
-                Suivant →
+                {t('action.next')} →
               </Button>
             )}
           </div>
@@ -1188,6 +1190,7 @@ interface Step5Props {
 }
 
 function Step5Validation({ client, projectName, selectedUnitsData, amenities, finalPrice, discountAmount, schedule, internalNotes, onNotesChange }: Step5Props) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-5">
       {/* Banner */}
@@ -1280,10 +1283,10 @@ function Step5Validation({ client, projectName, selectedUnitsData, amenities, fi
                     <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-blue" title="Aperçu">
                       <Eye className="h-3.5 w-3.5" />
                     </button>
-                    <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-green" title="Télécharger">
+                    <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-green" title={t('action.download')}>
                       <Download className="h-3.5 w-3.5" />
                     </button>
-                    <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-text-primary" title="Imprimer">
+                    <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-text-primary" title={t('action.print')}>
                       <Printer className="h-3.5 w-3.5" />
                     </button>
                   </div>

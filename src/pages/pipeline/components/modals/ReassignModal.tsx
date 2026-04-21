@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { UserCheck } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function ReassignModal({ isOpen, onClose, clientId, currentAgentId }: Props) {
+  const { t } = useTranslation()
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   const [selectedAgent, setSelectedAgent] = useState(currentAgentId ?? '')
@@ -48,7 +50,7 @@ export function ReassignModal({ isOpen, onClose, clientId, currentAgentId }: Pro
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['client-detail'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
-      toast.success('Client réassigné')
+      toast.success(t('success.assigned'))
       onClose()
     },
   })

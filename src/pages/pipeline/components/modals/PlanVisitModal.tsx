@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { CalendarDays, MapPin, Building2, Video } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -47,6 +48,7 @@ export function PlanVisitModal({
   prefillType = 'on_site',
   prefillNotes = '',
 }: PlanVisitModalProps) {
+  const { t } = useTranslation()
   const [date, setDate] = useState(prefillDate)
   const [selectedSlot, setSelectedSlot] = useState(prefillTime)
   const [customTime, setCustomTime] = useState('')
@@ -111,7 +113,7 @@ export function PlanVisitModal({
       qc.invalidateQueries({ queryKey: ['clients'] })
       qc.invalidateQueries({ queryKey: ['client-history'] })
       qc.invalidateQueries({ queryKey: ['client-detail'] })
-      toast.success('Visite planifiée avec succès')
+      toast.success(t('visit_modal.toast_planned'))
       resetAndClose()
     },
   })
@@ -261,7 +263,7 @@ export function PlanVisitModal({
             onClick={resetAndClose}
             className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
-            Annuler
+            {t('action.cancel')}
           </Button>
           <Button
             onClick={() => mutation.mutate()}

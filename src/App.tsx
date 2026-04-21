@@ -26,6 +26,7 @@ const PerformancePage = lazy(() => import('@/pages/performance/PerformancePage')
 const AgentsPage = lazy(() => import('@/pages/agents/AgentsPage').then(m => ({ default: m.AgentsPage })))
 const AgentDetailPage = lazy(() => import('@/pages/agents/AgentDetailPage').then(m => ({ default: m.AgentDetailPage })))
 const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage').then(m => ({ default: m.ReportsPage })))
+const ActivityLogPage = lazy(() => import('@/pages/activity-log/ActivityLogPage').then(m => ({ default: m.ActivityLogPage })))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage').then(m => ({ default: m.SettingsPage })))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then(m => ({ default: m.NotFoundPage })))
 
@@ -100,6 +101,7 @@ function App() {
             <Route element={<RoleRoute allowedRoles={['admin']} />}>
               <Route path="/agents" element={<AgentsPage />} />
               <Route path="/agents/:agentId" element={<AgentDetailPage />} />
+              <Route path="/activity-log" element={<ActivityLogPage />} />
               <Route path="/marketing-roi" element={<MarketingROIPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>

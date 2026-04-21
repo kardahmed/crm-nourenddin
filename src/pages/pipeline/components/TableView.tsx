@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Eye, ArrowUpDown, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PIPELINE_STAGES, SOURCE_LABELS } from '@/types'
 import type { Client, PipelineStage, ClientSource } from '@/types'
 import { formatPriceCompact } from '@/lib/constants'
@@ -43,6 +44,7 @@ interface TableViewProps {
 const PAGE_SIZE = 25
 
 export function TableView({ clients, daysInStageMap, agentMap, projectMap, urgentDays }: TableViewProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const [sortCol, setSortCol] = useState<SortCol>('created_at')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
@@ -101,7 +103,7 @@ export function TableView({ clients, daysInStageMap, agentMap, projectMap, urgen
             </thead>
             <tbody className="divide-y divide-immo-border-default">
               {paged.length === 0 ? (
-                <tr><td colSpan={10} className="py-16 text-center text-sm text-immo-text-muted">Aucun client</td></tr>
+                <tr><td colSpan={10} className="py-16 text-center text-sm text-immo-text-muted">{t('pipeline_extra.no_client')}</td></tr>
               ) : (
                 paged.map((c) => {
                   const stage = PIPELINE_STAGES[c.pipeline_stage]
@@ -154,7 +156,7 @@ export function TableView({ clients, daysInStageMap, agentMap, projectMap, urgen
                         <button
                           onClick={() => navigate(`/pipeline/clients/${c.id}`)}
                           className="rounded-md p-1.5 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-green"
-                          title="Voir fiche"
+                          title={t('action.view')}
                         >
                           <Eye className="h-4 w-4" />
                         </button>

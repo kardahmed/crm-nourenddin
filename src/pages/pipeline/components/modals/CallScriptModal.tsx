@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { X, Phone, Clock, Sparkles, CheckCircle, Lightbulb, ArrowRight, Calendar, AlertTriangle, MessageCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -45,6 +46,7 @@ interface CallScriptModalProps {
 export function CallScriptModal({
   isOpen, onClose, clientId, clientName, clientPhone, clientStage, agentId,
 }: CallScriptModalProps) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({})
   const [checkedQuestions, setCheckedQuestions] = useState<Set<string>>(new Set())
@@ -199,7 +201,7 @@ export function CallScriptModal({
       }
     },
     onSuccess: () => {
-      toast.success('Visite planifiée !')
+      toast.success(t('call_script.toast_visit_planned'))
       setShowVisitForm(false)
       qc.invalidateQueries({ queryKey: ['client-visits'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
@@ -313,14 +315,14 @@ export function CallScriptModal({
         metadata: { duration: timer, result, answers_count: answeredCount, mode: script?.mode },
       } as never)
 
-      toast.success('Appel enregistré et fiche client mise à jour')
+      toast.success(t('call_script.toast_saved'))
       qc.invalidateQueries({ queryKey: ['client-detail'] })
       qc.invalidateQueries({ queryKey: ['client-history'] })
       qc.invalidateQueries({ queryKey: ['clients'] })
       onClose()
     } catch (err) {
       console.error(err)
-      toast.error('Erreur lors de la sauvegarde')
+      toast.error(t('call_script.error_save'))
     } finally {
       setSaving(false)
     }
@@ -585,9 +587,9 @@ export function CallScriptModal({
             <label className="mb-2 block text-[10px] font-medium text-immo-text-muted">Resultat de l'appel</label>
             <div className="grid grid-cols-3 gap-2">
               {([
-                { value: 'qualified' as const, label: 'Qualifie', color: 'text-immo-accent-green border-immo-accent-green/30 bg-immo-accent-green/5' },
-                { value: 'callback' as const, label: 'A rappeler', color: 'text-immo-status-orange border-immo-status-orange/30 bg-immo-status-orange/5' },
-                { value: 'not_interested' as const, label: 'Pas interesse', color: 'text-immo-status-red border-immo-status-red/30 bg-immo-status-red/5' },
+                { value: 'qualified' as const, label: t('call_script.response_qualified'), color: 'text-immo-accent-green border-immo-accent-green/30 bg-immo-accent-green/5' },
+                { value: 'callback' as const, label: t('call_script.response_callback'), color: 'text-immo-status-orange border-immo-status-orange/30 bg-immo-status-orange/5' },
+                { value: 'not_interested' as const, label: t('call_script.response_not_interested'), color: 'text-immo-status-red border-immo-status-red/30 bg-immo-status-red/5' },
               ]).map(r => (
                 <button key={r.value} onClick={() => setResult(r.value)}
                   className={`rounded-lg border px-2 py-2 text-[11px] font-medium transition-all ${result === r.value ? r.color : 'border-immo-border-default text-immo-text-muted'}`}>
@@ -616,7 +618,7 @@ export function CallScriptModal({
                   <Button onClick={() => createVisit.mutate()} disabled={!visitDate || !visitTime || createVisit.isPending} className="flex-1 h-7 bg-immo-accent-blue text-[10px] text-white">
                     {createVisit.isPending ? '...' : 'Confirmer visite'}
                   </Button>
-                  <Button onClick={() => setShowVisitForm(false)} className="h-7 border border-immo-border-default bg-transparent text-[10px] text-immo-text-muted">Annuler</Button>
+                  <Button onClick={() => setShowVisitForm(false)} className="h-7 border border-immo-border-default bg-transparent text-[10px] text-immo-text-muted">{t('action.cancel')}</Button>
                 </div>
               </div>
             )}

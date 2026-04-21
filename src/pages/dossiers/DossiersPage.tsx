@@ -259,7 +259,7 @@ export function DossiersPage() {
   }), [dossiers])
 
   const projectOptions = [
-    { value: 'all', label: 'Tous les projets' },
+    { value: 'all', label: t('dossiers_extra.all_projects') },
     ...projectsList.map(p => ({ value: p.id, label: p.name })),
   ]
 
@@ -279,10 +279,10 @@ export function DossiersPage() {
 
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
-        <SearchInput placeholder="Nom, téléphone..." value={search} onChange={setSearch} className="w-full sm:w-[240px]" />
-        <FilterDropdown label="Projet" options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
-        <Button variant="ghost" size="sm" onClick={() => toast('Fonctionnalite d\'import CSV bientot disponible')} className="border border-immo-border-default text-xs text-immo-text-muted">
-          <Upload className="mr-1 h-3.5 w-3.5" /> Importer
+        <SearchInput placeholder={t('dossiers_extra.search_placeholder')} value={search} onChange={setSearch} className="w-full sm:w-[240px]" />
+        <FilterDropdown label={t('field.project')} options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
+        <Button variant="ghost" size="sm" onClick={() => toast(t('dossiers_extra.import_soon'))} className="border border-immo-border-default text-xs text-immo-text-muted">
+          <Upload className="mr-1 h-3.5 w-3.5" /> {t('dossiers_extra.import_csv')}
         </Button>
       </div>
 
@@ -310,14 +310,14 @@ export function DossiersPage() {
 
       {/* List */}
       {filtered.length === 0 ? (
-        <div className="py-16 text-center text-sm text-immo-text-muted">Aucun dossier</div>
+        <div className="py-16 text-center text-sm text-immo-text-muted">{t('dossiers_extra.no_files')}</div>
       ) : (
         <div className="overflow-hidden rounded-xl border border-immo-border-default">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-immo-bg-card-hover">
-                  {['Client', 'Projet', 'Unités', 'Total', 'Encaissé', 'Restant dû', 'Prochain paiement', 'Statut', 'Agent'].map((h) => (
+                  {[t('dossiers_extra.header_client'), t('dossiers_extra.header_project'), t('dossiers_extra.header_units'), t('dossiers_extra.header_total'), t('dossiers_extra.header_collected'), t('dossiers_extra.header_remaining'), t('dossiers_extra.header_next_payment'), t('dossiers_extra.header_status'), t('dossiers_extra.header_agent')].map((h) => (
                     <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-immo-text-muted">{h}</th>
                   ))}
                 </tr>
@@ -361,10 +361,10 @@ export function DossiersPage() {
                       <td className="whitespace-nowrap px-4 py-3">
                         <StatusBadge
                           label={
-                            d.status === 'late' ? 'En retard'
-                            : d.status === 'sale' ? 'Vente'
-                            : d.status === 'reservation' ? 'Réservation'
-                            : 'Annulé'
+                            d.status === 'late' ? t('status.late')
+                            : d.status === 'sale' ? t('tab.sale')
+                            : d.status === 'reservation' ? t('tab.reservation')
+                            : t('status.cancelled')
                           }
                           type={
                             d.status === 'late' ? 'red'
@@ -382,7 +382,7 @@ export function DossiersPage() {
             </table>
           </div>
           <div className="border-t border-immo-border-default bg-immo-bg-card-hover px-4 py-2 text-xs text-immo-text-muted">
-            {filtered.length} dossier(s)
+            {filtered.length} {t('dossiers_extra.files_count')}
           </div>
         </div>
       )}
@@ -391,8 +391,8 @@ export function DossiersPage() {
       {selectedDossier && (
         <div className="mt-6">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-immo-text-primary">Echeancier — {selectedDossier.clientName}</h3>
-            <button onClick={() => setSelectedDossier(null)} className="text-xs text-immo-text-muted hover:text-immo-text-primary">Fermer ✕</button>
+            <h3 className="text-sm font-semibold text-immo-text-primary">{t('dossiers_extra.schedule_title')} — {selectedDossier.clientName}</h3>
+            <button onClick={() => setSelectedDossier(null)} className="text-xs text-immo-text-muted hover:text-immo-text-primary">{t('action.close')} ✕</button>
           </div>
           <PaymentSchedulePanel saleId={selectedDossier.saleId} totalPrice={selectedDossier.totalPrice} clientName={selectedDossier.clientName} />
         </div>

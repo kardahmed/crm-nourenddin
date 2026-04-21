@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   ArrowLeft, ChevronRight, Phone, Mail, Pencil, Ban,
@@ -16,16 +17,16 @@ import { USER_ROLE_LABELS, GOAL_METRIC_LABELS, PIPELINE_STAGES, HISTORY_TYPE_LAB
 import type { UserRole, GoalMetric, GoalStatus, PipelineStage, HistoryType } from '@/types'
 import { formatPriceCompact } from '@/lib/constants'
 import { format, startOfMonth, endOfMonth, formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr as frLocale, ar as arLocale, enUS as enLocale } from 'date-fns/locale'
 import { EditAgentModal } from './components/EditAgentModal'
 import { TransferAgentModal } from './components/TransferAgentModal'
 
 type AgentStatus = 'active' | 'inactive' | 'archived'
 
-const STATUS_BADGE: Record<AgentStatus, { label: string; type: 'green' | 'red' | 'muted' }> = {
-  active: { label: 'Actif', type: 'green' },
-  inactive: { label: 'Inactif', type: 'red' },
-  archived: { label: 'Archivé', type: 'muted' },
+const STATUS_BADGE_TYPE: Record<AgentStatus, 'green' | 'red' | 'muted'> = {
+  active: 'green',
+  inactive: 'red',
+  archived: 'muted',
 }
 
 interface HistoryRow {
@@ -36,14 +37,16 @@ interface HistoryRow {
   clients: { full_name: string } | null
 }
 
-const STATUS_CONFIG: Record<GoalStatus, { label: string; type: 'blue' | 'green' | 'red' }> = {
-  in_progress: { label: 'En cours', type: 'blue' },
-  achieved: { label: 'Atteint', type: 'green' },
-  exceeded: { label: 'Dépassé', type: 'green' },
-  not_achieved: { label: 'Non atteint', type: 'red' },
+const GOAL_STATUS_TYPE: Record<GoalStatus, 'blue' | 'green' | 'red'> = {
+  in_progress: 'blue',
+  achieved: 'green',
+  exceeded: 'green',
+  not_achieved: 'red',
 }
 
 export function AgentDetailPage() {
+  const { t, i18n } = useTranslation()
+  const dateLocale = i18n.language === 'ar' ? arLocale : i18n.language === 'en' ? enLocale : frLocale
   const { agentId } = useParams<{ agentId: string }>()
   const navigate = useNavigate()
   useAuthStore() // keep store subscription active
@@ -143,14 +146,15 @@ export function AgentDetailPage() {
   if (isLoading || !agent) return <LoadingSpinner size="lg" className="h-96" />
 
   const fullName = `${agent.first_name} ${agent.last_name}`
-  const statusCfg = STATUS_BADGE[agent.status] ?? STATUS_BADGE.inactive
+  const statusType = STATUS_BADGE_TYPE[agent.status] ?? 'red'
+  const statusLabel = t(`status.${agent.status}`)
   const isArchived = agent.status === 'archived'
 
   return (
     <div className="space-y-5">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-immo-text-muted">
-        <Link to="/agents" className="hover:text-immo-text-primary">Agents</Link>
+        <Link to="/agents" className="hover:text-immo-text-primary">{t('nav.agents')}</Link>
         <ChevronRight className="h-3.5 w-3.5" />
         <span className="text-immo-text-primary">{fullName}</span>
       </div>
@@ -171,14 +175,14 @@ export function AgentDetailPage() {
           <div className="flex items-center gap-3">
             <h1 className="text-xl font-bold text-immo-text-primary">{fullName}</h1>
             <StatusBadge label={USER_ROLE_LABELS[agent.role]} type="blue" />
-            <StatusBadge label={statusCfg.label} type={statusCfg.type} />
+            <StatusBadge label={statusLabel} type={statusType} />
           </div>
           <div className="mt-1 flex items-center gap-4 text-sm text-immo-text-muted">
             {agent.phone && <span className="flex items-center gap-1"><Phone className="h-3.5 w-3.5" />{agent.phone}</span>}
             <span className="flex items-center gap-1"><Mail className="h-3.5 w-3.5" />{agent.email}</span>
             {isArchived && agent.archived_at && (
               <span className="text-immo-text-muted">
-                Archivé {formatDistanceToNow(new Date(agent.archived_at), { addSuffix: true, locale: fr })}
+                {t('agent_detail.archived_time', { time: formatDistanceToNow(new Date(agent.archived_at), { addSuffix: true, locale: dateLocale }) })}
               </span>
             )}
           </div>
@@ -191,7 +195,7 @@ export function AgentDetailPage() {
               onClick={() => setEditing(true)}
               className="text-immo-text-secondary hover:bg-immo-bg-card-hover"
             >
-              <Pencil className="mr-1.5 h-3.5 w-3.5" /> Modifier
+              <Pencil className="mr-1.5 h-3.5 w-3.5" /> {t('action.edit')}
             </Button>
             {agent.status === 'active' && (
               <Button
@@ -199,7 +203,7 @@ export function AgentDetailPage() {
                 onClick={() => setDeactivating(true)}
                 className="bg-immo-status-red/10 text-immo-status-red hover:bg-immo-status-red/20"
               >
-                <Ban className="mr-1.5 h-3.5 w-3.5" /> Désactiver
+                <Ban className="mr-1.5 h-3.5 w-3.5" /> {t('agents_page.deactivate')}
               </Button>
             )}
           </div>
@@ -208,11 +212,11 @@ export function AgentDetailPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
-        <KPICard label="Clients" value={stats?.clients ?? 0} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Visites (mois)" value={stats?.visits ?? 0} accent="blue" icon={<Calendar className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Réservations" value={stats?.reservations ?? 0} accent="orange" icon={<Bookmark className="h-4 w-4 text-immo-status-orange" />} />
-        <KPICard label="Ventes" value={stats?.sales ?? 0} accent="green" icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="CA généré" value={formatPriceCompact(stats?.revenue ?? 0)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('field.client')} value={stats?.clients ?? 0} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('agent_detail.visits_month')} value={stats?.visits ?? 0} accent="blue" icon={<Calendar className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('kpi.reservations')} value={stats?.reservations ?? 0} accent="orange" icon={<Bookmark className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label={t('kpi.sales')} value={stats?.sales ?? 0} accent="green" icon={<CheckCircle className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('agent_detail.revenue_generated')} value={formatPriceCompact(stats?.revenue ?? 0)} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
       </div>
 
       <Separator className="bg-immo-border-default" />
@@ -221,20 +225,20 @@ export function AgentDetailPage() {
         {/* Goals */}
         <div>
           <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">
-            <Target className="mr-1.5 inline h-4 w-4" />Objectifs en cours
+            <Target className="mr-1.5 inline h-4 w-4" />{t('agent_detail.current_goals')}
           </h3>
           {goals.length === 0 ? (
-            <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-8 text-center text-xs text-immo-text-muted">Aucun objectif</div>
+            <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-8 text-center text-xs text-immo-text-muted">{t('agent_detail.no_goals')}</div>
           ) : (
             <div className="space-y-2">
               {goals.map(g => {
                 const progress = g.target_value > 0 ? Math.min(Math.round((g.current_value / g.target_value) * 100), 150) : 0
-                const stCfg = STATUS_CONFIG[g.status]
+                const goalStatusLabel = t(`goals_page.${g.status}`)
                 return (
                   <div key={g.id} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3">
                     <div className="mb-2 flex items-center justify-between">
                       <span className="text-xs font-medium text-immo-text-primary">{GOAL_METRIC_LABELS[g.metric]}</span>
-                      <StatusBadge label={stCfg.label} type={stCfg.type} />
+                      <StatusBadge label={goalStatusLabel} type={GOAL_STATUS_TYPE[g.status]} />
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-2 flex-1 overflow-hidden rounded-full bg-immo-bg-primary">
@@ -252,15 +256,15 @@ export function AgentDetailPage() {
         {/* Clients */}
         <div>
           <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">
-            <Users className="mr-1.5 inline h-4 w-4" />Clients assignés
+            <Users className="mr-1.5 inline h-4 w-4" />{t('agents_page.assigned_clients')}
           </h3>
           {clients.length === 0 ? (
-            <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-8 text-center text-xs text-immo-text-muted">Aucun client</div>
+            <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-8 text-center text-xs text-immo-text-muted">{t('agent_detail.no_clients')}</div>
           ) : (
             <div className="overflow-hidden rounded-xl border border-immo-border-default">
               <table className="w-full">
                 <thead><tr className="bg-immo-bg-card-hover">
-                  {['Nom', 'Téléphone', 'Étape'].map(h => <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold uppercase text-immo-text-muted">{h}</th>)}
+                  {[t('field.name'), t('field.phone'), t('field.stage')].map(h => <th key={h} className="px-3 py-2 text-left text-[10px] font-semibold uppercase text-immo-text-muted">{h}</th>)}
                 </tr></thead>
                 <tbody className="divide-y divide-immo-border-default">
                   {clients.map(c => {
@@ -288,9 +292,9 @@ export function AgentDetailPage() {
 
       {/* History */}
       <div>
-        <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">Historique d'activité</h3>
+        <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">{t('agent_detail.activity_history')}</h3>
         {history.length === 0 ? (
-          <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-8 text-center text-xs text-immo-text-muted">Aucune activité</div>
+          <div className="rounded-xl border border-immo-border-default bg-immo-bg-card py-8 text-center text-xs text-immo-text-muted">{t('agent_detail.no_activity')}</div>
         ) : (
           <div className="space-y-1.5">
             {history.map(h => {
@@ -303,7 +307,7 @@ export function AgentDetailPage() {
                     {h.clients && <span className="ml-2 text-[11px] text-immo-text-muted">— {h.clients.full_name}</span>}
                   </div>
                   <span className="shrink-0 text-[11px] text-immo-text-muted">
-                    {formatDistanceToNow(new Date(h.created_at), { addSuffix: true, locale: fr })}
+                    {formatDistanceToNow(new Date(h.created_at), { addSuffix: true, locale: dateLocale })}
                   </span>
                 </div>
               )

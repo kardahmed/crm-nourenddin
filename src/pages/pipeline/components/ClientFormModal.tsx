@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useClients } from '@/hooks/useClients'
@@ -53,6 +54,7 @@ const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text
 const labelClass = 'text-[11px] font-medium text-immo-text-muted'
 
 export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProps) {
+  const { t } = useTranslation()
   const isEdit = !!client
   const { createClient, updateClient } = useClients()
   const { generateForStage } = useAutoTasks()
@@ -199,8 +201,8 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEdit ? `Modifier ${client?.full_name}` : 'Nouveau client'}
-      subtitle={isEdit ? 'Mettre à jour les informations' : 'Ajouter un client au pipeline'}
+      title={isEdit ? t('client_form.edit_client') : t('client_form.new_client')}
+      subtitle={isEdit ? t('client_form.edit_client') : t('client_form.new_client')}
       size="lg"
     >
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -223,7 +225,7 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
             </Field>
 
             <Field label="NIN / CIN">
-              <Input {...register('nin_cin')} placeholder="Numéro identité" className={inputClass} />
+              <Input {...register('nin_cin')} placeholder={t('client_form.placeholder_nin')} className={inputClass} />
             </Field>
 
             <Field label="Type client">
@@ -245,7 +247,7 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
             </Field>
 
             <Field label="Nationalité">
-              <Input {...register('nationality')} placeholder="Algérienne" className={inputClass} />
+              <Input {...register('nationality')} placeholder={t('client_form.placeholder_nationality')} className={inputClass} />
             </Field>
           </div>
 
@@ -359,7 +361,7 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
             </Field>
 
             <Field label="Profession">
-              <Input {...register('profession')} placeholder="Ingénieur, Commerçant..." className={inputClass} />
+              <Input {...register('profession')} placeholder={t('client_form.placeholder_profession')} className={inputClass} />
             </Field>
 
             <Field label="Adresse">
@@ -419,7 +421,7 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
             onClick={onClose}
             className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
-            Annuler
+            {t('action.cancel')}
           </Button>
           <Button
             type="submit"
@@ -429,9 +431,9 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
             {isPending ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
             ) : isEdit ? (
-              'Enregistrer'
+              t('action.save')
             ) : (
-              'Ajouter le client'
+              t('client_form.add_client')
             )}
           </Button>
         </div>

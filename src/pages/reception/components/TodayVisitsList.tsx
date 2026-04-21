@@ -1,5 +1,6 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { format, getHours, getMinutes } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import {
@@ -68,10 +69,11 @@ function useTodayVisits() {
 }
 
 function useCheckIn() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (v: VisitRow) => {
-      if (!v.client) throw new Error('Client manquant')
+      if (!v.client) throw new Error(t('error.generic'))
 
       const { error: upErr } = await supabase
         .from('visits')
@@ -96,10 +98,10 @@ function useCheckIn() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['reception-today-visits'] })
       qc.invalidateQueries({ queryKey: ['reception-metrics'] })
-      toast.success('Client accueilli — agent notifié')
+      toast.success(t('reception_form.toast_checked_in'))
     },
     onError: (err) => {
-      toast.error(err instanceof Error ? err.message : 'Erreur')
+      toast.error(err instanceof Error ? err.message : t('error.generic'))
     },
   })
 }

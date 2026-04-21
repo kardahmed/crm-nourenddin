@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Plus, FileText, Pencil, Trash2, Copy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useEmailTemplates, useDeleteTemplate, useSaveTemplate } from '@/hooks/useEmailMarketing'
 import { LoadingSpinner } from '@/components/common'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ import toast from 'react-hot-toast'
 import type { EmailBlock } from '@/lib/blocksToHtml'
 
 export function EmailTemplatesTab() {
+  const { t } = useTranslation()
   const { data: templates = [], isLoading } = useEmailTemplates()
   const deleteTemplate = useDeleteTemplate()
   const saveTemplate = useSaveTemplate()
@@ -20,31 +22,31 @@ export function EmailTemplatesTab() {
     setEditorOpen(true)
   }
 
-  const handleEdit = (t: typeof templates[0]) => {
-    setEditingTemplate({ id: t.id, name: t.name, subject: t.subject, blocks: t.blocks })
+  const handleEdit = (tpl: typeof templates[0]) => {
+    setEditingTemplate({ id: tpl.id, name: tpl.name, subject: tpl.subject, blocks: tpl.blocks })
     setEditorOpen(true)
   }
 
-  const handleDuplicate = async (t: typeof templates[0]) => {
+  const handleDuplicate = async (tpl: typeof templates[0]) => {
     try {
       await saveTemplate.mutateAsync({
-        name: `${t.name} (copie)`,
-        subject: t.subject,
-        blocks: t.blocks,
-        html_cache: t.html_cache ?? '',
+        name: `${tpl.name} (copie)`,
+        subject: tpl.subject,
+        blocks: tpl.blocks,
+        html_cache: tpl.html_cache ?? '',
       })
-      toast.success('Template dupliqué')
+      toast.success(t('marketing.template_duplicated'))
     } catch {
-      toast.error('Erreur')
+      toast.error(t('marketing.error_generic'))
     }
   }
 
   const handleDelete = async (id: string) => {
     try {
       await deleteTemplate.mutateAsync(id)
-      toast.success('Template supprimé')
+      toast.success(t('marketing.template_deleted'))
     } catch {
-      toast.error('Erreur')
+      toast.error(t('marketing.error_generic'))
     }
   }
 
@@ -69,41 +71,41 @@ export function EmailTemplatesTab() {
       ) : templates.length === 0 ? (
         <div className="rounded-xl border border-dashed border-immo-border-default p-12 text-center">
           <FileText className="mx-auto h-10 w-10 text-immo-text-muted mb-3" />
-          <p className="text-sm font-medium text-immo-text-primary">Aucun template</p>
+          <p className="text-sm font-medium text-immo-text-primary">{t('marketing.no_templates')}</p>
           <p className="text-xs text-immo-text-muted mt-1">Créez votre premier template d'email marketing</p>
           <Button onClick={handleNew} className="mt-4 gap-1.5 text-xs" variant="outline"><Plus className="h-3.5 w-3.5" /> Créer</Button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {templates.map(t => (
-            <div key={t.id} className="rounded-xl border border-immo-border-default bg-immo-bg-card p-4 space-y-3 hover:border-immo-accent-green/30 transition-colors">
+          {templates.map(tpl => (
+            <div key={tpl.id} className="rounded-xl border border-immo-border-default bg-immo-bg-card p-4 space-y-3 hover:border-immo-accent-green/30 transition-colors">
               {/* Preview thumbnail */}
               <div className="h-32 rounded-lg bg-immo-bg-primary border border-immo-border-default/50 overflow-hidden">
-                {t.html_cache ? (
-                  <iframe srcDoc={t.html_cache} className="w-full h-full pointer-events-none" style={{ transform: 'scale(0.4)', transformOrigin: 'top left', width: '250%', height: '250%' }} sandbox="" title={t.name} />
+                {tpl.html_cache ? (
+                  <iframe srcDoc={tpl.html_cache} className="w-full h-full pointer-events-none" style={{ transform: 'scale(0.4)', transformOrigin: 'top left', width: '250%', height: '250%' }} sandbox="" title={tpl.name} />
                 ) : (
                   <div className="flex items-center justify-center h-full text-immo-text-muted"><FileText className="h-8 w-8" /></div>
                 )}
               </div>
 
               <div>
-                <h4 className="text-sm font-semibold text-immo-text-primary truncate">{t.name}</h4>
+                <h4 className="text-sm font-semibold text-immo-text-primary truncate">{tpl.name}</h4>
                 <p className="text-[11px] text-immo-text-muted mt-0.5">
-                  {t.subject || 'Sans objet'} · {t.blocks.length} bloc(s)
+                  {tpl.subject || 'Sans objet'} · {tpl.blocks.length} bloc(s)
                 </p>
                 <p className="text-[10px] text-immo-text-muted mt-1">
-                  Modifié le {format(new Date(t.updated_at), 'dd/MM/yy HH:mm')}
+                  Modifié le {format(new Date(tpl.updated_at), 'dd/MM/yy HH:mm')}
                 </p>
               </div>
 
               <div className="flex gap-1.5 pt-1">
-                <Button variant="outline" size="sm" onClick={() => handleEdit(t)} className="flex-1 gap-1 text-xs">
+                <Button variant="outline" size="sm" onClick={() => handleEdit(tpl)} className="flex-1 gap-1 text-xs">
                   <Pencil className="h-3 w-3" /> Modifier
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDuplicate(t)} className="text-xs px-2">
+                <Button variant="ghost" size="sm" onClick={() => handleDuplicate(tpl)} className="text-xs px-2">
                   <Copy className="h-3.5 w-3.5" />
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => handleDelete(t.id)} className="text-xs px-2 hover:text-immo-status-red">
+                <Button variant="ghost" size="sm" onClick={() => handleDelete(tpl.id)} className="text-xs px-2 hover:text-immo-status-red">
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>

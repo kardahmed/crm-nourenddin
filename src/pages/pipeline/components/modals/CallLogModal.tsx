@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { Modal } from '@/components/common'
@@ -18,15 +19,16 @@ interface CallLogModalProps {
 }
 
 export function CallLogModal({ isOpen, onClose, clientId, clientName, agentId, onSuccess }: CallLogModalProps) {
+  const { t } = useTranslation()
   const [duration, setDuration] = useState('5')
   const [result, setResult] = useState<'interested' | 'callback' | 'not_interested'>('interested')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
 
   const RESULTS = [
-    { value: 'interested' as const, label: 'Interesse', color: 'text-immo-accent-green' },
-    { value: 'callback' as const, label: 'A rappeler', color: 'text-immo-status-orange' },
-    { value: 'not_interested' as const, label: 'Pas interesse', color: 'text-immo-status-red' },
+    { value: 'interested' as const, label: t('call_script.response_interested'), color: 'text-immo-accent-green' },
+    { value: 'callback' as const, label: t('call_script.response_callback'), color: 'text-immo-status-orange' },
+    { value: 'not_interested' as const, label: t('call_script.response_not_interested'), color: 'text-immo-status-red' },
   ]
 
   async function handleSubmit() {
@@ -44,7 +46,7 @@ export function CallLogModal({ isOpen, onClose, clientId, clientName, agentId, o
 
       if (error) { handleSupabaseError(error); throw error }
 
-      toast.success('Appel enregistré')
+      toast.success(t('call_modal.toast_saved'))
       setDuration('5'); setNotes(''); setResult('interested')
       onSuccess?.()
       onClose()
@@ -58,7 +60,7 @@ export function CallLogModal({ isOpen, onClose, clientId, clientName, agentId, o
   const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary'
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Enregistrer un appel" subtitle={clientName} size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('call_modal.title')} subtitle={clientName} size="sm">
       <div className="space-y-4">
         {/* Duration */}
         <div>
@@ -100,9 +102,9 @@ export function CallLogModal({ isOpen, onClose, clientId, clientName, agentId, o
 
         {/* Actions */}
         <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
-          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary">Annuler</Button>
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary">{t('action.cancel')}</Button>
           <Button onClick={handleSubmit} disabled={loading} className="bg-immo-accent-green font-semibold text-white hover:bg-immo-accent-green/90">
-            {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : 'Enregistrer'}
+            {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" /> : t('action.save')}
           </Button>
         </div>
       </div>

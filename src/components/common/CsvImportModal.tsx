@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Upload, FileText, AlertCircle, CheckCircle, X, ArrowRight, Download } from 'lucide-react'
 import { Modal } from './Modal'
 import { Button } from '@/components/ui/button'
@@ -103,6 +104,7 @@ function buildTemplateCsv(fields: CsvFieldSpec[]): string {
 export function CsvImportModal({
   isOpen, onClose, title, subtitle, table, fields, defaults, onSuccess, templateName,
 }: CsvImportProps) {
+  const { t } = useTranslation()
   const [step, setStep] = useState<Step>('upload')
   const [csv, setCsv] = useState<ParsedCsv | null>(null)
   const [mapping, setMapping] = useState<Record<string, string>>({}) // db column -> csv header
@@ -135,18 +137,18 @@ export function CsvImportModal({
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast.success('Modèle téléchargé')
+    toast.success(t('csv.template_downloaded'))
   }
 
   async function handleFile(file: File) {
     if (!file.name.match(/\.(csv|tsv|txt)$/i)) {
-      toast.error('Format non supporté (CSV ou TSV uniquement)')
+      toast.error(t('csv.unsupported_format'))
       return
     }
     const text = await file.text()
     const parsed = parseCsv(text)
     if (parsed.headers.length === 0 || parsed.rows.length === 0) {
-      toast.error('Fichier vide ou invalide')
+      toast.error(t('csv.empty_file'))
       return
     }
     setCsv(parsed)
@@ -188,7 +190,7 @@ export function CsvImportModal({
         try {
           row[field.column] = field.transform ? field.transform(raw) : raw
         } catch (err) {
-          errors.push(`Ligne ${rowIdx + 2} · ${field.label} : ${(err as Error).message}`)
+          errors.push(t('csv.line_error', { line: rowIdx + 2, field: field.label, message: (err as Error).message }))
         }
       }
       return row
@@ -198,7 +200,7 @@ export function CsvImportModal({
       const batch = rows.slice(i, i + BATCH_SIZE)
       const { error, data } = await supabase.from(table).insert(batch as never).select('id')
       if (error) {
-        errors.push(`Lot ${Math.floor(i / BATCH_SIZE) + 1} : ${error.message}`)
+        errors.push(t('csv.batch_error', { batch: Math.floor(i / BATCH_SIZE) + 1, message: error.message }))
       } else {
         inserted += data?.length ?? batch.length
       }
@@ -212,7 +214,7 @@ export function CsvImportModal({
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={closeAndReset} title={title} subtitle={subtitle ?? 'Importer des données depuis un fichier CSV'} size="lg">
+    <Modal isOpen={isOpen} onClose={closeAndReset} title={title} subtitle={subtitle ?? t('csv.modal_subtitle')} size="lg">
       {step === 'upload' && (
         <div className="space-y-4">
           {/* Template download CTA */}
@@ -225,9 +227,9 @@ export function CsvImportModal({
               <Download className="h-4 w-4 text-immo-accent-blue" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-semibold text-immo-text-primary">Télécharger le modèle CSV</p>
+              <p className="text-sm font-semibold text-immo-text-primary">{t('csv.download_template')}</p>
               <p className="text-[11px] text-immo-text-muted">
-                Pré-rempli avec les en-têtes attendues + une ligne d'exemple — remplissez-le puis revenez ici.
+                {t('csv.download_template_hint')}
               </p>
             </div>
           </button>
@@ -235,15 +237,15 @@ export function CsvImportModal({
           <label className="flex cursor-pointer flex-col items-center gap-3 rounded-xl border-2 border-dashed border-immo-border-default p-10 transition-colors hover:border-immo-accent-green hover:bg-immo-accent-green/5">
             <Upload className="h-10 w-10 text-immo-text-muted" />
             <div className="text-center">
-              <p className="text-sm font-semibold text-immo-text-primary">Cliquez pour choisir un fichier</p>
-              <p className="mt-1 text-xs text-immo-text-muted">CSV ou TSV — la première ligne doit être les en-têtes</p>
+              <p className="text-sm font-semibold text-immo-text-primary">{t('csv.pick_file')}</p>
+              <p className="mt-1 text-xs text-immo-text-muted">{t('csv.pick_file_hint')}</p>
             </div>
             <input type="file" accept=".csv,.tsv,.txt" onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }} className="hidden" />
           </label>
 
           <div className="rounded-lg border border-immo-border-default bg-immo-bg-primary p-4 text-[11px] text-immo-text-muted">
-            <p className="mb-2 font-semibold text-immo-text-secondary">💡 Astuce</p>
-            <p>Vous pouvez aussi exporter vos données depuis un ancien CRM en CSV, puis associer manuellement chaque colonne au champ correspondant à l'étape suivante.</p>
+            <p className="mb-2 font-semibold text-immo-text-secondary">{t('csv.tip_title')}</p>
+            <p>{t('csv.tip_body')}</p>
           </div>
         </div>
       )}
@@ -252,7 +254,7 @@ export function CsvImportModal({
         <div className="space-y-4">
           <div className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3 text-xs">
             <span className="font-semibold text-immo-text-primary">{csv.rows.length}</span>{' '}
-            <span className="text-immo-text-muted">ligne(s) détectée(s) — {csv.headers.length} colonne(s)</span>
+            <span className="text-immo-text-muted">{t('csv.rows_detected', { cols: csv.headers.length })}</span>
           </div>
 
           <div className="max-h-[380px] space-y-2 overflow-y-auto pr-1">
@@ -270,7 +272,7 @@ export function CsvImportModal({
                   onChange={(e) => setMapping((m) => ({ ...m, [field.column]: e.target.value }))}
                   className="h-8 w-full rounded-md border border-immo-border-default bg-immo-bg-primary px-2 text-xs text-immo-text-primary"
                 >
-                  <option value="">— Ignorer —</option>
+                  <option value="">{t('csv.ignore')}</option>
                   {csv.headers.map((h) => (
                     <option key={h} value={h}>{h}</option>
                   ))}
@@ -283,16 +285,16 @@ export function CsvImportModal({
             <div className="flex items-start gap-2 rounded-lg border border-immo-status-red/30 bg-immo-status-red/5 p-3 text-xs">
               <AlertCircle className="h-4 w-4 shrink-0 text-immo-status-red" />
               <div>
-                <p className="font-semibold text-immo-status-red">Champs obligatoires non mappés :</p>
+                <p className="font-semibold text-immo-status-red">{t('csv.required_missing')}</p>
                 <p className="text-immo-text-secondary">{requiredMissing.map((f) => f.label).join(', ')}</p>
               </div>
             </div>
           )}
 
           <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
-            <Button variant="ghost" onClick={() => setStep('upload')} className="text-immo-text-secondary">Retour</Button>
+            <Button variant="ghost" onClick={() => setStep('upload')} className="text-immo-text-secondary">{t('action.back')}</Button>
             <Button onClick={runImport} disabled={requiredMissing.length > 0} className="bg-immo-accent-green text-immo-bg-primary hover:bg-immo-accent-green/90">
-              Importer {csv.rows.length} ligne(s)
+              {t('csv.import_rows', { count: csv.rows.length })}
             </Button>
           </div>
         </div>
@@ -301,7 +303,7 @@ export function CsvImportModal({
       {step === 'import' && (
         <div className="flex flex-col items-center gap-4 py-10">
           <div className="h-14 w-14 animate-spin rounded-full border-4 border-immo-accent-green border-t-transparent" />
-          <p className="text-sm text-immo-text-primary">Import en cours… {progress}%</p>
+          <p className="text-sm text-immo-text-primary">{t('csv.importing', { progress })}</p>
           <div className="h-2 w-64 overflow-hidden rounded-full bg-immo-border-default">
             <div className="h-full bg-immo-accent-green transition-all" style={{ width: `${progress}%` }} />
           </div>
@@ -312,9 +314,9 @@ export function CsvImportModal({
         <div className="space-y-4">
           <div className="flex flex-col items-center gap-3 rounded-xl border border-immo-accent-green/30 bg-immo-accent-green/5 p-6 text-center">
             <CheckCircle className="h-12 w-12 text-immo-accent-green" />
-            <p className="text-lg font-bold text-immo-text-primary">Import terminé</p>
+            <p className="text-lg font-bold text-immo-text-primary">{t('csv.import_done')}</p>
             <p className="text-sm text-immo-text-secondary">
-              <span className="font-semibold text-immo-accent-green">{result.inserted}</span> ligne(s) importée(s){result.errors.length > 0 && <> — <span className="text-immo-status-red">{result.errors.length} erreur(s)</span></>}
+              <span className="font-semibold text-immo-accent-green">{result.inserted}</span> {t('csv.rows_imported')}{result.errors.length > 0 && <> — <span className="text-immo-status-red">{t('csv.errors_count', { count: result.errors.length })}</span></>}
             </p>
           </div>
 
@@ -322,20 +324,20 @@ export function CsvImportModal({
             <div className="max-h-52 overflow-y-auto rounded-lg border border-immo-status-red/20 bg-immo-bg-primary p-3">
               <div className="mb-2 flex items-center gap-2">
                 <X className="h-3.5 w-3.5 text-immo-status-red" />
-                <p className="text-xs font-semibold text-immo-status-red">Erreurs</p>
+                <p className="text-xs font-semibold text-immo-status-red">{t('csv.errors')}</p>
               </div>
               <ul className="space-y-1 text-[11px] text-immo-text-muted">
                 {result.errors.slice(0, 20).map((e, i) => (
                   <li key={i} className="flex gap-2"><FileText className="h-3 w-3 shrink-0" /><span>{e}</span></li>
                 ))}
-                {result.errors.length > 20 && <li className="italic">…et {result.errors.length - 20} autre(s)</li>}
+                {result.errors.length > 20 && <li className="italic">{t('csv.more_errors', { count: result.errors.length - 20 })}</li>}
               </ul>
             </div>
           )}
 
           <div className="flex justify-end gap-3 border-t border-immo-border-default pt-4">
-            <Button variant="ghost" onClick={reset} className="text-immo-text-secondary">Nouvel import</Button>
-            <Button onClick={closeAndReset} className="bg-immo-accent-green text-immo-bg-primary hover:bg-immo-accent-green/90">Fermer</Button>
+            <Button variant="ghost" onClick={reset} className="text-immo-text-secondary">{t('csv.new_import')}</Button>
+            <Button onClick={closeAndReset} className="bg-immo-accent-green text-immo-bg-primary hover:bg-immo-accent-green/90">{t('action.close')}</Button>
           </div>
         </div>
       )}

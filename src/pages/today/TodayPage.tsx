@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query'
 import {
   Calendar, CheckCircle2, ClipboardList, Coins, IdCard, Phone, AlertCircle,
@@ -49,6 +50,7 @@ function whatsappHref(phone: string | null): string | null {
 }
 
 export function TodayPage() {
+  const { t } = useTranslation()
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   // Pinned once per mount so day-diff calculations stay stable across re-renders.
@@ -132,7 +134,7 @@ export function TodayPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['today'] })
       qc.invalidateQueries({ queryKey: ['client-tasks'] })
-      toast.success('Tâche terminée')
+      toast.success(t('tasks_page.kpi_completed'))
     },
   })
 

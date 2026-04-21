@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Bell, CheckCheck, CreditCard, Clock, Users, AlertTriangle, BellRing } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
 import { formatDistanceToNow } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr as frLocale, enUS as enLocale, arSA as arLocale } from 'date-fns/locale'
 import toast from 'react-hot-toast'
 
 interface Notification {
@@ -29,9 +30,11 @@ const TYPE_COLORS: Record<string, string> = {
 }
 
 export function NotificationBell() {
+  const { t, i18n } = useTranslation()
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const { permission, enablePush, isSupported } = usePushNotifications()
+  const dateLocale = i18n.language === 'ar' ? arLocale : i18n.language === 'en' ? enLocale : frLocale
 
   const qc = useQueryClient()
 
@@ -81,10 +84,10 @@ export function NotificationBell() {
       {open && (
         <div className="absolute right-0 top-full z-50 mt-2 w-[calc(100vw-1.5rem)] max-w-[360px] rounded-xl border border-immo-border-default bg-immo-bg-card shadow-lg sm:w-[360px]">
           <div className="flex items-center justify-between border-b border-immo-border-default px-4 py-3">
-            <h3 className="text-sm font-semibold text-immo-text-primary">Notifications</h3>
+            <h3 className="text-sm font-semibold text-immo-text-primary">{t('notifications.title')}</h3>
             {unread > 0 && (
               <button onClick={() => markAllRead.mutate()} className="flex items-center gap-1 text-[11px] text-immo-accent-green hover:underline">
-                <CheckCheck className="h-3.5 w-3.5" /> Tout marquer lu
+                <CheckCheck className="h-3.5 w-3.5" /> {t('notifications.mark_all_read')}
               </button>
             )}
           </div>
@@ -92,18 +95,18 @@ export function NotificationBell() {
             <button
               onClick={async () => {
                 const result = await enablePush()
-                if (result === 'granted') toast.success('Notifications activées sur cet appareil')
-                else if (result === 'denied') toast.error('Notifications bloquées dans le navigateur')
+                if (result === 'granted') toast.success(t('notifications.push_enabled'))
+                else if (result === 'denied') toast.error(t('notifications.push_blocked'))
               }}
               className="flex w-full items-center gap-2 border-b border-immo-border-default bg-immo-accent-green/5 px-4 py-2.5 text-left text-[11px] text-immo-accent-green hover:bg-immo-accent-green/10"
             >
               <BellRing className="h-3.5 w-3.5" />
-              Activer les notifications push pour cet appareil
+              {t('notifications.enable_push')}
             </button>
           )}
           <div className="max-h-[400px] divide-y divide-immo-border-default overflow-y-auto">
             {notifications.length === 0 ? (
-              <div className="px-4 py-8 text-center text-xs text-immo-text-muted">Aucune notification</div>
+              <div className="px-4 py-8 text-center text-xs text-immo-text-muted">{t('notifications.empty')}</div>
             ) : (
               notifications.map(n => {
                 const Icon = TYPE_ICONS[n.type] ?? AlertTriangle
@@ -115,7 +118,7 @@ export function NotificationBell() {
                       <p className={`text-sm ${!n.read ? 'font-medium text-immo-text-primary' : 'text-immo-text-secondary'}`}>{n.title}</p>
                       {n.message && <p className="mt-0.5 text-[11px] text-immo-text-muted">{n.message}</p>}
                       <p className="mt-1 text-[10px] text-immo-text-muted">
-                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: fr })}
+                        {formatDistanceToNow(new Date(n.created_at), { addSuffix: true, locale: dateLocale })}
                       </p>
                     </div>
                     {!n.read && <div className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-immo-accent-green" />}

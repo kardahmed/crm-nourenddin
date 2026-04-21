@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { SlidersHorizontal, X } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ interface AdvancedFiltersProps {
 }
 
 export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 
   const { data: agents = [] } = useQuery({
@@ -76,7 +78,7 @@ export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersP
             <div>
               <label className="mb-1 block text-[10px] font-medium text-immo-text-muted">Agent</label>
               <select value={filters.agentId} onChange={e => update('agentId', e.target.value)} className={selectClass}>
-                <option value="">Tous</option>
+                <option value="">{t('common.all')}</option>
                 {agents.map(a => <option key={a.id} value={a.id}>{a.first_name} {a.last_name}</option>)}
               </select>
             </div>
@@ -94,7 +96,7 @@ export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersP
             <div>
               <label className="mb-1 block text-[10px] font-medium text-immo-text-muted">Niveau interet</label>
               <select value={filters.interestLevel} onChange={e => update('interestLevel', e.target.value)} className={selectClass}>
-                <option value="">Tous</option>
+                <option value="">{t('common.all')}</option>
                 {Object.entries(INTEREST_LEVEL_LABELS).map(([v, meta]) => <option key={v} value={v}>{(meta as { label: string }).label}</option>)}
               </select>
             </div>
@@ -103,7 +105,7 @@ export function AdvancedFilters({ filters, onChange, onClear }: AdvancedFiltersP
             <div>
               <label className="mb-1 block text-[10px] font-medium text-immo-text-muted">Priorite</label>
               <select value={filters.isPriority} onChange={e => update('isPriority', e.target.value)} className={selectClass}>
-                <option value="">Tous</option>
+                <option value="">{t('common.all')}</option>
                 <option value="true">Prioritaire</option>
                 <option value="false">Normal</option>
               </select>

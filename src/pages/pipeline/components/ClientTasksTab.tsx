@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle, Clock, Send, Phone, MessageCircle, Mail, AlertTriangle, Zap, SkipForward } from 'lucide-react'
+import { CheckCircle, Clock, Send, Phone, MessageCircle, Mail, AlertTriangle, Zap, SkipForward, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
-import { StatusBadge } from '@/components/common'
+import { StatusBadge, Modal } from '@/components/common'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 // import { PIPELINE_STAGES } from '@/types'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
 import toast from 'react-hot-toast'
+
+const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted'
 
 interface ClientTask {
   id: string; title: string; description: string | null; stage: string
@@ -39,6 +44,7 @@ export function ClientTasksTab({ clientId, clientName, clientPhone }: Props) {
   const userId = useAuthStore(s => s.session?.user?.id)
   const qc = useQueryClient()
   const [filter, setFilter] = useState<'all' | 'pending' | 'completed'>('pending')
+  const [showCreate, setShowCreate] = useState(false)
 
   // Client tasks
   const { data: tasks = [] } = useQuery({
@@ -46,6 +52,27 @@ export function ClientTasksTab({ clientId, clientName, clientPhone }: Props) {
     queryFn: async () => {
       const { data } = await supabase.from('client_tasks').select('*').eq('client_id', clientId).order('created_at')
       return (data ?? []) as ClientTask[]
+    },
+  })
+
+  const createTask = useMutation({
+    mutationFn: async (input: { title: string; description: string; channel: string; priority: string; scheduled_at: string | null }) => {
+      const { error } = await supabase.from('client_tasks').insert({
+        client_id: clientId,
+        agent_id: userId,
+        title: input.title,
+        description: input.description || null,
+        channel: input.channel,
+        priority: input.priority,
+        scheduled_at: input.scheduled_at,
+        status: 'pending',
+      } as never)
+      if (error) { handleSupabaseError(error); throw error }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['client-tasks', clientId] })
+      toast.success('Tâche créée')
+      setShowCreate(false)
     },
   })
 
@@ -125,6 +152,9 @@ export function ClientTasksTab({ clientId, clientName, clientPhone }: Props) {
               </button>
             ))}
           </div>
+          <Button onClick={() => setShowCreate(true)} className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
+            <Plus className="mr-1 h-3.5 w-3.5" /> Tâche
+          </Button>
         </div>
       </div>
 
@@ -213,6 +243,92 @@ export function ClientTasksTab({ clientId, clientName, clientPhone }: Props) {
           })}
         </div>
       )}
+
+      <CreateTaskModal
+        isOpen={showCreate}
+        onClose={() => setShowCreate(false)}
+        onSubmit={(d) => createTask.mutate(d)}
+        loading={createTask.isPending}
+      />
     </div>
+  )
+}
+
+function CreateTaskModal({ isOpen, onClose, onSubmit, loading }: {
+  isOpen: boolean
+  onClose: () => void
+  onSubmit: (d: { title: string; description: string; channel: string; priority: string; scheduled_at: string | null }) => void
+  loading: boolean
+}) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [channel, setChannel] = useState('system')
+  const [priority, setPriority] = useState('normal')
+  const [date, setDate] = useState('')
+  const [time, setTime] = useState('09:00')
+
+  function handle() {
+    if (!title.trim()) return
+    const scheduled_at = date ? `${date}T${time}:00` : null
+    onSubmit({ title: title.trim(), description: description.trim(), channel, priority, scheduled_at })
+    setTitle(''); setDescription(''); setChannel('system'); setPriority('normal'); setDate(''); setTime('09:00')
+  }
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Nouvelle tâche" size="sm">
+      <div className="space-y-3">
+        <div>
+          <Label className="text-xs text-immo-text-secondary">Titre *</Label>
+          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Rappeler le client..." className={inputClass} />
+        </div>
+        <div>
+          <Label className="text-xs text-immo-text-secondary">Description</Label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Détails optionnels..."
+            rows={3}
+            className={`w-full resize-none rounded-md border px-3 py-2 text-sm ${inputClass}`}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-immo-text-secondary">Canal</Label>
+            <select value={channel} onChange={(e) => setChannel(e.target.value)} className={`h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
+              <option value="system">Manuelle</option>
+              <option value="call">Appel</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="sms">SMS</option>
+              <option value="email">Email</option>
+            </select>
+          </div>
+          <div>
+            <Label className="text-xs text-immo-text-secondary">Priorité</Label>
+            <select value={priority} onChange={(e) => setPriority(e.target.value)} className={`h-9 w-full rounded-md border px-3 text-sm ${inputClass}`}>
+              <option value="low">Basse</option>
+              <option value="normal">Normale</option>
+              <option value="high">Haute</option>
+              <option value="urgent">Urgente</option>
+            </select>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-immo-text-secondary">Date (optionnel)</Label>
+            <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <Label className="text-xs text-immo-text-secondary">Heure</Label>
+            <Input type="time" value={time} onChange={(e) => setTime(e.target.value)} className={inputClass} />
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary">Annuler</Button>
+          <Button onClick={handle} disabled={!title.trim() || loading} className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
+            {loading ? <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" /> : 'Créer'}
+          </Button>
+        </div>
+      </div>
+    </Modal>
   )
 }

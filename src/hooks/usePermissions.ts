@@ -30,7 +30,7 @@ const DEFAULT_AGENT_PERMISSIONS: PermissionKey[] = [
   'sales.view', 'sales.create',
   'dossiers.view',
   'documents.view', 'documents.generate', 'documents.upload',
-  'payments.view',
+  'payments.view', 'payments.mark_paid',
   'goals.view_own',
   'performance.view_own',
   'reports.view',

@@ -61,7 +61,7 @@ export function VisitsTab({ clientId }: { clientId: string }) {
           {upcoming.length} {t('status.planned').toLowerCase()}, {past.length} {t('status.completed').toLowerCase()}
         </p>
         <Button onClick={() => setShowCreate(true)} className="bg-immo-accent-green text-xs font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90">
-          <Plus className="mr-1 h-3.5 w-3.5" /> {t('tab.visits')}
+          <Plus className="mr-1 h-3.5 w-3.5" /> {t('action.add')}
         </Button>
       </div>
 

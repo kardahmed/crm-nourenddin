@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Modal } from '@/components/common'
@@ -8,8 +9,8 @@ import { Label } from '@/components/ui/label'
 import { useProjects } from '@/hooks/useProjects'
 
 const schema = z.object({
-  name: z.string().min(2, 'Nom requis (min 2 caractères)'),
-  code: z.string().min(2, 'Code requis'),
+  name: z.string().min(2, 'create_project.name_required'),
+  code: z.string().min(2, 'create_project.code_required'),
   description: z.string().optional(),
   location: z.string().optional(),
   delivery_date: z.string().optional(),
@@ -24,6 +25,7 @@ interface CreateProjectModalProps {
 }
 
 export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps) {
+  const { t } = useTranslation()
   const { createProject } = useProjects()
 
   const {
@@ -53,49 +55,49 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nouveau projet" subtitle="Créer un programme immobilier" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={t('create_project.title')} subtitle={t('create_project.subtitle')} size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label className="text-sm text-immo-text-secondary">Nom du projet *</Label>
+            <Label className="text-sm text-immo-text-secondary">{t('create_project.name')}</Label>
             <Input
               {...register('name')}
-              placeholder="Résidence Les Oliviers"
+              placeholder={t('create_project.name_placeholder')}
               className="border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted"
             />
-            {errors.name && <p className="text-xs text-immo-status-red">{errors.name.message}</p>}
+            {errors.name && <p className="text-xs text-immo-status-red">{t(errors.name.message ?? '')}</p>}
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm text-immo-text-secondary">Code *</Label>
+            <Label className="text-sm text-immo-text-secondary">{t('create_project.code')}</Label>
             <Input
               {...register('code')}
-              placeholder="PRJ-001"
+              placeholder={t('create_project.code_placeholder')}
               className="border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted"
             />
-            {errors.code && <p className="text-xs text-immo-status-red">{errors.code.message}</p>}
+            {errors.code && <p className="text-xs text-immo-status-red">{t(errors.code.message ?? '')}</p>}
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-sm text-immo-text-secondary">Description</Label>
+          <Label className="text-sm text-immo-text-secondary">{t('create_project.description')}</Label>
           <Input
             {...register('description')}
-            placeholder="Description du programme..."
+            placeholder={t('create_project.description_placeholder')}
             className="border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted"
           />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <Label className="text-sm text-immo-text-secondary">Localisation</Label>
+            <Label className="text-sm text-immo-text-secondary">{t('create_project.location')}</Label>
             <Input
               {...register('location')}
-              placeholder="Alger, Hydra"
+              placeholder={t('create_project.location_placeholder')}
               className="border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted"
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-sm text-immo-text-secondary">Date de livraison</Label>
+            <Label className="text-sm text-immo-text-secondary">{t('create_project.delivery_date')}</Label>
             <Input
               type="date"
               {...register('delivery_date')}
@@ -105,11 +107,11 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-sm text-immo-text-secondary">Prix moyen par unité (DA)</Label>
+          <Label className="text-sm text-immo-text-secondary">{t('create_project.avg_price')}</Label>
           <Input
             type="number"
             {...register('avg_price_per_unit')}
-            placeholder="12000000"
+            placeholder={t('create_project.avg_price_placeholder')}
             className="border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted"
           />
         </div>
@@ -121,7 +123,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
             onClick={onClose}
             className="text-immo-text-secondary hover:bg-immo-bg-card-hover hover:text-immo-text-primary"
           >
-            Annuler
+            {t('create_project.cancel')}
           </Button>
           <Button
             type="submit"
@@ -131,7 +133,7 @@ export function CreateProjectModal({ isOpen, onClose }: CreateProjectModalProps)
             {createProject.isPending ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
             ) : (
-              'Créer le projet'
+              t('create_project.submit')
             )}
           </Button>
         </div>

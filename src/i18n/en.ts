@@ -1163,12 +1163,22 @@ export const en = {
   // Create project
   create_project: {
     title: 'New project',
-    name: 'Project name',
-    code: 'Project code',
+    subtitle: 'Create a real-estate program',
+    name: 'Project name *',
+    name_placeholder: 'Olive Gardens Residence',
+    code: 'Code *',
+    code_placeholder: 'PRJ-001',
     location: 'Location',
+    location_placeholder: 'Algiers, Hydra',
     description: 'Description',
-    name_required: 'Name is required',
-    code_required: 'Code is required',
+    description_placeholder: 'Program description...',
+    delivery_date: 'Delivery date',
+    avg_price: 'Average price per unit (DZD)',
+    avg_price_placeholder: '12000000',
+    cancel: 'Cancel',
+    submit: 'Create project',
+    name_required: 'Name required (min 2 characters)',
+    code_required: 'Code required',
   },
 
   // Create unit

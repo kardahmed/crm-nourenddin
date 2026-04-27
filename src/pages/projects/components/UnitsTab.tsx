@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQueryClient } from '@tanstack/react-query'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
@@ -70,6 +71,7 @@ const SUBTYPE_OPTIONS = [
 ]
 
 export function UnitsTab() {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const { units: rawUnits, isLoading, updateUnitStatus } = useUnits()
   const { projects } = useProjects()
@@ -146,11 +148,11 @@ export function UnitsTab() {
     <div className="space-y-6">
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4 xl:grid-cols-7">
-        <KPICard label="Total" value={total} accent="blue" icon={<Home className="h-5 w-5 text-immo-accent-blue" />} />
-        <KPICard label="Disponibles" value={available} accent="blue" icon={<Home className="h-5 w-5 text-immo-accent-blue" />} />
-        <KPICard label="Réservés" value={reserved} accent="orange" icon={<Bookmark className="h-5 w-5 text-immo-status-orange" />} />
-        <KPICard label="Vendus" value={sold} accent="green" icon={<CheckCircle className="h-5 w-5 text-immo-accent-green" />} />
-        <KPICard label="Bloqués" value={blocked} accent="red" icon={<Ban className="h-5 w-5 text-immo-status-red" />} />
+        <KPICard label={t('units_tab.total')} value={total} accent="blue" icon={<Home className="h-5 w-5 text-immo-accent-blue" />} />
+        <KPICard label={t('units_tab.available')} value={available} accent="blue" icon={<Home className="h-5 w-5 text-immo-accent-blue" />} />
+        <KPICard label={t('units_tab.reserved')} value={reserved} accent="orange" icon={<Bookmark className="h-5 w-5 text-immo-status-orange" />} />
+        <KPICard label={t('units_tab.sold')} value={sold} accent="green" icon={<CheckCircle className="h-5 w-5 text-immo-accent-green" />} />
+        <KPICard label={t('units_tab.blocked')} value={blocked} accent="red" icon={<Ban className="h-5 w-5 text-immo-status-red" />} />
         <KPICard label="Valeur totale" value={formatPriceCompact(totalValue)} accent="blue" icon={<DollarSign className="h-5 w-5 text-immo-accent-blue" />} />
         <KPICard label="Valeur vendue" value={formatPriceCompact(soldValue)} accent="green" icon={<DollarSign className="h-5 w-5 text-immo-accent-green" />} />
       </div>

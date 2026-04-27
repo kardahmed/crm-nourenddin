@@ -1,8 +1,9 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { Sidebar, MobileSidebar } from './Sidebar'
 import { Topbar } from './Topbar'
 import { OnboardingWizard } from '@/components/common/OnboardingWizard'
 import { CommandPalette } from '@/components/CommandPalette'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { usePageMeta } from '@/hooks/usePageMeta'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
 import { usePushNotifications } from '@/hooks/usePushNotifications'
@@ -13,6 +14,7 @@ export function AppLayout() {
   const { title, subtitle } = usePageMeta()
   const { isMobile } = useMobile()
   const role = useAuthStore((s) => s.role)
+  const location = useLocation()
   useKeyboardShortcuts()
   usePushNotifications()
 
@@ -34,9 +36,14 @@ export function AppLayout() {
           }}
         >
           {role === 'admin' && <OnboardingWizard />}
-          <div className="animate-in fade-in duration-200">
-            <Outlet />
-          </div>
+          {/* Per-route ErrorBoundary: a page crash only takes down the main
+              content; sidebar/topbar/command palette stay usable. The key
+              forces a reset when the user navigates elsewhere. */}
+          <ErrorBoundary key={location.pathname}>
+            <div className="animate-in fade-in duration-200">
+              <Outlet />
+            </div>
+          </ErrorBoundary>
         </main>
       </div>
       <CommandPalette />

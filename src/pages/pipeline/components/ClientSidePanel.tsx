@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { X, Phone, Mail, Flame, ExternalLink } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -24,6 +25,7 @@ function nameToColor(name: string): string {
 }
 
 export function ClientSidePanel({ clientId, onClose }: ClientSidePanelProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   const { data: client } = useQuery({
@@ -75,7 +77,7 @@ export function ClientSidePanel({ clientId, onClose }: ClientSidePanelProps) {
     <div className="fixed inset-y-0 right-0 z-40 flex w-full flex-col border-l border-immo-border-default bg-immo-bg-card shadow-xl sm:w-[400px]">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-immo-border-default px-5 py-4">
-        <h3 className="text-sm font-semibold text-immo-text-primary">Apercu client</h3>
+        <h3 className="text-sm font-semibold text-immo-text-primary">{t('pipeline_components.side_overview')}</h3>
         <button onClick={onClose} className="rounded-md p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-text-primary">
           <X className="h-4 w-4" />
         </button>
@@ -110,7 +112,7 @@ export function ClientSidePanel({ clientId, onClose }: ClientSidePanelProps) {
                 <Phone className="h-3.5 w-3.5 text-immo-text-muted" />
                 {client.phone}
               </div>
-              <a href={waLink} target="_blank" rel="noopener noreferrer" className="text-[#25D366] hover:text-[#128C7E]" title="WhatsApp">
+              <a href={waLink} target="_blank" rel="noopener noreferrer" className="text-[#25D366] hover:text-[#128C7E]" title={t('kanban_card.whatsapp_open')}>
                 <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z M12.001 2C6.478 2 2 6.478 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.932-1.39A9.953 9.953 0 0012 22c5.523 0 10-4.477 10-10S17.524 2 12.001 2z"/></svg>
               </a>
             </div>
@@ -125,22 +127,22 @@ export function ClientSidePanel({ clientId, onClose }: ClientSidePanelProps) {
           {/* Key metrics */}
           <div className="mb-4 grid grid-cols-2 gap-3">
             <div className="rounded-lg border border-immo-border-default p-3">
-              <p className="text-[10px] font-medium text-immo-text-muted">Budget</p>
+              <p className="text-[10px] font-medium text-immo-text-muted">{t('pipeline_components.side_budget')}</p>
               <p className="text-sm font-bold text-immo-text-primary">
                 {client.confirmed_budget ? formatPrice(client.confirmed_budget) : '-'}
               </p>
             </div>
             <div className="rounded-lg border border-immo-border-default p-3">
-              <p className="text-[10px] font-medium text-immo-text-muted">Agent</p>
+              <p className="text-[10px] font-medium text-immo-text-muted">{t('pipeline_components.side_agent')}</p>
               <p className="text-sm font-bold text-immo-text-primary">{agentName ?? '-'}</p>
             </div>
           </div>
 
           {/* Recent activity */}
           <div className="mb-4">
-            <h4 className="mb-2 text-xs font-semibold text-immo-text-muted">Activite recente</h4>
+            <h4 className="mb-2 text-xs font-semibold text-immo-text-muted">{t('pipeline_components.side_recent_activity')}</h4>
             {history.length === 0 ? (
-              <p className="text-xs text-immo-text-muted">Aucune activite</p>
+              <p className="text-xs text-immo-text-muted">{t('pipeline_components.side_no_activity')}</p>
             ) : (
               <div className="space-y-1.5">
                 {history.map(h => (
@@ -164,7 +166,7 @@ export function ClientSidePanel({ clientId, onClose }: ClientSidePanelProps) {
           onClick={() => { navigate(`/pipeline/clients/${clientId}`); onClose() }}
           className="w-full bg-immo-accent-green font-semibold text-white hover:bg-immo-accent-green/90"
         >
-          <ExternalLink className="mr-1.5 h-4 w-4" /> Voir la fiche complete
+          <ExternalLink className="mr-1.5 h-4 w-4" /> {t('pipeline_components.side_view_full')}
         </Button>
       </div>
     </div>

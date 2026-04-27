@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Phone, MessageCircle, Mail, Calendar, Clock, TrendingUp, Users, ArrowRight, AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { PIPELINE_STAGES } from '@/types'
@@ -24,6 +25,7 @@ interface StageStats {
 }
 
 export function PipelineAnalytics() {
+  const { t } = useTranslation()
   const { data, isLoading } = useQuery({
     queryKey: ['pipeline-analytics'],
     queryFn: async () => {
@@ -104,11 +106,11 @@ export function PipelineAnalytics() {
     <div className="space-y-6">
       {/* Global KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <KPICard label="Total clients" value={data.totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Appels total" value={data.totalCalls} accent="green" icon={<Phone className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="Messages total" value={data.totalMessages} accent="blue" icon={<MessageCircle className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Visites total" value={data.totalVisits} accent="orange" icon={<Calendar className="h-4 w-4 text-immo-status-orange" />} />
-        <KPICard label="Taux conversion moy." value={`${data.avgConversion.toFixed(0)}%`} accent={data.avgConversion > 50 ? 'green' : 'orange'} icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('pipeline_components.analytics_total_clients')} value={data.totalClients} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('pipeline_components.analytics_total_calls')} value={data.totalCalls} accent="green" icon={<Phone className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('pipeline_components.analytics_total_messages')} value={data.totalMessages} accent="blue" icon={<MessageCircle className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('pipeline_components.analytics_total_visits')} value={data.totalVisits} accent="orange" icon={<Calendar className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label={t('pipeline_components.analytics_avg_conversion')} value={`${data.avgConversion.toFixed(0)}%`} accent={data.avgConversion > 50 ? 'green' : 'orange'} icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
       </div>
 
       {/* Stage detail table */}
@@ -117,7 +119,19 @@ export function PipelineAnalytics() {
           <table className="w-full">
             <thead>
               <tr className="bg-immo-bg-card-hover">
-                {['Etape', 'Clients', 'Duree moy.', 'Appels', 'WhatsApp', 'SMS', 'Emails', 'Visites', 'Total interactions', 'Sans activite', 'Conversion'].map(h => (
+                {[
+                  t('pipeline_components.analytics_th_stage'),
+                  t('pipeline_components.analytics_th_clients'),
+                  t('pipeline_components.analytics_th_avg_duration'),
+                  t('pipeline_components.analytics_th_calls'),
+                  t('pipeline_components.analytics_th_whatsapp'),
+                  t('pipeline_components.analytics_th_sms'),
+                  t('pipeline_components.analytics_th_emails'),
+                  t('pipeline_components.analytics_th_visits'),
+                  t('pipeline_components.analytics_th_total'),
+                  t('pipeline_components.analytics_th_no_activity'),
+                  t('pipeline_components.analytics_th_conversion'),
+                ].map(h => (
                   <th key={h} className="whitespace-nowrap px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-immo-text-muted">{h}</th>
                 ))}
               </tr>
@@ -201,7 +215,7 @@ export function PipelineAnalytics() {
 
       {/* Conversion funnel visual */}
       <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-5">
-        <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">Entonnoir de conversion</h3>
+        <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">{t('pipeline_components.analytics_funnel')}</h3>
         <div className="flex items-end gap-1" style={{ height: 180 }}>
           {data.stats.filter(s => !['relancement', 'perdue'].includes(s.stage)).map((s, i, arr) => {
             const maxClients = Math.max(...arr.map(x => x.clients), 1)

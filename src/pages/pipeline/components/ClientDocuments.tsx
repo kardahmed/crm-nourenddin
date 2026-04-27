@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Upload, FileText, Trash2, Download, Eye, CheckCircle, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -33,6 +34,7 @@ interface Props {
 }
 
 export function ClientDocuments({ clientId, cinVerified }: Props) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [uploading, setUploading] = useState(false)
 
@@ -167,7 +169,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
               </div>
             )
           })}
-          {documents.length === 0 && <p className="px-4 py-6 text-center text-xs text-immo-text-muted">Aucun document uploade</p>}
+          {documents.length === 0 && <p className="px-4 py-6 text-center text-xs text-immo-text-muted">{t('pipeline_components.docs_empty')}</p>}
         </div>
       </div>
     </div>

@@ -60,7 +60,7 @@ type ViewMode = 'kanban' | 'cards' | 'table' | 'analytics'
 export function PipelinePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { clients: rawClients, isLoading: loadingClients, updateClientStage } = useClients()
+  const { clients: rawClients, isLoading: loadingClients, updateClientStage } = useClients({ pageSize: 'all' })
   const { generateForStage } = useAutoTasks()
   const { data: stats, isLoading: loadingStats } = usePipelineStats()
   const { canManageProjects, isAgent } = usePermissions()

@@ -14,7 +14,8 @@ interface ClientFilters {
   search?: string
   isPriority?: boolean
   page?: number
-  pageSize?: number
+  /** Pass 'all' to disable pagination and fetch every matching client (e.g. Kanban view) */
+  pageSize?: number | 'all'
 }
 
 const DEFAULT_PAGE_SIZE = 50
@@ -43,15 +44,17 @@ export function useClients(filters?: ClientFilters) {
         query = query.or(`full_name.ilike.%${s}%,phone.ilike.%${s}%,email.ilike.%${s}%`)
       }
 
-      // Pagination
+      // Pagination — désactivée si pageSize === 'all' (ex: vue Kanban)
+      const fetchAll = filters?.pageSize === 'all'
       const page = filters?.page ?? 0
-      const pageSize = filters?.pageSize ?? DEFAULT_PAGE_SIZE
+      const pageSize = (!fetchAll && filters?.pageSize) ? (filters.pageSize as number) : DEFAULT_PAGE_SIZE
       const from = page * pageSize
       const to = from + pageSize - 1
 
-      const { data, error, count } = await query
-        .order('created_at', { ascending: false })
-        .range(from, to)
+      const ordered = query.order('created_at', { ascending: false })
+      const { data, error, count } = fetchAll
+        ? await ordered
+        : await ordered.range(from, to)
 
       if (error) { handleSupabaseError(error); throw error }
       return { data: data ?? [], count: count ?? 0 }

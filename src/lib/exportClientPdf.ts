@@ -107,11 +107,23 @@ ${history.length > 0 ? `
 </div>
 </body></html>`
 
-  // Open in new window and trigger print
-  const win = window.open('', '_blank')
+  // Open the rendered HTML in a popup via a blob URL so we never call
+  // document.write (deprecated). The popup loads the blob, fires onload,
+  // and we trigger print + revoke the URL afterwards.
+  const blob = new Blob([html], { type: 'text/html' })
+  const url = URL.createObjectURL(blob)
+  const win = window.open(url, '_blank')
   if (win) {
-    win.document.write(html)
-    win.document.close()
-    win.setTimeout(() => win.print(), 500)
+    win.addEventListener(
+      'load',
+      () => {
+        win.print()
+        // Revoke after a tick so the print preview keeps the resource.
+        window.setTimeout(() => URL.revokeObjectURL(url), 5000)
+      },
+      { once: true },
+    )
+  } else {
+    URL.revokeObjectURL(url)
   }
 }

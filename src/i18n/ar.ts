@@ -616,12 +616,19 @@ export const ar = {
 
   advanced_filters: {
     title: 'تصفية متقدمة',
+    agent: 'الوكيل',
+    source: 'المصدر',
+    interest: 'مستوى الاهتمام',
+    priority: 'الأولوية',
     budget_min: 'الميزانية الدنيا',
     budget_max: 'الميزانية القصوى',
+    all: 'الكل',
     all_f: 'الكل',
     priority_yes: 'ذو أولوية',
     priority_no: 'عادي',
+    reset: 'إعادة تعيين',
     apply: 'تطبيق',
+    filters: 'مرشحات',
   },
 
   pipeline_extra: {
@@ -781,6 +788,10 @@ export const ar = {
     schedules: 'جداول الدفع',
     receipts: 'إيصالات الحجز',
     no_documents: 'لا توجد مستندات',
+    client: 'العميل',
+    type: 'النوع',
+    date: 'التاريخ',
+    document_name: 'اسم المستند',
   },
 
   performance_page: {
@@ -810,6 +821,11 @@ export const ar = {
     export_pdf: 'تصدير PDF',
     export_csv: 'تصدير CSV',
     date_range: 'الفترة',
+    report_type: 'نوع التقرير',
+    sales_report: 'تقرير المبيعات',
+    clients_report: 'تقرير العملاء',
+    agents_report: 'تقرير الوكلاء',
+    financial_report: 'التقرير المالي',
     this_week: 'هذا الأسبوع',
   },
 
@@ -822,6 +838,7 @@ export const ar = {
     total_views: 'إجمالي المشاهدات',
     leads_captured: 'العملاء المحتملون',
     active_pages: 'الصفحات النشطة',
+    copy_link: 'نسخ الرابط',
     link_copied: 'تم نسخ الرابط!',
     confirm_delete: 'حذف هذه الصفحة؟',
     delete_desc: 'ستفقد الإحصائيات.',
@@ -832,15 +849,20 @@ export const ar = {
     conv: 'التحويل',
     edit: 'تعديل الصفحة',
     new: 'صفحة التقاط جديدة',
+    content: 'المحتوى',
     sections: 'أقسام الصفحة',
     add_section: 'إضافة',
     distribution: 'توزيع العملاء المحتملين',
     tracking: 'التتبع والتحويلات',
+    mode: 'الوضع',
     agent_fixed: 'وكيل ثابت',
     round_robin: 'بالتناوب',
     per_agent: 'رابط لكل وكيل',
+    source_default: 'المصدر الافتراضي',
+    lang_ab: 'اللغة واختبار A/B',
     choose_template: 'اختر قالبًا',
     template_subtitle: 'ابدأ بنموذج جاهز',
+    sections_count: '{{count}} أقسام',
   },
 
   not_found: {
@@ -860,6 +882,7 @@ export const ar = {
     all_caught_up: 'جميع العملاء محدثون',
     never_contacted: 'لم يتم التواصل أبدًا',
     last_contact_on: 'آخر اتصال: {{date}}',
+    goal_target: 'الهدف: {{count}}',
   },
 
   project_detail: {
@@ -904,6 +927,17 @@ export const ar = {
 
   units_tab: {
     new_unit: 'وحدة جديدة',
+    all_types: 'جميع الأنواع',
+    all_statuses: 'جميع الحالات',
+    code: 'الرمز',
+    type: 'النوع',
+    subtype: 'النوع الفرعي',
+    surface: 'المساحة',
+    floor: 'الطابق',
+    building: 'المبنى',
+    price: 'السعر',
+    status: 'الحالة',
+    actions: 'الإجراءات',
     delete_unit: 'حذف هذه الوحدة؟',
     delete_desc: 'سيتم حذف الحجوزات والمبيعات المرتبطة.',
     total: 'الإجمالي',
@@ -915,12 +949,25 @@ export const ar = {
 
   create_project: {
     title: 'مشروع جديد',
+    name: 'اسم المشروع',
+    code: 'رمز المشروع',
+    location: 'الموقع',
+    description: 'الوصف',
     name_required: 'الاسم مطلوب',
     code_required: 'الرمز مطلوب',
   },
 
   create_unit: {
     title: 'وحدة جديدة',
+    project: 'المشروع',
+    code: 'رمز الوحدة',
+    type: 'النوع',
+    subtype: 'النوع الفرعي',
+    surface: 'المساحة (م²)',
+    floor: 'الطابق',
+    building: 'المبنى',
+    price: 'السعر (دج)',
+    delivery_date: 'تاريخ التسليم',
     select_project: 'اختر',
   },
 

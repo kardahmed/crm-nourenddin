@@ -8,6 +8,7 @@ import {
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError, parseEdgeError } from '@/lib/errors'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useDebounce } from '@/hooks/useDebounce'
 import {
   KPICard, SearchInput, StatusBadge, LoadingSpinner, Modal, UserAvatar,
 } from '@/components/common'
@@ -62,6 +63,7 @@ export function AgentsPage() {
   const [activeTab, setActiveTab] = useState<'agents' | 'permissions'>('agents')
   const [showArchived, setShowArchived] = useState(false)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 250)
   const [showCreate, setShowCreate] = useState(false)
   const [deactivateId, setDeactivateId] = useState<string | null>(null)
   const [archiveId, setArchiveId] = useState<string | null>(null)
@@ -148,12 +150,12 @@ export function AgentsPage() {
     const base = showArchived
       ? agents.filter(a => a.status === 'archived')
       : agents.filter(a => a.status !== 'archived')
-    if (!search) return base
-    const q = search.toLowerCase()
+    if (!debouncedSearch) return base
+    const q = debouncedSearch.toLowerCase()
     return base.filter(a =>
       `${a.first_name} ${a.last_name}`.toLowerCase().includes(q) || a.email.toLowerCase().includes(q)
     )
-  }, [agents, search, showArchived])
+  }, [agents, debouncedSearch, showArchived])
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 

@@ -2,6 +2,7 @@ import { pdf } from '@react-pdf/renderer'
 import { createElement } from 'react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
+import { randomToken } from '@/lib/utils'
 import { UNIT_TYPE_LABELS, FINANCING_MODE_LABELS } from '@/types'
 import type { UnitType, FinancingMode } from '@/types'
 import { SaleContractPDF } from './SaleContractPDF'
@@ -16,7 +17,7 @@ import { format } from 'date-fns'
 
 function contractNumber(): string {
   const timestamp = Date.now().toString(36).toUpperCase()
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase()
+  const random = randomToken(4).toUpperCase()
   return `CTR-${timestamp}-${random}`
 }
 

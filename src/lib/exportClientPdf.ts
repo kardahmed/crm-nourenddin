@@ -2,6 +2,8 @@
  * Export a client dossier as a formatted HTML that opens print dialog (PDF).
  * Uses window.print() — no external library needed.
  */
+import { currentLocaleTag, formatLocalDate, formatLocalNumber } from '@/lib/utils'
+
 interface ClientData {
   full_name: string
   phone: string
@@ -34,8 +36,8 @@ export function exportClientPdf(
   history: HistoryEntry[],
   agencyName = 'IMMO PRO-X'
 ) {
-  const formatPrice = (n: number) => n.toLocaleString('fr') + ' DA'
-  const formatDate = (s: string) => new Date(s).toLocaleDateString('fr', { day: '2-digit', month: '2-digit', year: 'numeric' })
+  const formatPrice = (n: number) => formatLocalNumber(n) + ' DA'
+  const formatDate = (s: string) => formatLocalDate(s, { day: '2-digit', month: '2-digit', year: 'numeric' })
 
   const totalPaid = schedules.filter(s => s.status === 'paid').reduce((sum, s) => sum + s.amount, 0)
   const totalDue = schedules.filter(s => s.status !== 'paid').reduce((sum, s) => sum + s.amount, 0)
@@ -101,7 +103,7 @@ ${history.length > 0 ? `
 </table>` : ''}
 
 <div style="margin-top:40px;padding-top:16px;border-top:1px solid #E3E8EF;color:#8898AA;font-size:10px;text-align:center">
-  Document genere par ${agencyName} · ${new Date().toLocaleDateString('fr')} · Confidentiel
+  Document genere par ${agencyName} · ${new Date().toLocaleDateString(currentLocaleTag())} · Confidentiel
 </div>
 </body></html>`
 

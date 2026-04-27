@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ArrowRight, Calendar, MapPin, Building2, Star, DollarSign, RotateCcw, XCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+import { formatLocalNumber } from '@/lib/utils'
 // import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
 import { Modal } from '@/components/common'
@@ -120,7 +121,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
         if (budget) {
           supabase.from('clients').update({ confirmed_budget: parseInt(budget) || null } as never).eq('id', clientId)
         }
-        finalNote = `Entree en negociation${budget ? '. Budget confirme: ' + parseInt(budget).toLocaleString('fr') + ' DA' : ''}`
+        finalNote = `Entree en negociation${budget ? '. Budget confirme: ' + formatLocalNumber(parseInt(budget)) + ' DA' : ''}`
         break
 
       case 'reason':

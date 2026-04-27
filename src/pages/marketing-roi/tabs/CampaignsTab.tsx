@@ -7,6 +7,7 @@ import { LoadingSpinner, StatusBadge, Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatPriceCompact } from '@/lib/constants'
+import { formatLocalNumber } from '@/lib/utils'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 
@@ -208,7 +209,7 @@ export function CampaignsTab() {
                                 </div>
                               </td>
                               <td className="px-5 py-2.5 text-xs text-immo-text-muted">{e.subcategory ?? '-'}{e.notes ? ` — ${e.notes}` : ''}</td>
-                              <td className="px-5 py-2.5 text-sm font-semibold text-immo-text-primary">{e.amount.toLocaleString('fr')} DA</td>
+                              <td className="px-5 py-2.5 text-sm font-semibold text-immo-text-primary">{formatLocalNumber(e.amount)} DA</td>
                               <td className="px-5 py-2.5">
                                 <button onClick={() => deleteExpense.mutate(e.id)} className="text-immo-text-muted hover:text-immo-status-red"><Trash2 className="h-3 w-3" /></button>
                               </td>
@@ -218,7 +219,7 @@ export function CampaignsTab() {
                         {/* Total row */}
                         <tr className="bg-immo-bg-card-hover">
                           <td colSpan={3} className="px-5 py-2.5 text-xs font-semibold text-immo-text-primary text-right">Total campagne</td>
-                          <td className="px-5 py-2.5 text-sm font-bold text-immo-accent-green">{spent.toLocaleString('fr')} DA</td>
+                          <td className="px-5 py-2.5 text-sm font-bold text-immo-accent-green">{formatLocalNumber(spent)} DA</td>
                           <td />
                         </tr>
                       </tbody>

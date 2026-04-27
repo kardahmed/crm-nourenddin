@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { PIPELINE_STAGES, SOURCE_LABELS } from '@/types'
 import type { Client, PipelineStage, ClientSource } from '@/types'
 import { formatPriceCompact } from '@/lib/constants'
+import { formatLocalDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 type SortCol = 'full_name' | 'pipeline_stage' | 'confirmed_budget' | 'days' | 'created_at'
@@ -150,7 +151,7 @@ export function TableView({ clients, daysInStageMap, agentMap, projectMap, urgen
                         </span>
                       </td>
                       <td className="whitespace-nowrap px-4 py-3 text-xs text-immo-text-muted">
-                        {c.last_contact_at ? new Date(c.last_contact_at).toLocaleDateString('fr-FR') : '-'}
+                        {c.last_contact_at ? formatLocalDate(c.last_contact_at) : '-'}
                       </td>
                       <td className="whitespace-nowrap px-4 py-2">
                         <button

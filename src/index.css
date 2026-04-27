@@ -277,4 +277,23 @@
     outline: 2px solid #0579DA;
     outline-offset: 2px;
   }
+
+  /* ─── RTL: mirror chevrons and arrows that imply reading direction ───
+     Lucide icons and translate-x utilities don't auto-flip when dir="rtl",
+     so we mirror them here. Components that need to keep an LTR direction
+     (numeric values, code blocks) can opt out with .no-rtl-mirror. */
+  [dir="rtl"] [class*="lucide-chevron-right"],
+  [dir="rtl"] [class*="lucide-chevron-left"],
+  [dir="rtl"] [class*="lucide-arrow-right"],
+  [dir="rtl"] [class*="lucide-arrow-left"] {
+    transform: scaleX(-1);
+  }
+
+  /* Numbers, dates and prices stay LTR even inside an RTL container so
+     they don't render as 0,000 5 etc. Apply via class="ltr-num". */
+  [dir="rtl"] .ltr-num {
+    direction: ltr;
+    unicode-bidi: isolate;
+    display: inline-block;
+  }
 }

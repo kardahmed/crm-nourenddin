@@ -17,7 +17,6 @@ import { Step2Biens } from './newSale/Step2Biens'
 import { Step3Finance } from './newSale/Step3Finance'
 import { Step4Schedule } from './newSale/Step4Schedule'
 import { Step5Validation } from './newSale/Step5Validation'
-import { STEPS } from './newSale/styles'
 import type { ClientInfo, AvailableUnit, SaleFormData, ScheduleLine } from './newSale/types'
 
 interface NewSaleModalProps {
@@ -116,13 +115,20 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
       : step === 2
         ? !!formData.financingMode
         : true
+  const STEPS = [
+    { label: t('sale_modal.step_id') },
+    { label: t('sale_modal.step_units') },
+    { label: t('sale_modal.step_finance') },
+    { label: t('sale_modal.step_docs') },
+    { label: t('sale_modal.step_confirm') },
+  ]
   const isLastStep = step === STEPS.length - 1
 
   const badges = [
-    { label: 'Client', done: !!client },
-    { label: 'Projet', done: !!formData.projectId },
-    { label: 'Biens', done: formData.selectedUnits.length > 0 },
-    { label: 'CNI', done: !!client?.nin_cin },
+    { label: t('sale_modal.badge_client'), done: !!client },
+    { label: t('sale_modal.badge_project'), done: !!formData.projectId },
+    { label: t('sale_modal.badge_units'), done: formData.selectedUnits.length > 0 },
+    { label: t('sale_modal.badge_cni'), done: !!client?.nin_cin },
   ]
   const doneCount = badges.filter((b) => b.done).length
   const isReady = doneCount === 4
@@ -176,7 +182,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
         p_internal_notes: formData.internalNotes || null,
         p_schedules: schedulesPayload,
         p_amenities: amenitiesPayload,
-        p_history_title: `Vente créée : ${unitCodes} — ${formatPriceCompact(finalPrice)}`,
+        p_history_title: t('sale_modal.history_sale_created', { units: unitCodes, price: formatPriceCompact(finalPrice) }),
         p_history_metadata: { unit_ids: formData.selectedUnits, final_price: finalPrice },
       } as never)
       if (rpcErr) { handleSupabaseError(rpcErr); throw rpcErr }
@@ -324,7 +330,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
                 {submitSale.isPending ? (
                   <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
                 ) : (
-                  'Créer la vente'
+                  t('sale_modal.create_sale')
                 )}
               </Button>
             ) : (
@@ -344,7 +350,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           {/* Progress */}
           <div>
             <div className="mb-2 flex items-center justify-between text-xs">
-              <span className="text-immo-text-muted">Progression</span>
+              <span className="text-immo-text-muted">{t('sale_modal.progression')}</span>
               <span className="font-semibold text-immo-text-primary">{doneCount}/4</span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-immo-bg-primary">
@@ -373,14 +379,14 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
 
           {/* Client */}
           <div>
-            <p className="text-[10px] text-immo-text-muted">Client</p>
+            <p className="text-[10px] text-immo-text-muted">{t('sale_modal.badge_client')}</p>
             <p className="text-xs font-medium text-immo-text-primary">{client.full_name}</p>
           </div>
 
           {/* Project */}
           {projectName && (
             <div>
-              <p className="text-[10px] text-immo-text-muted">Projet</p>
+              <p className="text-[10px] text-immo-text-muted">{t('sale_modal.badge_project')}</p>
               <p className="text-xs font-medium text-immo-text-primary">{projectName}</p>
             </div>
           )}
@@ -388,7 +394,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           {/* Selected units */}
           {selectedUnitsData.length > 0 && (
             <div>
-              <p className="text-[10px] text-immo-text-muted">Biens ({selectedUnitsData.length})</p>
+              <p className="text-[10px] text-immo-text-muted">{t('sale_modal.units_count', { count: selectedUnitsData.length })}</p>
               <div className="mt-1 space-y-1">
                 {selectedUnitsData.map((u) => (
                   <div key={u.id} className="flex items-center justify-between text-[11px]">
@@ -403,7 +409,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           {/* Amenities */}
           {formData.amenities.length > 0 && (
             <div>
-              <p className="text-[10px] text-immo-text-muted">Aménagements ({formData.amenities.length})</p>
+              <p className="text-[10px] text-immo-text-muted">{t('sale_modal.amenities_count', { count: formData.amenities.length })}</p>
               <div className="mt-1 space-y-1">
                 {formData.amenities.map((a) => (
                   <div key={a.id} className="flex items-center justify-between text-[11px]">
@@ -420,8 +426,8 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           {/* Schedule info */}
           {schedule.length > 0 && (
             <div>
-              <p className="text-[10px] text-immo-text-muted">Versements</p>
-              <p className="text-xs text-immo-text-primary">{schedule.length} échéances</p>
+              <p className="text-[10px] text-immo-text-muted">{t('sale_modal.payments')}</p>
+              <p className="text-xs text-immo-text-primary">{t('sale_modal.schedule_count', { count: schedule.length })}</p>
             </div>
           )}
 
@@ -431,12 +437,12 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
           <div>
             {discountAmount > 0 && (
               <>
-                <p className="text-[10px] text-immo-text-muted">Sous-total</p>
+                <p className="text-[10px] text-immo-text-muted">{t('sale_modal.subtotal')}</p>
                 <p className="text-xs text-immo-text-secondary line-through">{formatPriceCompact(grandTotal)}</p>
-                <p className="text-[10px] text-immo-status-orange">Remise: -{formatPriceCompact(discountAmount)}</p>
+                <p className="text-[10px] text-immo-status-orange">{t('sale_modal.discount_amount', { amount: formatPriceCompact(discountAmount) })}</p>
               </>
             )}
-            <p className="text-[10px] text-immo-text-muted">{discountAmount > 0 ? 'Prix final' : 'Total'}</p>
+            <p className="text-[10px] text-immo-text-muted">{discountAmount > 0 ? t('sale_modal.final_label') : t('sale_modal.total_label')}</p>
             <p className="text-lg font-bold text-immo-accent-green">{formatPriceCompact(finalPrice)}</p>
           </div>
 
@@ -448,7 +454,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
                 : 'bg-immo-status-orange-bg text-immo-status-orange'
             }`}
           >
-            {isReady ? '✓ Prêt à finaliser' : 'Informations manquantes'}
+            {isReady ? t('sale_modal.ready_to_finalize') : t('sale_modal.info_missing')}
           </div>
         </div>
       </div>

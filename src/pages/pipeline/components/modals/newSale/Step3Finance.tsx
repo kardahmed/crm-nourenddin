@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { formatPriceCompact } from '@/lib/constants'
@@ -15,11 +16,12 @@ interface Step3Props {
 }
 
 export function Step3Finance({ formData, grandTotal, discountAmount, finalPrice, defaultDelivery, onChange }: Step3Props) {
+  const { t } = useTranslation()
   return (
     <div className="space-y-6">
       {/* Discount */}
       <div className="rounded-xl border border-immo-border-default bg-immo-bg-primary p-4">
-        <h4 className="mb-3 text-xs font-semibold text-immo-text-primary">Remise commerciale</h4>
+        <h4 className="mb-3 text-xs font-semibold text-immo-text-primary">{t('sale_modal.discount_section')}</h4>
         <div className="flex items-center gap-4">
           <div className="flex gap-1 rounded-lg border border-immo-border-default p-0.5">
             <button
@@ -27,14 +29,14 @@ export function Step3Finance({ formData, grandTotal, discountAmount, finalPrice,
               onClick={() => onChange({ discountType: 'percentage', discountValue: formData.discountValue })}
               className={`rounded-md px-3 py-1 text-[11px] font-medium ${formData.discountType === 'percentage' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}
             >
-              Pourcentage (%)
+              {t('sale_modal.discount_percentage')}
             </button>
             <button
               type="button"
               onClick={() => onChange({ discountType: 'fixed', discountValue: formData.discountValue })}
               className={`rounded-md px-3 py-1 text-[11px] font-medium ${formData.discountType === 'fixed' ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted'}`}
             >
-              Montant fixe
+              {t('sale_modal.discount_fixed')}
             </button>
             {formData.discountType && (
               <button
@@ -70,12 +72,12 @@ export function Step3Finance({ formData, grandTotal, discountAmount, finalPrice,
 
       {/* Financing mode */}
       <div className="rounded-xl border border-immo-border-default bg-immo-bg-primary p-4">
-        <h4 className="mb-3 text-xs font-semibold text-immo-text-primary">Mode de financement</h4>
+        <h4 className="mb-3 text-xs font-semibold text-immo-text-primary">{t('sale_modal.financing_section')}</h4>
         <div className="space-y-2">
           {([
-            { value: 'comptant' as FinancingMode, label: 'Comptant', desc: 'Paiement intégral ou échelonné sans crédit' },
-            { value: 'credit' as FinancingMode, label: 'Crédit', desc: 'Financement via établissement bancaire ou employeur' },
-            { value: 'mixte' as FinancingMode, label: 'Mixte', desc: 'Apport personnel + crédit bancaire' },
+            { value: 'comptant' as FinancingMode, label: t('sale_modal.financing_cash'), desc: t('sale_modal.financing_cash_desc') },
+            { value: 'credit' as FinancingMode, label: t('sale_modal.financing_credit'), desc: t('sale_modal.financing_credit_desc') },
+            { value: 'mixte' as FinancingMode, label: t('sale_modal.financing_mixed'), desc: t('sale_modal.financing_mixed_desc') },
           ]).map((mode) => (
             <button
               key={mode.value}
@@ -103,14 +105,14 @@ export function Step3Finance({ formData, grandTotal, discountAmount, finalPrice,
 
       {/* Delivery date */}
       <div className="rounded-xl border border-immo-border-default bg-immo-bg-primary p-4">
-        <h4 className="mb-3 text-xs font-semibold text-immo-text-primary">Date de livraison prévue</h4>
+        <h4 className="mb-3 text-xs font-semibold text-immo-text-primary">{t('sale_modal.delivery_section')}</h4>
         <Input
           type="date"
           value={formData.deliveryDate || defaultDelivery}
           onChange={(e) => onChange({ deliveryDate: e.target.value })}
           className={`w-[200px] ${inputClass}`}
         />
-        <p className="mt-2 text-[11px] text-immo-text-muted">L'échéancier sera calculé jusqu'à cette date</p>
+        <p className="mt-2 text-[11px] text-immo-text-muted">{t('sale_modal.delivery_hint')}</p>
       </div>
     </div>
   )

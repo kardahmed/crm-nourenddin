@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Check, Search, LayoutGrid, List, Plus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,6 +21,7 @@ interface Step2Props {
 }
 
 export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAddAmenity, onRemoveAmenity }: Step2Props) {
+  const { t } = useTranslation()
   const [view, setView] = useState<'grid' | 'list'>('grid')
   const [subTab, setSubTab] = useState<'units' | 'parkings' | 'options'>('units')
   const [search, setSearch] = useState('')
@@ -57,26 +59,26 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold text-immo-text-primary">Sélection des biens</h3>
-        <p className="text-[11px] text-immo-text-muted">Sélectionnez au moins une unité pour continuer</p>
+        <h3 className="text-sm font-semibold text-immo-text-primary">{t('sale_modal.select_units_title')}</h3>
+        <p className="text-[11px] text-immo-text-muted">{t('sale_modal.select_units_subtitle')}</p>
       </div>
 
       {/* Sub-tabs */}
       <div className="flex items-center justify-between">
         <div className="flex gap-1 rounded-lg border border-immo-border-default p-0.5">
           {([
-            { key: 'units' as const, label: `Unités (${regularUnits.length})` },
-            { key: 'parkings' as const, label: `Parkings (${parkingUnits.length})` },
-            { key: 'options' as const, label: 'Options' },
-          ]).map((t) => (
+            { key: 'units' as const, label: t('sale_modal.tab_units', { count: regularUnits.length }) },
+            { key: 'parkings' as const, label: t('sale_modal.tab_parkings', { count: parkingUnits.length }) },
+            { key: 'options' as const, label: t('sale_modal.tab_options') },
+          ]).map((tab) => (
             <button
-              key={t.key}
-              onClick={() => setSubTab(t.key)}
+              key={tab.key}
+              onClick={() => setSubTab(tab.key)}
               className={`rounded-md px-3 py-1 text-[11px] font-medium transition-colors ${
-                subTab === t.key ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted hover:text-immo-text-secondary'
+                subTab === tab.key ? 'bg-immo-accent-green/10 text-immo-accent-green' : 'text-immo-text-muted hover:text-immo-text-secondary'
               }`}
             >
-              {t.label}
+              {tab.label}
             </button>
           ))}
         </div>
@@ -100,14 +102,14 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-immo-text-muted" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Code..." className={`h-8 w-[150px] pl-8 text-xs ${inputClass}`} />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('sale_modal.code_placeholder')} className={`h-8 w-[150px] pl-8 text-xs ${inputClass}`} />
             </div>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
               className="h-8 rounded-md border border-immo-border-default bg-immo-bg-primary px-2 text-xs text-immo-text-primary"
             >
-              <option value="all">Tous sous-types</option>
+              <option value="all">{t('sale_modal.all_subtypes')}</option>
               {subtypes.map((st) => (
                 <option key={st} value={st}>{UNIT_SUBTYPE_LABELS[st as UnitSubtype] ?? st}</option>
               ))}
@@ -117,19 +119,19 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
               onChange={(e) => setSortDir(e.target.value as 'asc' | 'desc')}
               className="h-8 rounded-md border border-immo-border-default bg-immo-bg-primary px-2 text-xs text-immo-text-primary"
             >
-              <option value="asc">Prix ↑</option>
-              <option value="desc">Prix ↓</option>
+              <option value="asc">{t('sale_modal.price_asc')}</option>
+              <option value="desc">{t('sale_modal.price_desc')}</option>
             </select>
             {selectedUnits.length > 0 && (
               <span className="ml-auto text-[11px] font-medium text-immo-accent-green">
-                {selectedUnits.length} sélectionnée(s)
+                {t('sale_modal.selected_count', { count: selectedUnits.length })}
               </span>
             )}
           </div>
 
           {/* Grid / List */}
           {filtered.length === 0 ? (
-            <div className="py-12 text-center text-xs text-immo-text-muted">Aucune unité disponible</div>
+            <div className="py-12 text-center text-xs text-immo-text-muted">{t('sale_modal.no_unit_available')}</div>
           ) : view === 'grid' ? (
             <div className="grid max-h-[320px] grid-cols-3 gap-2 overflow-y-auto">
               {filtered.map((u) => {
@@ -166,7 +168,7 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
                         <span className="text-[10px] text-immo-text-muted">{format(new Date(u.delivery_date), 'MM/yyyy')}</span>
                       )}
                       {isClose && (
-                        <span className="rounded bg-immo-accent-green-bg px-1 py-0.5 text-[9px] font-medium text-immo-accent-green">Proche</span>
+                        <span className="rounded bg-immo-accent-green-bg px-1 py-0.5 text-[9px] font-medium text-immo-accent-green">{t('sale_modal.delivery_close')}</span>
                       )}
                     </div>
                   </button>
@@ -179,7 +181,7 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
                 <thead>
                   <tr className="bg-immo-bg-card-hover">
                     <th className="w-8 px-2 py-2" />
-                    {['Code', 'Type', 'Étage', 'Surface', 'Prix', 'Livraison'].map((h) => (
+                    {[t('sale_modal.th_code'), t('sale_modal.th_type'), t('sale_modal.th_floor'), t('sale_modal.th_surface'), t('sale_modal.th_price'), t('sale_modal.th_delivery')].map((h) => (
                       <th key={h} className="px-2 py-2 text-left text-[10px] font-semibold uppercase text-immo-text-muted">{h}</th>
                     ))}
                   </tr>
@@ -217,7 +219,7 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
       {/* Options tab */}
       {subTab === 'options' && (
         <div className="space-y-4">
-          <p className="text-xs text-immo-text-muted">Aménagements et options supplémentaires à inclure dans la vente.</p>
+          <p className="text-xs text-immo-text-muted">{t('sale_modal.options_subtitle')}</p>
 
           {/* List existing amenities */}
           {amenities.length > 0 && (
@@ -241,7 +243,7 @@ export function Step2Biens({ units, selectedUnits, onToggleUnit, amenities, onAd
             onClick={() => setShowAddAmenity(true)}
             className="border border-dashed border-immo-border-default text-xs text-immo-text-secondary hover:border-immo-accent-green hover:text-immo-accent-green"
           >
-            <Plus className="mr-1.5 h-3.5 w-3.5" /> Ajouter un aménagement
+            <Plus className="mr-1.5 h-3.5 w-3.5" /> {t('sale_modal.add_amenity')}
           </Button>
 
           {/* Add amenity inline form */}

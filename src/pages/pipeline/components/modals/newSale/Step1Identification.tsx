@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Search, Building2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,6 +22,7 @@ interface Step1Props {
 }
 
 export function Step1Identification({ client, projects, selectedProjectId, onSelectProject }: Step1Props) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState('')
   const stage = PIPELINE_STAGES[client.pipeline_stage]
 
@@ -60,19 +62,19 @@ export function Step1Identification({ client, projects, selectedProjectId, onSel
 
       {/* Project selection */}
       <div>
-        <Label className={labelClass}>Choisir un projet *</Label>
+        <Label className={labelClass}>{t('sale_modal.choose_project')}</Label>
         <div className="relative mt-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-immo-text-muted" />
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un projet..."
+            placeholder={t('sale_modal.search_project')}
             className={`pl-9 ${inputClass}`}
           />
         </div>
         <div className="mt-3 max-h-[280px] space-y-2 overflow-y-auto">
           {filtered.length === 0 ? (
-            <p className="py-6 text-center text-xs text-immo-text-muted">Aucun projet actif</p>
+            <p className="py-6 text-center text-xs text-immo-text-muted">{t('sale_modal.no_active_project')}</p>
           ) : (
             filtered.map((p) => {
               const selected = selectedProjectId === p.id

@@ -25,7 +25,7 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
       {/* Banner */}
       <div className="flex items-center gap-3 rounded-xl border border-immo-accent-green/30 bg-immo-accent-green/5 px-4 py-3">
         <CheckCircle className="h-5 w-5 text-immo-accent-green" />
-        <p className="text-sm font-medium text-immo-accent-green">Prêt à finaliser</p>
+        <p className="text-sm font-medium text-immo-accent-green">{t('sale_modal.ready_banner')}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-6">
@@ -33,7 +33,7 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
         <div className="space-y-4">
           {/* Identification */}
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">Identification</p>
+            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">{t('sale_modal.section_id')}</p>
             <div className="rounded-lg border border-immo-border-default bg-immo-bg-primary p-3">
               <p className="text-sm text-immo-text-primary">{client.full_name}</p>
               <p className="text-xs text-immo-text-muted">{projectName}</p>
@@ -42,7 +42,7 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
 
           {/* Units */}
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">Biens sélectionnés</p>
+            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">{t('sale_modal.section_units_selected')}</p>
             <div className="rounded-lg border border-immo-border-default bg-immo-bg-primary">
               {selectedUnitsData.map((u, i) => (
                 <div key={u.id} className={`flex items-center justify-between px-3 py-2 ${i > 0 ? 'border-t border-immo-border-default' : ''}`}>
@@ -61,12 +61,12 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
               ))}
               {discountAmount > 0 && (
                 <div className="flex items-center justify-between border-t border-immo-border-default px-3 py-2">
-                  <span className="text-xs text-immo-status-orange">Remise</span>
+                  <span className="text-xs text-immo-status-orange">{t('sale_modal.discount_label')}</span>
                   <span className="text-xs text-immo-status-orange">-{formatPrice(discountAmount)}</span>
                 </div>
               )}
               <div className="flex items-center justify-between border-t border-immo-accent-green/30 bg-immo-accent-green/5 px-3 py-2.5">
-                <span className="text-xs font-semibold text-immo-accent-green">Total</span>
+                <span className="text-xs font-semibold text-immo-accent-green">{t('sale_modal.total_label')}</span>
                 <span className="text-sm font-bold text-immo-accent-green">{formatPrice(finalPrice)}</span>
               </div>
             </div>
@@ -75,14 +75,14 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
           {/* Schedule summary */}
           {schedule.length > 0 && (
             <div>
-              <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">Échéancier</p>
+              <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">{t('sale_modal.section_schedule')}</p>
               <div className="rounded-lg border border-immo-border-default bg-immo-bg-primary p-3 text-xs">
                 <div className="flex justify-between text-immo-text-muted">
-                  <span>Premier versement</span>
+                  <span>{t('sale_modal.first_installment')}</span>
                   <span className="text-immo-text-primary">{formatPriceCompact(schedule[0].amount)} — {format(new Date(schedule[0].date), 'dd/MM/yyyy')}</span>
                 </div>
                 <div className="mt-1 flex justify-between text-immo-text-muted">
-                  <span>Dernier versement</span>
+                  <span>{t('sale_modal.last_installment')}</span>
                   <span className="text-immo-text-primary">{formatPriceCompact(schedule[schedule.length - 1].amount)} — {format(new Date(schedule[schedule.length - 1].date), 'dd/MM/yyyy')}</span>
                 </div>
               </div>
@@ -93,23 +93,23 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
         {/* Right: Documents + Notes */}
         <div className="space-y-4">
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">Documents à générer</p>
+            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">{t('sale_modal.documents_to_generate')}</p>
             <div className="space-y-2">
               {[
-                { name: 'Contrat de Vente', required: true },
-                { name: 'Échéancier de Paiement', required: false },
-                { name: 'Bon de Réservation', required: false },
+                { name: t('sale_modal.doc_contract'), required: true },
+                { name: t('sale_modal.doc_schedule'), required: false },
+                { name: t('sale_modal.doc_receipt'), required: false },
               ].map((doc) => (
                 <div key={doc.name} className="flex items-center justify-between rounded-lg border border-immo-border-default bg-immo-bg-primary px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <FileText className="h-4 w-4 text-immo-accent-blue" />
                     <span className="text-xs text-immo-text-primary">{doc.name}</span>
                     {doc.required && (
-                      <span className="rounded bg-immo-status-orange-bg px-1.5 py-0.5 text-[9px] font-medium text-immo-status-orange">REQUIS</span>
+                      <span className="rounded bg-immo-status-orange-bg px-1.5 py-0.5 text-[9px] font-medium text-immo-status-orange">{t('sale_modal.doc_required')}</span>
                     )}
                   </div>
                   <div className="flex gap-1">
-                    <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-blue" title="Aperçu">
+                    <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-blue" title={t('sale_modal.doc_preview')}>
                       <Eye className="h-3.5 w-3.5" />
                     </button>
                     <button className="rounded p-1 text-immo-text-muted hover:bg-immo-bg-card-hover hover:text-immo-accent-green" title={t('action.download')}>
@@ -125,11 +125,11 @@ export function Step5Validation({ client, projectName, selectedUnitsData, amenit
           </div>
 
           <div>
-            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">Notes internes</p>
+            <p className="mb-2 text-[10px] font-semibold uppercase text-immo-text-muted">{t('sale_modal.internal_notes')}</p>
             <textarea
               value={internalNotes}
               onChange={(e) => onNotesChange(e.target.value)}
-              placeholder="Notes internes sur cette vente..."
+              placeholder={t('sale_modal.internal_notes_placeholder')}
               rows={4}
               className={`w-full resize-none rounded-lg border p-3 text-sm focus:outline-none focus:ring-1 focus:ring-immo-accent-green ${inputClass}`}
             />

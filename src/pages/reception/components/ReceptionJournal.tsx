@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { format, subDays, startOfDay } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -59,6 +60,7 @@ interface JournalRow {
  * sorted by time descending. Filters by date range and event type.
  */
 export function ReceptionJournal() {
+  const { t } = useTranslation()
   const [range, setRange] = useState<Range>('7d')
   const [kind, setKind] = useState<FilterKind>('all')
 
@@ -219,11 +221,11 @@ export function ReceptionJournal() {
 
       {/* Mini KPIs */}
       <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-        <MiniKpi label="Événements" value={kpi.total} />
-        <MiniKpi label="Leads créés" value={kpi.created} color={KIND_COLORS.client_created} />
-        <MiniKpi label="Assignations" value={kpi.reassigned} color={KIND_COLORS.reassignment} />
-        <MiniKpi label="Check-ins" value={kpi.checkins} color={KIND_COLORS.visit_confirmed} />
-        <MiniKpi label="Overrides" value={kpi.overrides} color="#FF9A1E" />
+        <MiniKpi label={t('reception_components.journal_kpi_events')} value={kpi.total} />
+        <MiniKpi label={t('reception_components.journal_kpi_leads')} value={kpi.created} color={KIND_COLORS.client_created} />
+        <MiniKpi label={t('reception_components.journal_kpi_assigns')} value={kpi.reassigned} color={KIND_COLORS.reassignment} />
+        <MiniKpi label={t('reception_components.journal_kpi_checkins')} value={kpi.checkins} color={KIND_COLORS.visit_confirmed} />
+        <MiniKpi label={t('reception_components.journal_kpi_overrides')} value={kpi.overrides} color="#FF9A1E" />
       </div>
 
       {/* Table */}
@@ -232,7 +234,7 @@ export function ReceptionJournal() {
       ) : rows.length === 0 ? (
         <EmptyState
           icon={<FileText className="h-8 w-8" />}
-          title="Aucun événement"
+          title={t('reception_components.journal_no_events')}
           description={`Rien n'a été enregistré sur la période "${RANGE_LABELS[range]}".`}
         />
       ) : (
@@ -241,8 +243,8 @@ export function ReceptionJournal() {
             <table className="w-full text-xs">
               <thead className="sticky top-0 z-10 bg-immo-bg-card-hover">
                 <tr className="text-left text-[10px] uppercase tracking-wider text-immo-text-muted">
-                  <th className="px-3 py-2 font-semibold">Quand</th>
-                  <th className="px-3 py-2 font-semibold">Événement</th>
+                  <th className="px-3 py-2 font-semibold">{t('reception_components.journal_th_when')}</th>
+                  <th className="px-3 py-2 font-semibold">{t('reception_components.journal_th_event')}</th>
                   <th className="px-3 py-2 font-semibold">Client</th>
                   <th className="px-3 py-2 font-semibold">Agent assigné</th>
                   <th className="px-3 py-2 font-semibold">Auteur</th>

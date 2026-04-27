@@ -70,40 +70,36 @@ export function AgentsPage() {
   // eslint-disable-next-line react-hooks/purity -- Date.now() inside an empty-deps useMemo is effectively a mount constant
   const nowMs = useMemo(() => Date.now(), [])
 
-  // Fetch agents with counts
+  // Fetch agents with counts. The agent_counts RPC aggregates in Postgres so
+  // we don't ship every clients/sales row to the browser just to count them.
   const { data: agents = [], isLoading } = useQuery({
     queryKey: ['agents-list'],
     queryFn: async () => {
-      const { data: users, error } = await supabase
-        .from('users')
-        .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url, permission_profile_id')
-        .order('first_name')
-      if (error) { handleSupabaseError(error); throw error }
-
-      const agentIds = (users ?? []).map(u => u.id)
-      if (agentIds.length === 0) return []
-
-      const [clientsRes, salesRes] = await Promise.all([
-        supabase.from('clients').select('agent_id'),
-        supabase.from('sales').select('agent_id').eq('status', 'active'),
+      const [usersRes, countsRes] = await Promise.all([
+        supabase
+          .from('users')
+          .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url, permission_profile_id')
+          .order('first_name'),
+        supabase.rpc('agent_counts'),
       ])
+      if (usersRes.error) { handleSupabaseError(usersRes.error); throw usersRes.error }
+      if (countsRes.error) { handleSupabaseError(countsRes.error); throw countsRes.error }
 
-      const clientCounts = new Map<string, number>()
-      const saleCounts = new Map<string, number>()
-      for (const c of (clientsRes.data ?? []) as Array<{ agent_id: string | null }>) {
-        if (c.agent_id) clientCounts.set(c.agent_id, (clientCounts.get(c.agent_id) ?? 0) + 1)
-      }
-      for (const s of (salesRes.data ?? []) as Array<{ agent_id: string }>) {
-        saleCounts.set(s.agent_id, (saleCounts.get(s.agent_id) ?? 0) + 1)
+      const counts = new Map<string, { clients_count: number; sales_count: number }>()
+      for (const row of (countsRes.data ?? []) as Array<{ agent_id: string; clients_count: number; sales_count: number }>) {
+        counts.set(row.agent_id, { clients_count: row.clients_count, sales_count: row.sales_count })
       }
 
-      return (users ?? []).map((u): AgentRow => ({
-        ...u,
-        role: u.role as UserRole,
-        status: (u.status ?? 'active') as AgentStatus,
-        clients_count: clientCounts.get(u.id) ?? 0,
-        sales_count: saleCounts.get(u.id) ?? 0,
-      }))
+      return (usersRes.data ?? []).map((u): AgentRow => {
+        const c = counts.get(u.id)
+        return {
+          ...u,
+          role: u.role as UserRole,
+          status: (u.status ?? 'active') as AgentStatus,
+          clients_count: c?.clients_count ?? 0,
+          sales_count: c?.sales_count ?? 0,
+        }
+      })
     },
   })
 

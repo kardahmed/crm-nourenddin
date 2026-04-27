@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Check, Sparkles, Star, UserCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
 import { useAuthStore } from '@/store/authStore'
@@ -33,6 +34,23 @@ const UNIT_TYPE_OPTIONS: UnitType[] = ['apartment', 'local', 'villa', 'parking']
 const PAYMENT_METHOD_OPTIONS: PaymentMethod[] = ['comptant', 'credit', 'mixte']
 
 const INTEREST_LEVEL_OPTIONS: InterestLevel[] = ['low', 'medium', 'high']
+
+// Algerian numbers come in many flavours (05XX..., +213..., spaces). We just
+// check there are at least 8 digits — DB uniqueness handles the canonical form.
+const phoneSchema = z
+  .string()
+  .trim()
+  .min(1, { message: 'Téléphone requis' })
+  .refine((v) => (v.match(/\d/g) ?? []).length >= 8, { message: 'Numéro invalide' })
+
+const contactSchema = z.object({
+  fullName: z.string().trim().min(2, { message: 'Nom trop court (min 2 caractères)' }),
+  phone: phoneSchema,
+  email: z.union([z.literal(''), z.string().trim().email({ message: 'Email invalide' })]),
+  budget: z.union([z.literal(''), z.string().regex(/^\d+$/, { message: 'Budget doit être un nombre positif' })]),
+  projectInterest: z.string().max(200, { message: 'Trop long (max 200 caractères)' }),
+  notes: z.string().max(2000, { message: 'Notes trop longues (max 2000 caractères)' }),
+})
 
 export function NewContactForm() {
   const { t } = useTranslation()
@@ -86,8 +104,11 @@ export function NewContactForm() {
 
   const create = useMutation({
     mutationFn: async () => {
-      if (!fullName.trim() || !phone.trim()) {
-        throw new Error(t('reception_form.name_phone_required'))
+      const parsed = contactSchema.safeParse({ fullName, phone, email, budget, projectInterest, notes })
+      if (!parsed.success) {
+        // Surface the first violation; the full list ships in the toast log
+        // for the receptionist while the rest live in dev console.
+        throw new Error(parsed.error.issues[0]?.message ?? t('reception_form.name_phone_required'))
       }
       if (!effectiveAgentId && settings?.mode !== 'manual') {
         throw new Error(t('reception_form.no_agent_available'))
@@ -101,9 +122,9 @@ export function NewContactForm() {
       }
 
       const payload: Record<string, unknown> = {
-        full_name: fullName.trim(),
-        phone: phone.trim(),
-        email: email.trim() || null,
+        full_name: parsed.data.fullName,
+        phone: parsed.data.phone,
+        email: parsed.data.email || null,
         source,
         pipeline_stage: 'accueil',
         agent_id: effectiveAgentId,

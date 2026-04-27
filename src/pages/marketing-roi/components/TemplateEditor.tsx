@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/store/authStore'
 import { blocksToHtml, sanitizeTextHtml, STARTER_BLOCKS } from '@/lib/blocksToHtml'
+import { randomToken } from '@/lib/utils'
 import { validateFile } from '@/lib/fileValidation'
 import type { EmailBlock } from '@/lib/blocksToHtml'
 import { useSaveTemplate } from '@/hooks/useEmailMarketing'
@@ -26,7 +27,7 @@ const BLOCK_TYPES = [
 ]
 
 function newBlock(type: EmailBlock['type']): EmailBlock {
-  const id = `b_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`
+  const id = `b_${Date.now()}_${randomToken(4)}`
   switch (type) {
     case 'text': return { id, type, content: { text: '<p>Votre texte ici</p>' }, styles: {} }
     case 'image': return { id, type, content: { src: '', alt: '' }, styles: { width: '100%', borderRadius: '8px' } }
@@ -107,7 +108,7 @@ export function TemplateEditor({ initialTemplate, onClose }: Props) {
     const check = await validateFile(file, { maxSizeMB: 5, allowedMimes: ['image/*'] })
     if (!check.ok) { toast.error(`Image refusée: ${check.reason}`); return }
     // eslint-disable-next-line react-hooks/purity -- inside async upload handler, not render
-    const path = `email/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${check.detected.ext}`
+    const path = `email/${Date.now()}-${randomToken(6)}.${check.detected.ext}`
     const { error } = await supabase.storage
       .from('email-assets')
       .upload(path, file, { contentType: check.detected.mime })

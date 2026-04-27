@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Phone,
   MessageCircle,
@@ -30,6 +31,7 @@ function daysSince(date: string | null): number {
 }
 
 export function PrioritySlider({ clients, onAction }: PrioritySliderProps) {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   if (clients.length === 0) return null
 
@@ -77,12 +79,12 @@ export function PrioritySlider({ clients, onAction }: PrioritySliderProps) {
               {/* Quick actions */}
               <div className="flex gap-1">
                 {[
-                  { icon: Phone, action: 'call', title: 'Appeler' },
-                  { icon: MessageCircle, action: 'whatsapp', title: 'WhatsApp' },
-                  { icon: Calendar, action: 'visit', title: 'Planifier visite' },
-                  { icon: Mail, action: 'email', title: 'Email' },
-                  { icon: StickyNote, action: 'note', title: 'Note' },
-                  { icon: Eye, action: 'view', title: 'Voir fiche' },
+                  { icon: Phone, action: 'call', title: t('pipeline_components.call') },
+                  { icon: MessageCircle, action: 'whatsapp', title: t('quick_actions.whatsapp') },
+                  { icon: Calendar, action: 'visit', title: t('pipeline_components.schedule_visit') },
+                  { icon: Mail, action: 'email', title: t('quick_actions.email') },
+                  { icon: StickyNote, action: 'note', title: t('quick_actions.note') },
+                  { icon: Eye, action: 'view', title: t('pipeline_components.view_card') },
                 ].map(({ icon: Icon, action, title }) => (
                   <button
                     key={action}

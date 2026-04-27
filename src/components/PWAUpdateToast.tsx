@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { RefreshCw, CheckCircle2 } from 'lucide-react'
 import { useRegisterSW } from 'virtual:pwa-register/react'
@@ -11,31 +11,42 @@ import { useRegisterSW } from 'virtual:pwa-register/react'
  * Mounted once at the app root. Nothing to render.
  */
 export function PWAUpdateToast() {
+  const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null)
+
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     offlineReady: [offlineReady, setOfflineReady],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_swUrl, registration) {
-      if (!registration) return
-
-      // Check for updates every hour for long-lived sessions
-      setInterval(() => {
-        registration.update().catch(() => {})
-      }, 60 * 60 * 1000)
-
-      // Also check when the tab becomes visible (user comes back after
-      // switching to another app). This way a fresh deploy is picked up
-      // within seconds instead of waiting for the hourly poll.
-      const reg = registration
-      function onVisibility() {
-        if (document.visibilityState === 'visible') {
-          reg.update().catch(() => {})
-        }
-      }
-      document.addEventListener('visibilitychange', onVisibility)
+    onRegisteredSW(_swUrl, reg) {
+      if (reg) setRegistration(reg)
     },
   })
+
+  // Poll for SW updates hourly + on tab focus. Cleans up on unmount so we
+  // never leak intervals or event listeners across remounts/hot-reloads.
+  useEffect(() => {
+    if (!registration) return
+    // SW update poll failures are non-fatal (network blip, etc); we don't
+    // toast the user but we keep the trace in dev so we can diagnose
+    // sticky update loops.
+    const onUpdateError = (err: unknown) => {
+      if (import.meta.env.DEV) console.warn('[PWA] update poll failed', err)
+    }
+    const intervalId = window.setInterval(() => {
+      registration.update().catch(onUpdateError)
+    }, 60 * 60 * 1000)
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        registration.update().catch(onUpdateError)
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.clearInterval(intervalId)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [registration])
 
   useEffect(() => {
     if (offlineReady) {

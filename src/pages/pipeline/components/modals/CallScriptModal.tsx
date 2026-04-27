@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { X, Phone, Clock, Sparkles, CheckCircle, Lightbulb, ArrowRight, Calendar, AlertTriangle, MessageCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
+import { formatLocalDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { PIPELINE_STAGES } from '@/types'
@@ -298,7 +299,8 @@ export function CallScriptModal({
       if (fullNotes) {
         const { data: currentClient } = await supabase.from('clients').select('notes').eq('id', clientId).single()
         const existingNotes = (currentClient as { notes: string | null } | null)?.notes ?? ''
-        clientUpdate.notes = existingNotes ? `${existingNotes}\n\n[Appel ${new Date().toLocaleDateString('fr')}] ${fullNotes}` : `[Appel ${new Date().toLocaleDateString('fr')}] ${fullNotes}`
+        const stamp = formatLocalDate(new Date())
+        clientUpdate.notes = existingNotes ? `${existingNotes}\n\n[Appel ${stamp}] ${fullNotes}` : `[Appel ${stamp}] ${fullNotes}`
       }
 
       if (Object.keys(clientUpdate).length > 0) {

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { PIPELINE_STAGES } from '@/types'
 import type { StageStat } from '@/hooks/usePipelineStats'
 
@@ -6,12 +7,13 @@ interface StageProgressProps {
 }
 
 export function StageProgress({ stats }: StageProgressProps) {
+  const { t } = useTranslation()
   const maxCount = Math.max(...stats.map(s => s.count), 1)
 
   return (
     <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-4">
       <h3 className="mb-4 text-sm font-semibold text-immo-text-primary">
-        Répartition par étape
+        {t('pipeline_components.stage_distribution')}
       </h3>
       <div className="space-y-2.5">
         {stats.map((s) => {

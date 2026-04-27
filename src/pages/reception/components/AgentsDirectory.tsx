@@ -1,4 +1,5 @@
 import { Phone, User } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { formatDistanceToNow } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -17,6 +18,7 @@ interface AgentContact {
 }
 
 export function AgentsDirectory() {
+  const { t } = useTranslation()
   const { data: settings } = useReceptionSettings()
   const { data: loads = [] } = useAgentLoads(settings?.maxLeadsPerDay ?? 10)
 
@@ -46,7 +48,7 @@ export function AgentsDirectory() {
   return (
     <div className="space-y-2">
       <p className="mb-2 text-[11px] text-immo-text-muted">
-        Annuaire temps réel de l'équipe commerciale. Les compteurs sont utiles pour transférer un appel ou assigner un walk-in sans passer par la file d'attente.
+        {t('reception_components.directory_subtitle')}
       </p>
 
       {rows.map(a => {
@@ -84,7 +86,7 @@ export function AgentsDirectory() {
                 )}
                 {a.load?.at_cap && (
                   <span className="rounded-full bg-immo-status-red/10 px-2 py-0.5 text-[9px] font-semibold text-immo-status-red">
-                    Plafond atteint
+                    {t('reception_components.cap_reached')}
                   </span>
                 )}
               </div>
@@ -110,7 +112,7 @@ export function AgentsDirectory() {
                 {a.load?.leads_today ?? 0}
               </div>
               <div className="text-[9px] uppercase tracking-wide text-immo-text-muted">
-                leads aujourd'hui
+                {t('reception_components.leads_today')}
               </div>
               <div className="mt-0.5 text-[10px] text-immo-text-muted">
                 {a.load?.active_clients ?? 0} clients actifs
@@ -123,7 +125,7 @@ export function AgentsDirectory() {
       {rows.length === 0 && (
         <div className="rounded-xl border border-dashed border-immo-border-default p-10 text-center">
           <User className="mx-auto mb-3 h-8 w-8 text-immo-text-muted/50" />
-          <p className="text-sm text-immo-text-muted">Aucun agent actif.</p>
+          <p className="text-sm text-immo-text-muted">{t('reception_components.no_active_agent')}</p>
         </div>
       )}
     </div>

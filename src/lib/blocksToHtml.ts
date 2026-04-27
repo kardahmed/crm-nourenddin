@@ -1,6 +1,8 @@
 // ─── Convert email template blocks (JSON) to responsive HTML email ──────────
 // Produces Outlook-safe, table-based HTML with inline styles.
 
+import DOMPurify from 'dompurify'
+
 export interface EmailBlock {
   id: string
   type: 'text' | 'image' | 'button' | 'columns' | 'divider' | 'spacer'
@@ -14,28 +16,25 @@ function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 }
 
-// Minimal whitelist HTML sanitiser for text block content. Allows only safe
-// formatting tags and strips on*-handlers + javascript:/data: URLs.
-const ALLOWED_TEXT_TAGS = new Set([
-  'p','br','h1','h2','h3','h4','h5','h6','strong','em','b','i','u','a',
-  'span','div','ul','ol','li','hr','blockquote',
-])
+// Whitelist HTML sanitiser for text block content. Uses DOMPurify which is
+// resilient to mutation XSS, entity-encoded protocols, nested tag tricks, and
+// other bypasses that regex-based sanitisers miss.
+const ALLOWED_TEXT_TAGS = [
+  'p', 'br', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'strong', 'em', 'b', 'i', 'u', 'a',
+  'span', 'div', 'ul', 'ol', 'li', 'hr', 'blockquote',
+]
 
-function stripDangerousAttrs(tag: string): string {
-  let t = tag.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '')
-  t = t.replace(/\s+(href|src)\s*=\s*"(\s*(?:javascript|data|vbscript):[^"]*)"/gi, ' $1="#"')
-  t = t.replace(/\s+(href|src)\s*=\s*'(\s*(?:javascript|data|vbscript):[^']*)'/gi, " $1='#'")
-  return t
-}
+const ALLOWED_TEXT_ATTRS = ['href', 'style', 'target', 'rel', 'title']
 
 export function sanitizeTextHtml(input: string): string {
-  let html = String(input ?? '')
-  html = html.replace(/<(script|style|iframe|object|embed|svg|math|link|meta|form|input|textarea|button)\b[^>]*>[\s\S]*?<\/\1\s*>/gi, '')
-  html = html.replace(/<(script|style|iframe|object|embed|svg|math|link|meta|form|input|textarea|button)\b[^>]*\/?>/gi, '')
-  html = html.replace(/<\/?([a-z][a-z0-9]*)\b[^>]*>/gi, (match, tagName: string) => {
-    return ALLOWED_TEXT_TAGS.has(tagName.toLowerCase()) ? stripDangerousAttrs(match) : ''
+  return DOMPurify.sanitize(String(input ?? ''), {
+    ALLOWED_TAGS: ALLOWED_TEXT_TAGS,
+    ALLOWED_ATTR: ALLOWED_TEXT_ATTRS,
+    ALLOWED_URI_REGEXP: /^(?:https?:|mailto:|tel:|#|\/)/i,
+    FORBID_TAGS: ['script', 'style', 'iframe', 'object', 'embed', 'svg', 'math', 'link', 'meta', 'form', 'input', 'textarea', 'button'],
+    FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover', 'onfocus', 'onblur', 'onchange', 'onsubmit'],
+    KEEP_CONTENT: true,
   })
-  return html
 }
 
 // CSS value validators: block expression(), url(), javascript:, @import, and

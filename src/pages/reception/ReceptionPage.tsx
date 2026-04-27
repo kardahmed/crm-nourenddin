@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { UserPlus, CalendarCheck, Users, Inbox, Scale, FileText } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -15,6 +16,7 @@ import { usePermissions } from '@/hooks/usePermissions'
 type TabKey = 'new' | 'visits' | 'unassigned' | 'directory' | 'journal' | 'equity'
 
 export function ReceptionPage() {
+  const { t } = useTranslation()
   const [tab, setTab] = useState<TabKey>('new')
   const { data: settings } = useReceptionSettings()
   const { isAdmin } = usePermissions()
@@ -58,17 +60,17 @@ export function ReceptionPage() {
 
   const TABS = useMemo(() => {
     const base = [
-      { key: 'new' as TabKey, label: 'Nouveau contact', icon: UserPlus },
-      { key: 'visits' as TabKey, label: 'Visites du jour', icon: CalendarCheck, count: metrics?.visitsToday },
-      { key: 'unassigned' as TabKey, label: 'Non-assignés', icon: Inbox, count: metrics?.unassigned },
-      { key: 'directory' as TabKey, label: 'Agents', icon: Users, count: metrics?.activeAgents },
+      { key: 'new' as TabKey, label: t('reception_page.tab_new'), icon: UserPlus },
+      { key: 'visits' as TabKey, label: t('reception_page.tab_visits'), icon: CalendarCheck, count: metrics?.visitsToday },
+      { key: 'unassigned' as TabKey, label: t('reception_page.tab_unassigned'), icon: Inbox, count: metrics?.unassigned },
+      { key: 'directory' as TabKey, label: t('reception_page.tab_directory'), icon: Users, count: metrics?.activeAgents },
     ]
     if (isAdmin) {
-      base.push({ key: 'journal' as TabKey, label: 'Journal', icon: FileText })
-      base.push({ key: 'equity' as TabKey, label: 'Équité', icon: Scale })
+      base.push({ key: 'journal' as TabKey, label: t('reception_page.tab_journal'), icon: FileText })
+      base.push({ key: 'equity' as TabKey, label: t('reception_page.tab_equity'), icon: Scale })
     }
     return base
-  }, [metrics, isAdmin])
+  }, [metrics, isAdmin, t])
 
   if (isLoading) return <LoadingSpinner size="lg" className="h-96" />
 
@@ -77,19 +79,19 @@ export function ReceptionPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-immo-text-primary">Réception</h1>
+          <h1 className="text-xl font-bold text-immo-text-primary">{t('reception_page.title')}</h1>
           <p className="text-sm text-immo-text-muted">
-            Accueil des clients, saisie des nouveaux leads, répartition vers les agents.
+            {t('reception_page.subtitle')}
           </p>
         </div>
         {settings && (
           <div className="rounded-lg border border-immo-border-default bg-immo-bg-card px-3 py-2 text-[11px]">
-            <span className="text-immo-text-muted">Mode d'attribution:</span>{' '}
+            <span className="text-immo-text-muted">{t('reception_page.assignment_mode')}</span>{' '}
             <span className="font-semibold text-immo-accent-green">
               {MODE_LABELS[settings.mode]}
             </span>
             <span className="ml-2 text-immo-text-muted">
-              (plafond {settings.maxLeadsPerDay}/jour par agent)
+              {t('reception_page.cap_per_day', { count: settings.maxLeadsPerDay })}
             </span>
           </div>
         )}
@@ -98,25 +100,25 @@ export function ReceptionPage() {
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <KPICard
-          label="Leads aujourd'hui"
+          label={t('reception_page.kpi_leads_today')}
           value={metrics?.leadsToday ?? 0}
           accent="green"
           icon={<UserPlus className="h-4 w-4 text-immo-accent-green" />}
         />
         <KPICard
-          label="Visites prévues"
+          label={t('reception_page.kpi_visits_today')}
           value={metrics?.visitsToday ?? 0}
           accent="blue"
           icon={<CalendarCheck className="h-4 w-4 text-immo-accent-blue" />}
         />
         <KPICard
-          label="Non-assignés"
+          label={t('reception_page.kpi_unassigned')}
           value={metrics?.unassigned ?? 0}
           accent={metrics && metrics.unassigned > 0 ? 'orange' : 'green'}
           icon={<Inbox className="h-4 w-4 text-immo-status-orange" />}
         />
         <KPICard
-          label="Agents actifs"
+          label={t('reception_page.kpi_active_agents')}
           value={metrics?.activeAgents ?? 0}
           accent="blue"
           icon={<Users className="h-4 w-4 text-immo-accent-blue" />}

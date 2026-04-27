@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
+import { randomToken } from '@/lib/utils'
 import { useProjects } from '@/hooks/useProjects'
 import { usePermissions } from '@/hooks/usePermissions'
 import { KPICard, StatusBadge, LoadingSpinner } from '@/components/common'
@@ -88,7 +89,7 @@ export function ProjectDetailPage() {
       return null
     }
     // eslint-disable-next-line react-hooks/purity -- inside async upload handler, not render
-    const path = `projects/${projectId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+    const path = `projects/${projectId}/${Date.now()}-${randomToken(8)}.${ext}`
     const { error } = await supabase.storage.from('landing-assets').upload(path, file, { upsert: false })
     if (error) {
       toast.error(t('project_detail.upload_error', { message: error.message }))

@@ -7,6 +7,7 @@ import { KPICard, LoadingSpinner, Modal } from '@/components/common'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { formatPriceCompact } from '@/lib/constants'
+import { formatLocalNumber } from '@/lib/utils'
 import { format } from 'date-fns'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts'
 import toast from 'react-hot-toast'
@@ -187,7 +188,7 @@ export function ExpensesTab() {
                   <td className="px-4 py-3 text-xs text-immo-text-secondary">{e.subcategory ?? '-'}</td>
                   <td className="px-4 py-3 text-xs text-immo-text-muted">{e.projects?.name ?? '-'}</td>
                   <td className="px-4 py-3 text-xs text-immo-text-muted">{e.marketing_campaigns?.name ?? '-'}</td>
-                  <td className="px-4 py-3 text-sm font-semibold text-immo-text-primary">{e.amount.toLocaleString('fr')} DA</td>
+                  <td className="px-4 py-3 text-sm font-semibold text-immo-text-primary">{formatLocalNumber(e.amount)} DA</td>
                   <td className="px-4 py-3">
                     <button onClick={() => deleteExpense.mutate(e.id)} className="text-immo-text-muted hover:text-immo-status-red"><Trash2 className="h-3.5 w-3.5" /></button>
                   </td>

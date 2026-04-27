@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { SOURCE_LABELS } from '@/types'
 import type { ClientSource } from '@/types'
@@ -18,6 +19,7 @@ interface Props {
 }
 
 export function SourceStats({ clients }: Props) {
+  const { t } = useTranslation()
   const stats = useMemo(() => {
     const bySource = new Map<string, { total: number; conversions: number; sales: number }>()
 
@@ -47,7 +49,7 @@ export function SourceStats({ clients }: Props) {
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
         {/* Pie chart */}
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-4">
-          <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">Leads par source</h3>
+          <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">{t('source_stats.leads_by_source')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={75} dataKey="value" paddingAngle={2}>
@@ -68,7 +70,7 @@ export function SourceStats({ clients }: Props) {
 
         {/* Conversion by source */}
         <div className="rounded-xl border border-immo-border-default bg-immo-bg-card p-4">
-          <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">Taux de conversion par source</h3>
+          <h3 className="mb-3 text-sm font-semibold text-immo-text-primary">{t('source_stats.conversion_by_source')}</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={stats.slice(0, 6)} layout="vertical">
               <CartesianGrid strokeDasharray="3 3" stroke="#E3E8EF" horizontal={false} />
@@ -86,9 +88,9 @@ export function SourceStats({ clients }: Props) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-immo-border-default bg-immo-bg-primary">
-              <th className="px-4 py-2 text-left text-[11px] font-medium text-immo-text-muted">Source</th>
-              <th className="px-4 py-2 text-right text-[11px] font-medium text-immo-text-muted">Leads</th>
-              <th className="px-4 py-2 text-right text-[11px] font-medium text-immo-text-muted">Conversions</th>
+              <th className="px-4 py-2 text-left text-[11px] font-medium text-immo-text-muted">{t('source_stats.th_source')}</th>
+              <th className="px-4 py-2 text-right text-[11px] font-medium text-immo-text-muted">{t('source_stats.th_leads')}</th>
+              <th className="px-4 py-2 text-right text-[11px] font-medium text-immo-text-muted">{t('source_stats.th_conversions')}</th>
               <th className="px-4 py-2 text-right text-[11px] font-medium text-immo-text-muted">Ventes</th>
               <th className="px-4 py-2 text-right text-[11px] font-medium text-immo-text-muted">Taux</th>
             </tr>

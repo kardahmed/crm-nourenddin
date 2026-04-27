@@ -23,6 +23,7 @@ import { exportToCsv } from '@/lib/exportCsv'
 import { usePipelineStats } from '@/hooks/usePipelineStats'
 import type { PipelineAlert } from '@/hooks/usePipelineStats'
 import { usePermissions } from '@/hooks/usePermissions'
+import { useDebounce } from '@/hooks/useDebounce'
 import {
   KPICard,
   SearchInput,
@@ -115,6 +116,7 @@ export function PipelinePage() {
 
   const [pipelineTab, setPipelineTab] = useState<'pipeline' | 'analytics'>('pipeline')
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 250)
   const [projectFilter, setProjectFilter] = useState('all')
   const [view, setView] = useState<ViewMode>('kanban')
   const [compact, setCompact] = useState(() => localStorage.getItem('pipeline-compact') === 'true')
@@ -132,8 +134,8 @@ export function PipelinePage() {
   const filtered = useMemo(() => {
     return clients.filter((c) => {
       if (alertFilter && !alertFilter.includes(c.id)) return false
-      if (search) {
-        const q = search.toLowerCase()
+      if (debouncedSearch) {
+        const q = debouncedSearch.toLowerCase()
         if (!c.full_name.toLowerCase().includes(q) && !c.phone.toLowerCase().includes(q)) return false
       }
       // Advanced filters
@@ -146,7 +148,7 @@ export function PipelinePage() {
       if (advFilters.budgetMax && (c.confirmed_budget ?? Infinity) > Number(advFilters.budgetMax)) return false
       return true
     })
-  }, [clients, search, alertFilter, advFilters])
+  }, [clients, debouncedSearch, alertFilter, advFilters])
 
   // Group by stage
   const clientsByStage = useMemo(() => {

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { format, subDays, startOfDay, eachDayOfInterval } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -69,6 +70,7 @@ interface ReceptionSummary {
  *   3. Conversion context (leads → sales closed per agent to weigh equity vs. perf)
  */
 export function EquityDashboard() {
+  const { t } = useTranslation()
   const [range, setRange] = useState<Range>('30d')
 
   const { data, isLoading } = useQuery({
@@ -288,17 +290,17 @@ export function EquityDashboard() {
 
       {/* High-level numbers */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <StatTile icon={TrendingUp} label="Leads attribués" value={summary.total} />
-        <StatTile icon={Users} label="Agents concernés" value={summary.agents.length} />
+        <StatTile icon={TrendingUp} label={t('reception_components.eq_leads_assigned')} value={summary.total} />
+        <StatTile icon={Users} label={t('reception_components.eq_agents_concerned')} value={summary.agents.length} />
         <StatTile
           icon={Scale}
-          label="Moyenne / agent"
+          label={t('reception_components.eq_avg_per_agent')}
           value={summary.mean.toFixed(1)}
           hint={`σ ${summary.stddev.toFixed(1)}`}
         />
         <StatTile
           icon={Shuffle}
-          label="Overrides détectés"
+          label={t('reception_components.eq_overrides_detected')}
           value={summary.receptions.reduce((s, r) => s + r.overrides, 0)}
           hint="hors mode manuel"
         />
@@ -443,11 +445,11 @@ export function EquityDashboard() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-immo-border-default text-left text-[10px] uppercase tracking-wide text-immo-text-muted">
-                  <th className="py-2 font-medium">Réceptionniste</th>
-                  <th className="py-2 font-medium">Attribs</th>
-                  <th className="py-2 font-medium">Overrides</th>
+                  <th className="py-2 font-medium">{t('reception_components.eq_th_receptionist')}</th>
+                  <th className="py-2 font-medium">{t('reception_components.eq_th_attribs')}</th>
+                  <th className="py-2 font-medium">{t('reception_components.eq_th_overrides')}</th>
                   <th className="py-2 font-medium">% override</th>
-                  <th className="py-2 font-medium">Agent favori</th>
+                  <th className="py-2 font-medium">{t('reception_components.eq_th_favorite_agent')}</th>
                 </tr>
               </thead>
               <tbody>

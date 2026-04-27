@@ -724,6 +724,26 @@ export const ar = {
     tab_email_templates: 'قوالب البريد',
   },
 
+  pipeline_components: {
+    stage_distribution: 'التوزيع حسب المرحلة',
+    no_timeline: 'لا يوجد نشاط',
+    sale_step_reservation: 'الحجز',
+    sale_step_signature: 'التوقيع',
+    sale_step_payment: 'الدفع',
+    sale_step_delivery: 'التسليم',
+    priority_normal: 'عادي',
+    priority_priority: 'ذو أولوية',
+    priority_urgent: 'عاجل',
+    sign_here: 'وقّع في المنطقة أدناه',
+    clear: 'مسح',
+    save: 'حفظ',
+    schedule_visit: 'جدولة زيارة',
+    view_card: 'عرض البطاقة',
+    call: 'اتصال',
+    cancel: 'إلغاء',
+    confirm_signature: 'تأكيد التوقيع',
+  },
+
   reception_page: {
     title: 'الاستقبال',
     subtitle: 'استقبال العملاء، إضافة عملاء محتملين جدد، التوزيع على الوكلاء.',

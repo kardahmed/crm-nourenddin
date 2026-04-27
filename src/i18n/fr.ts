@@ -744,6 +744,26 @@ export const fr = {
     tab_email_templates: 'Templates Email',
   },
 
+  pipeline_components: {
+    stage_distribution: 'Répartition par étape',
+    no_timeline: 'Aucune activité',
+    sale_step_reservation: 'Réservation',
+    sale_step_signature: 'Signature',
+    sale_step_payment: 'Paiement',
+    sale_step_delivery: 'Livraison',
+    priority_normal: 'Normal',
+    priority_priority: 'Prioritaire',
+    priority_urgent: 'Urgent',
+    sign_here: 'Signez dans la zone ci-dessous',
+    clear: 'Effacer',
+    save: 'Enregistrer',
+    schedule_visit: 'Planifier visite',
+    view_card: 'Voir fiche',
+    call: 'Appeler',
+    cancel: 'Annuler',
+    confirm_signature: 'Valider la signature',
+  },
+
   reception_page: {
     title: 'Réception',
     subtitle: 'Accueil des clients, saisie des nouveaux leads, répartition vers les agents.',

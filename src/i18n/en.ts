@@ -735,6 +735,26 @@ export const en = {
     tab_email_templates: 'Email templates',
   },
 
+  pipeline_components: {
+    stage_distribution: 'Stage distribution',
+    no_timeline: 'No activity',
+    sale_step_reservation: 'Reservation',
+    sale_step_signature: 'Signature',
+    sale_step_payment: 'Payment',
+    sale_step_delivery: 'Delivery',
+    priority_normal: 'Normal',
+    priority_priority: 'Priority',
+    priority_urgent: 'Urgent',
+    sign_here: 'Sign in the area below',
+    clear: 'Clear',
+    save: 'Save',
+    schedule_visit: 'Schedule visit',
+    view_card: 'View card',
+    call: 'Call',
+    cancel: 'Cancel',
+    confirm_signature: 'Confirm signature',
+  },
+
   reception_page: {
     title: 'Reception',
     subtitle: 'Welcome clients, capture new leads, dispatch to agents.',

@@ -792,6 +792,31 @@ export const fr = {
     analytics_th_conversion: 'Conversion',
   },
 
+  // Settings — Features section
+  settings_features: {
+    title: 'Fonctionnalités',
+    subtitle: 'Activez ou désactivez les modules selon les besoins de votre agence ({{active}}/{{total}} actifs)',
+    save: 'Enregistrer',
+    saving: 'Enregistrement...',
+    saved_toast: 'Fonctionnalités mises à jour',
+    payment_tracking: 'Suivi des échéanciers',
+    payment_tracking_desc: 'Gestion des paiements, échéanciers, relances de retard',
+    charges: 'Charges & frais',
+    charges_desc: 'Frais notaire, agence, enregistrement par dossier',
+    documents: 'Génération de documents',
+    documents_desc: 'Contrats, échéanciers, bons de réservation en PDF',
+    goals: 'Objectifs de vente',
+    goals_desc: 'Objectifs mensuels/trimestriels par agent',
+    landing_pages: 'Pages de capture',
+    landing_pages_desc: 'Landing pages pour vos campagnes publicitaires',
+    ai_scripts: 'Scripts d\'appel IA',
+    ai_scripts_desc: 'Génération de scripts personnalisés par intelligence artificielle',
+    whatsapp: 'WhatsApp Business',
+    whatsapp_desc: 'Envoi automatique de messages WhatsApp aux clients',
+    auto_tasks: 'Tâches automatiques',
+    auto_tasks_desc: 'Génération et suivi automatique des tâches par étape',
+  },
+
   // Marketing analytics tab
   marketing_analytics: {
     cpl: 'Coût par lead',

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -191,6 +192,7 @@ function StageColumn({ stage, clients, toCardClient, urgentDays, compact, select
   activeId: string | null
   onAddClient: (stage: PipelineStage) => void
 }) {
+  const { t } = useTranslation()
   const { setNodeRef, isOver } = useDroppable({ id: stage })
   const meta = PIPELINE_STAGES[stage]
 
@@ -218,7 +220,7 @@ function StageColumn({ stage, clients, toCardClient, urgentDays, compact, select
 
       <div className="flex-1 space-y-2 overflow-y-auto p-2" style={{ maxHeight: '60vh' }}>
         {clients.length === 0 ? (
-          <div className="py-8 text-center text-[11px] text-immo-text-muted">Aucun client</div>
+          <div className="py-8 text-center text-[11px] text-immo-text-muted">{t('common.no_client')}</div>
         ) : (
           clients.map(client => (
             <DraggableCard

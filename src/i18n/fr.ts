@@ -715,12 +715,32 @@ export const fr = {
   },
 
   // Quick actions
+  // Kanban card
+  kanban_card: {
+    day_suffix: 'j',
+    days_in_stage: '{{count}}j',
+    whatsapp_open: 'Ouvrir WhatsApp',
+  },
+
+  // Cards view sort
+  cards_view: {
+    sort_recent: 'Récent',
+    sort_oldest: 'Ancien',
+    sort_priority: 'Prioritaire',
+  },
+
   quick_actions: {
-    call: 'Appel',
+    call: 'Appeler',
+    whatsapp_call: 'Appel WA',
+    whatsapp_message: 'Message WA',
     whatsapp: 'WhatsApp',
     sms: 'SMS',
     email: 'Email',
+    ai_task: 'Suggestions AI',
     visit: 'Visite',
+    reservation: 'Réservation',
+    sale: 'Vente',
+    reassign: 'Réassigner',
     note: 'Note',
   },
 

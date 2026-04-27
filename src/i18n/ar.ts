@@ -697,12 +697,30 @@ export const ar = {
     toast_checked_in: 'تم استقبال العميل — تم إشعار الوكيل',
   },
 
+  kanban_card: {
+    day_suffix: 'ي',
+    days_in_stage: '{{count}}ي',
+    whatsapp_open: 'فتح واتساب',
+  },
+
+  cards_view: {
+    sort_recent: 'الأحدث',
+    sort_oldest: 'الأقدم',
+    sort_priority: 'ذو أولوية',
+  },
+
   quick_actions: {
-    call: 'مكالمة',
+    call: 'اتصال',
+    whatsapp_call: 'مكالمة واتساب',
+    whatsapp_message: 'رسالة واتساب',
     whatsapp: 'واتساب',
     sms: 'رسالة نصية',
     email: 'بريد إلكتروني',
+    ai_task: 'اقتراحات الذكاء',
     visit: 'زيارة',
+    reservation: 'حجز',
+    sale: 'بيع',
+    reassign: 'إعادة تعيين',
     note: 'ملاحظة',
   },
 

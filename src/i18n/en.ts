@@ -708,12 +708,30 @@ export const en = {
   },
 
   // Quick actions
+  kanban_card: {
+    day_suffix: 'd',
+    days_in_stage: '{{count}}d',
+    whatsapp_open: 'Open WhatsApp',
+  },
+
+  cards_view: {
+    sort_recent: 'Recent',
+    sort_oldest: 'Oldest',
+    sort_priority: 'Priority',
+  },
+
   quick_actions: {
     call: 'Call',
+    whatsapp_call: 'WA call',
+    whatsapp_message: 'WA message',
     whatsapp: 'WhatsApp',
     sms: 'SMS',
     email: 'Email',
+    ai_task: 'AI suggestions',
     visit: 'Visit',
+    reservation: 'Reservation',
+    sale: 'Sale',
+    reassign: 'Reassign',
     note: 'Note',
   },
 

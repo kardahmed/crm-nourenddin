@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Phone, PhoneCall, MessageCircle, MessageSquare,
   Mail, Bot, Calendar, UserCheck, Bookmark, DollarSign,
@@ -30,6 +31,7 @@ export function QuickActions({
   agentId, agentName, projectName,
   onAction, onOpenVisit, onOpenReservation, onOpenSale, onOpenAI, onOpenReassign,
 }: QuickActionsProps) {
+  const { t } = useTranslation()
   const [showCallLog, setShowCallLog] = useState(false)
   const [showCallScript, setShowCallScript] = useState(false)
   const [showMessage, setShowMessage] = useState(false)
@@ -95,17 +97,17 @@ export function QuickActions({
   }
 
   const ACTIONS = [
-    { key: 'call', icon: Phone, label: 'Appeler', color: 'text-immo-accent-blue' },
-    { key: 'whatsapp_call', icon: PhoneCall, label: 'Appel WA', color: 'text-[#25D366]' },
-    { key: 'whatsapp_message', icon: MessageCircle, label: 'Message WA', color: 'text-[#25D366]' },
-    { key: 'sms', icon: MessageSquare, label: 'SMS', color: 'text-immo-accent-blue' },
-    { key: 'email', icon: Mail, label: 'Email', color: 'text-immo-status-orange', disabled: !clientEmail },
-    { key: 'ai_task', icon: Bot, label: 'Suggestions AI', color: 'text-purple-400' },
-    { key: 'visit_planned', icon: Calendar, label: 'Visite', color: 'text-immo-accent-blue' },
-    { key: 'reservation', icon: Bookmark, label: 'Réservation', color: 'text-immo-status-orange' },
-    { key: 'sale', icon: DollarSign, label: 'Vente', color: 'text-immo-accent-green' },
-    { key: 'reassign', icon: UserCheck, label: 'Reassigner', color: 'text-immo-text-secondary' },
-  ] as const
+    { key: 'call', icon: Phone, label: t('quick_actions.call'), color: 'text-immo-accent-blue' },
+    { key: 'whatsapp_call', icon: PhoneCall, label: t('quick_actions.whatsapp_call'), color: 'text-[#25D366]' },
+    { key: 'whatsapp_message', icon: MessageCircle, label: t('quick_actions.whatsapp_message'), color: 'text-[#25D366]' },
+    { key: 'sms', icon: MessageSquare, label: t('quick_actions.sms'), color: 'text-immo-accent-blue' },
+    { key: 'email', icon: Mail, label: t('quick_actions.email'), color: 'text-immo-status-orange', disabled: !clientEmail },
+    { key: 'ai_task', icon: Bot, label: t('quick_actions.ai_task'), color: 'text-purple-400' },
+    { key: 'visit_planned', icon: Calendar, label: t('quick_actions.visit'), color: 'text-immo-accent-blue' },
+    { key: 'reservation', icon: Bookmark, label: t('quick_actions.reservation'), color: 'text-immo-status-orange' },
+    { key: 'sale', icon: DollarSign, label: t('quick_actions.sale'), color: 'text-immo-accent-green' },
+    { key: 'reassign', icon: UserCheck, label: t('quick_actions.reassign'), color: 'text-immo-text-secondary' },
+  ]
 
   return (
     <>

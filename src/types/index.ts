@@ -200,4 +200,5 @@ export const USER_ROLE_LABELS: Record<UserRole, string> = {
   admin: 'Administrateur',
   agent: 'Agent commercial',
   reception: 'Réception',
+  super_admin: 'Super administrateur',
 }

@@ -82,7 +82,7 @@ export function AgentsPage() {
           .from('users')
           .select('id, first_name, last_name, email, phone, role, status, last_activity, archived_at, avatar_url, permission_profile_id')
           .order('first_name'),
-        supabase.rpc('agent_counts'),
+        supabase.rpc('agent_counts' as never),
       ])
       if (usersRes.error) { handleSupabaseError(usersRes.error); throw usersRes.error }
       if (countsRes.error) { handleSupabaseError(countsRes.error); throw countsRes.error }

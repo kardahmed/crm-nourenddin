@@ -172,7 +172,7 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
 
       const unitCodes = selectedUnitsData.map((u) => u.code).join(', ')
 
-      const { error: rpcErr } = await supabase.rpc('create_sale_atomic', {
+      const { error: rpcErr } = await supabase.rpc('create_sale_atomic' as never, {
         p_client_id: client.id,
         p_agent_id: userId,
         p_project_id: formData.projectId,

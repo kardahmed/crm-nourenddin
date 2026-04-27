@@ -198,7 +198,7 @@ export function CsvImportModal({
 
     for (let i = 0; i < rows.length; i += BATCH_SIZE) {
       const batch = rows.slice(i, i + BATCH_SIZE)
-      const { error, data } = await supabase.from(table).insert(batch as never).select('id')
+      const { error, data } = await supabase.from(table as never).insert(batch as never).select('id')
       if (error) {
         errors.push(t('csv.batch_error', { batch: Math.floor(i / BATCH_SIZE) + 1, message: error.message }))
       } else {

@@ -27,7 +27,7 @@ export function AnalyticsTab() {
     queryKey: ['marketing-roi', period],
     queryFn: async () => {
       const [expensesRes, clientsRes, visitsRes, reservationsRes, salesRes] = await Promise.all([
-        supabase.from('marketing_expenses').select('amount, category, project_id, expense_date').gte('expense_date', dateStr),
+        supabase.from('marketing_expenses').select('amount, channel, project_id, expense_date').gte('expense_date', dateStr),
         supabase.from('clients').select('id, source, pipeline_stage, created_at').gte('created_at', dateFrom.toISOString()),
         // Visits: filter by scheduled_at (the actual visit date), not created_at
         supabase.from('visits').select('id, client_id, status').in('status', ['completed', 'confirmed']),
@@ -35,7 +35,7 @@ export function AnalyticsTab() {
         supabase.from('sales').select('id, final_price, client_id').eq('status', 'active'),
       ])
 
-      const expenses = (expensesRes.data ?? []) as Array<{ amount: number; category: string; project_id: string | null; expense_date: string }>
+      const expenses = (expensesRes.data ?? []) as Array<{ amount: number; channel: string | null; project_id: string | null; expense_date: string }>
       const clients = (clientsRes.data ?? []) as Array<{ id: string; source: string; pipeline_stage: string; created_at: string }>
       const visits = (visitsRes.data ?? []) as Array<{ id: string; client_id: string; status: string }>
       const reservations = (reservationsRes.data ?? []) as Array<{ id: string }>

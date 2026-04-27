@@ -1,0 +1,8 @@
+dist
+node_modules
+*.min.js
+package-lock.json
+supabase/migrations/*.sql
+src/i18n/ar.ts
+public
+.github

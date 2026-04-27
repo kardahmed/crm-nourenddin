@@ -27,12 +27,18 @@ export function PWAUpdateToast() {
   // never leak intervals or event listeners across remounts/hot-reloads.
   useEffect(() => {
     if (!registration) return
+    // SW update poll failures are non-fatal (network blip, etc); we don't
+    // toast the user but we keep the trace in dev so we can diagnose
+    // sticky update loops.
+    const onUpdateError = (err: unknown) => {
+      if (import.meta.env.DEV) console.warn('[PWA] update poll failed', err)
+    }
     const intervalId = window.setInterval(() => {
-      registration.update().catch(() => {})
+      registration.update().catch(onUpdateError)
     }, 60 * 60 * 1000)
     const onVisibility = () => {
       if (document.visibilityState === 'visible') {
-        registration.update().catch(() => {})
+        registration.update().catch(onUpdateError)
       }
     }
     document.addEventListener('visibilitychange', onVisibility)

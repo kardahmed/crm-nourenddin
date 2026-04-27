@@ -30,8 +30,12 @@ export function useTabVisibility() {
       if (now - lastResumeAt < 500) return
       lastResumeAt = now
 
-      // Ping supabase to rehydrate session and refresh token if expired
-      supabase.auth.getSession().catch(() => {})
+      // Ping supabase to rehydrate session and refresh token if expired.
+      // Failures are non-blocking (network blip on tab resume) but we log
+      // them in dev so a dead session is easier to diagnose.
+      supabase.auth.getSession().catch((err) => {
+        if (import.meta.env.DEV) console.warn('[Tab] getSession on resume failed', err)
+      })
 
       // Mark all queries stale so mounted components refetch lazily
       qc.invalidateQueries({ type: 'active' })

@@ -203,79 +203,59 @@ export function NewSaleModal({ isOpen, onClose, client }: NewSaleModalProps) {
   const doneCount = badges.filter((b) => b.done).length
   const isReady = doneCount === 4
 
-  // Submit mutation
+  // Submit mutation — runs the whole flow inside a single Postgres
+  // transaction (see migration 036) so we never leave half-created sales
+  // behind if any step fails.
   const submitSale = useMutation({
     mutationFn: async () => {
       if (!client || !userId) return
 
-      // 1. Insert sale for each unit
-      for (const unitId of formData.selectedUnits) {
-        const unitPrice = units.find(u => u.id === unitId)?.price ?? 0
+      const unitsPayload = formData.selectedUnits.map((unitId) => {
+        const unitPrice = units.find((u) => u.id === unitId)?.price ?? 0
         const unitDiscount = formData.discountType === 'percentage'
           ? (unitPrice * formData.discountValue) / 100
           : formData.discountType === 'fixed'
             ? formData.discountValue / formData.selectedUnits.length
             : 0
-        const unitFinal = unitPrice - unitDiscount
-
-        const { data: sale, error: saleErr } = await supabase.from('sales').insert({
-          
-          client_id: client.id,
-          agent_id: userId,
-          project_id: formData.projectId,
+        return {
           unit_id: unitId,
           total_price: unitPrice,
-          discount_type: formData.discountType || null,
+          discount_type: formData.discountType || '',
           discount_value: unitDiscount,
-          final_price: unitFinal,
-          financing_mode: formData.financingMode,
-          delivery_date: formData.deliveryDate || null,
-          internal_notes: formData.internalNotes || null,
-        } as never).select().single()
-        if (saleErr) { handleSupabaseError(saleErr); throw saleErr }
-
-        // 2. Payment schedules
-        if (formData.installments && schedule.length > 0 && sale) {
-          const saleId = (sale as { id: string }).id
-          for (const line of schedule) {
-            await supabase.from('payment_schedules').insert({
-              
-              sale_id: saleId,
-              installment_number: line.number,
-              due_date: line.date,
-              amount: line.amount,
-              description: line.description,
-            } as never)
-          }
+          final_price: unitPrice - unitDiscount,
         }
+      })
 
-        // 3. Amenities
-        if (formData.amenities.length > 0 && sale) {
-          const saleId = (sale as { id: string }).id
-          for (const a of formData.amenities) {
-            await supabase.from('sale_amenities').insert({
-              
-              sale_id: saleId,
-              description: a.description,
-              price: a.price,
-            } as never)
-          }
-        }
-      }
+      const schedulesPayload = formData.installments
+        ? schedule.map((line) => ({
+            installment_number: line.number,
+            due_date: line.date,
+            amount: line.amount,
+            description: line.description,
+          }))
+        : []
 
-      // 4. Client → vente
-      await supabase.from('clients').update({ pipeline_stage: 'vente' } as never).eq('id', client.id)
+      const amenitiesPayload = formData.amenities.map((a) => ({
+        description: a.description,
+        price: a.price,
+      }))
 
-      // 5. History
-      const unitCodes = selectedUnitsData.map(u => u.code).join(', ')
-      await supabase.from('history').insert({
-        
-        client_id: client.id,
-        agent_id: userId,
-        type: 'sale',
-        title: `Vente créée : ${unitCodes} — ${formatPriceCompact(finalPrice)}`,
-        metadata: { unit_ids: formData.selectedUnits, final_price: finalPrice },
+      const unitCodes = selectedUnitsData.map((u) => u.code).join(', ')
+
+      const { error: rpcErr } = await supabase.rpc('create_sale_atomic', {
+        p_client_id: client.id,
+        p_agent_id: userId,
+        p_project_id: formData.projectId,
+        p_units: unitsPayload,
+        p_financing_mode: formData.financingMode,
+        p_delivery_date: formData.deliveryDate || null,
+        p_internal_notes: formData.internalNotes || null,
+        p_schedules: schedulesPayload,
+        p_amenities: amenitiesPayload,
+        p_history_title: `Vente créée : ${unitCodes} — ${formatPriceCompact(finalPrice)}`,
+        p_history_metadata: { unit_ids: formData.selectedUnits, final_price: finalPrice },
       } as never)
+      if (rpcErr) { handleSupabaseError(rpcErr); throw rpcErr }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['clients'] })

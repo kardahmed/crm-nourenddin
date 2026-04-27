@@ -720,6 +720,38 @@ export const en = {
     sort_priority: 'Priority',
   },
 
+  register_page: {
+    disabled_title: 'Registration disabled',
+    disabled_subtitle: 'Contact your administrator to get an account.',
+    sign_in: 'Sign in',
+    already_registered: 'Already registered?',
+  },
+
+  marketing_roi: {
+    tab_analytics: 'ROI analytics',
+    tab_expenses: 'Budgets & spending',
+    tab_campaigns: 'Ad campaigns',
+    tab_email_campaigns: 'Email marketing',
+    tab_email_templates: 'Email templates',
+  },
+
+  reception_page: {
+    title: 'Reception',
+    subtitle: 'Welcome clients, capture new leads, dispatch to agents.',
+    assignment_mode: 'Assignment mode:',
+    cap_per_day: '(cap {{count}}/day per agent)',
+    kpi_leads_today: 'Leads today',
+    kpi_visits_today: 'Visits scheduled',
+    kpi_unassigned: 'Unassigned',
+    kpi_active_agents: 'Active agents',
+    tab_new: 'New contact',
+    tab_visits: 'Today visits',
+    tab_unassigned: 'Unassigned',
+    tab_directory: 'Agents',
+    tab_journal: 'Journal',
+    tab_equity: 'Fairness',
+  },
+
   quick_actions: {
     call: 'Call',
     whatsapp_call: 'WA call',

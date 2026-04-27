@@ -709,6 +709,38 @@ export const ar = {
     sort_priority: 'ذو أولوية',
   },
 
+  register_page: {
+    disabled_title: 'التسجيل معطل',
+    disabled_subtitle: 'تواصل مع المدير للحصول على حساب.',
+    sign_in: 'تسجيل الدخول',
+    already_registered: 'مسجل بالفعل؟',
+  },
+
+  marketing_roi: {
+    tab_analytics: 'تحليل العائد',
+    tab_expenses: 'الميزانية والمصاريف',
+    tab_campaigns: 'حملات إعلانية',
+    tab_email_campaigns: 'تسويق البريد الإلكتروني',
+    tab_email_templates: 'قوالب البريد',
+  },
+
+  reception_page: {
+    title: 'الاستقبال',
+    subtitle: 'استقبال العملاء، إضافة عملاء محتملين جدد، التوزيع على الوكلاء.',
+    assignment_mode: 'وضع التعيين:',
+    cap_per_day: '(الحد {{count}}/يوم لكل وكيل)',
+    kpi_leads_today: 'عملاء اليوم',
+    kpi_visits_today: 'الزيارات المقررة',
+    kpi_unassigned: 'غير معينين',
+    kpi_active_agents: 'الوكلاء النشطون',
+    tab_new: 'جهة اتصال جديدة',
+    tab_visits: 'زيارات اليوم',
+    tab_unassigned: 'غير معينين',
+    tab_directory: 'الوكلاء',
+    tab_journal: 'السجل',
+    tab_equity: 'العدالة',
+  },
+
   quick_actions: {
     call: 'اتصال',
     whatsapp_call: 'مكالمة واتساب',

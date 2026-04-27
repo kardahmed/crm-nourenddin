@@ -729,6 +729,38 @@ export const fr = {
     sort_priority: 'Prioritaire',
   },
 
+  register_page: {
+    disabled_title: 'Inscription désactivée',
+    disabled_subtitle: 'Contactez votre administrateur pour obtenir un compte.',
+    sign_in: 'Se connecter',
+    already_registered: 'Déjà inscrit ?',
+  },
+
+  marketing_roi: {
+    tab_analytics: 'Analytique ROI',
+    tab_expenses: 'Budgets & Dépenses',
+    tab_campaigns: 'Campagnes Ads',
+    tab_email_campaigns: 'Email Marketing',
+    tab_email_templates: 'Templates Email',
+  },
+
+  reception_page: {
+    title: 'Réception',
+    subtitle: 'Accueil des clients, saisie des nouveaux leads, répartition vers les agents.',
+    assignment_mode: 'Mode d\'attribution:',
+    cap_per_day: '(plafond {{count}}/jour par agent)',
+    kpi_leads_today: 'Leads aujourd\'hui',
+    kpi_visits_today: 'Visites prévues',
+    kpi_unassigned: 'Non-assignés',
+    kpi_active_agents: 'Agents actifs',
+    tab_new: 'Nouveau contact',
+    tab_visits: 'Visites du jour',
+    tab_unassigned: 'Non-assignés',
+    tab_directory: 'Agents',
+    tab_journal: 'Journal',
+    tab_equity: 'Équité',
+  },
+
   quick_actions: {
     call: 'Appeler',
     whatsapp_call: 'Appel WA',

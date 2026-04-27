@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { DollarSign, Users, Calendar, Home, TrendingUp, Target, ArrowRight } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -13,7 +14,7 @@ const SOURCE_LABELS: Record<string, string> = {
 }
 
 export function AnalyticsTab() {
-  
+  const { t } = useTranslation()
   const [period, setPeriod] = useState<'month' | 'quarter' | 'year' | 'all'>('year')
 
   const now = new Date()
@@ -108,11 +109,11 @@ export function AnalyticsTab() {
 
       {/* Main KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
-        <KPICard label="Cout par lead" value={formatPriceCompact(data.cpl) + ' DA'} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Cout par visite" value={formatPriceCompact(data.cpv) + ' DA'} accent="orange" icon={<Calendar className="h-4 w-4 text-immo-status-orange" />} />
-        <KPICard label="Cout par reservation" value={formatPriceCompact(data.cpr) + ' DA'} accent="blue" icon={<Target className="h-4 w-4 text-immo-accent-blue" />} />
-        <KPICard label="Cout par vente" value={formatPriceCompact(data.cpa) + ' DA'} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
-        <KPICard label="ROI Marketing" value={`${data.roi.toFixed(0)}%`} accent={data.roi > 0 ? 'green' : 'red'} icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('marketing_analytics.cpl')} value={formatPriceCompact(data.cpl) + ' DA'} accent="blue" icon={<Users className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('marketing_analytics.cpv')} value={formatPriceCompact(data.cpv) + ' DA'} accent="orange" icon={<Calendar className="h-4 w-4 text-immo-status-orange" />} />
+        <KPICard label={t('marketing_analytics.cpr')} value={formatPriceCompact(data.cpr) + ' DA'} accent="blue" icon={<Target className="h-4 w-4 text-immo-accent-blue" />} />
+        <KPICard label={t('marketing_analytics.cpa')} value={formatPriceCompact(data.cpa) + ' DA'} accent="green" icon={<DollarSign className="h-4 w-4 text-immo-accent-green" />} />
+        <KPICard label={t('marketing_analytics.roi')} value={`${data.roi.toFixed(0)}%`} accent={data.roi > 0 ? 'green' : 'red'} icon={<TrendingUp className="h-4 w-4 text-immo-accent-green" />} />
         <KPICard label="Valeur moy. vente" value={formatPriceCompact(data.avgDealValue) + ' DA'} accent="green" icon={<Home className="h-4 w-4 text-immo-accent-green" />} />
       </div>
 

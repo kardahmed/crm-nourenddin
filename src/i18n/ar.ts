@@ -772,6 +772,30 @@ export const ar = {
     analytics_th_conversion: 'التحويل',
   },
 
+  marketing_analytics: {
+    cpl: 'تكلفة كل عميل محتمل',
+    cpv: 'تكلفة كل زيارة',
+    cpr: 'تكلفة كل حجز',
+    cpa: 'تكلفة كل بيع',
+    roi: 'العائد التسويقي',
+  },
+
+  source_stats: {
+    leads_by_source: 'العملاء حسب المصدر',
+    conversion_by_source: 'معدل التحويل حسب المصدر',
+    th_source: 'المصدر',
+    th_leads: 'العملاء',
+    th_conversions: 'التحويلات',
+  },
+
+  payment_schedule: {
+    paid: 'مدفوع',
+    remaining: 'متبقي',
+    overdue: 'متأخر',
+    progress: 'التقدم',
+    no_schedule: 'لا يوجد قسط',
+  },
+
   reception_components: {
     directory_subtitle: 'دليل فوري لفريق المبيعات. العدادات مفيدة لتحويل مكالمة أو تعيين زائر دون المرور بقائمة الانتظار.',
     cap_reached: 'تم بلوغ الحد',

@@ -792,6 +792,33 @@ export const fr = {
     analytics_th_conversion: 'Conversion',
   },
 
+  // Marketing analytics tab
+  marketing_analytics: {
+    cpl: 'Coût par lead',
+    cpv: 'Coût par visite',
+    cpr: 'Coût par réservation',
+    cpa: 'Coût par vente',
+    roi: 'ROI Marketing',
+  },
+
+  // Performance source stats
+  source_stats: {
+    leads_by_source: 'Leads par source',
+    conversion_by_source: 'Taux de conversion par source',
+    th_source: 'Source',
+    th_leads: 'Leads',
+    th_conversions: 'Conversions',
+  },
+
+  // Payment schedule panel
+  payment_schedule: {
+    paid: 'Payé',
+    remaining: 'Restant',
+    overdue: 'En retard',
+    progress: 'Progression',
+    no_schedule: 'Aucune échéance',
+  },
+
   reception_components: {
     directory_subtitle: 'Annuaire temps réel de l\'équipe commerciale. Les compteurs sont utiles pour transférer un appel ou assigner un walk-in sans passer par la file d\'attente.',
     cap_reached: 'Plafond atteint',

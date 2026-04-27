@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { DollarSign, Check, Clock, AlertTriangle, Plus } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
@@ -42,6 +43,7 @@ interface Props {
 }
 
 export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) {
+  const { t } = useTranslation()
   const qc = useQueryClient()
   const [showAddPayment, setShowAddPayment] = useState(false)
   const [payAmount, setPayAmount] = useState('')
@@ -110,19 +112,19 @@ export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) 
       {/* Header KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className="rounded-lg bg-immo-accent-green/10 p-3 text-center">
-          <p className="text-[10px] font-medium text-immo-text-muted">Paye</p>
+          <p className="text-[10px] font-medium text-immo-text-muted">{t('payment_schedule.paid')}</p>
           <p className="text-sm font-bold text-immo-accent-green">{formatPrice(totalPaid)}</p>
         </div>
         <div className="rounded-lg bg-immo-status-orange/10 p-3 text-center">
-          <p className="text-[10px] font-medium text-immo-text-muted">Restant</p>
+          <p className="text-[10px] font-medium text-immo-text-muted">{t('payment_schedule.remaining')}</p>
           <p className="text-sm font-bold text-immo-status-orange">{formatPrice(totalDue)}</p>
         </div>
         <div className="rounded-lg bg-immo-status-red/10 p-3 text-center">
-          <p className="text-[10px] font-medium text-immo-text-muted">En retard</p>
+          <p className="text-[10px] font-medium text-immo-text-muted">{t('payment_schedule.overdue')}</p>
           <p className="text-sm font-bold text-immo-status-red">{formatPrice(totalLate)}</p>
         </div>
         <div className="rounded-lg bg-immo-accent-blue/10 p-3 text-center">
-          <p className="text-[10px] font-medium text-immo-text-muted">Progression</p>
+          <p className="text-[10px] font-medium text-immo-text-muted">{t('payment_schedule.progress')}</p>
           <p className="text-sm font-bold text-immo-accent-blue">{progress}%</p>
         </div>
       </div>
@@ -165,7 +167,7 @@ export function PaymentSchedulePanel({ saleId, totalPrice, clientName }: Props) 
               </div>
             )
           })}
-          {schedules.length === 0 && <p className="px-4 py-6 text-center text-xs text-immo-text-muted">Aucune echeance</p>}
+          {schedules.length === 0 && <p className="px-4 py-6 text-center text-xs text-immo-text-muted">{t('payment_schedule.no_schedule')}</p>}
         </div>
       </div>
 

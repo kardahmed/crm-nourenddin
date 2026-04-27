@@ -783,6 +783,30 @@ export const en = {
     analytics_th_conversion: 'Conversion',
   },
 
+  marketing_analytics: {
+    cpl: 'Cost per lead',
+    cpv: 'Cost per visit',
+    cpr: 'Cost per reservation',
+    cpa: 'Cost per sale',
+    roi: 'Marketing ROI',
+  },
+
+  source_stats: {
+    leads_by_source: 'Leads by source',
+    conversion_by_source: 'Conversion rate by source',
+    th_source: 'Source',
+    th_leads: 'Leads',
+    th_conversions: 'Conversions',
+  },
+
+  payment_schedule: {
+    paid: 'Paid',
+    remaining: 'Remaining',
+    overdue: 'Overdue',
+    progress: 'Progress',
+    no_schedule: 'No instalment',
+  },
+
   reception_components: {
     directory_subtitle: 'Real-time directory of the sales team. Useful counters for transferring a call or assigning a walk-in without going through the queue.',
     cap_reached: 'Cap reached',

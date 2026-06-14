@@ -85,7 +85,12 @@ export function AgentsPage() {
         supabase.rpc('agent_counts' as never),
       ])
       if (usersRes.error) { handleSupabaseError(usersRes.error); throw usersRes.error }
-      if (countsRes.error) { handleSupabaseError(countsRes.error); throw countsRes.error }
+      // Counts are a non-critical enrichment: if the agent_counts RPC is
+      // unavailable (e.g. migration not yet applied on this database), still
+      // render the team with zero counts instead of blanking the whole page.
+      if (countsRes.error) {
+        console.warn('agent_counts RPC unavailable, showing agents without counts:', countsRes.error.message)
+      }
 
       const counts = new Map<string, { clients_count: number; sales_count: number }>()
       for (const row of (countsRes.data ?? []) as Array<{ agent_id: string; clients_count: number; sales_count: number }>) {

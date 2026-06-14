@@ -14,6 +14,8 @@ import type { PipelineStage } from '@/types'
 interface PriorityClient {
   id: string
   full_name: string
+  phone: string
+  email: string | null
   pipeline_stage: PipelineStage
   confirmed_budget: number | null
   last_contact_at: string | null
@@ -33,6 +35,26 @@ function daysSince(date: string | null): number {
 export function PrioritySlider({ clients, onAction }: PrioritySliderProps) {
   const { t } = useTranslation()
   const navigate = useNavigate()
+
+  // Communication actions are handled here directly; navigation actions
+  // (visit / note / view) are delegated to the parent via onAction.
+  function handleAction(client: PriorityClient, action: string) {
+    const waPhone = client.phone.replace(/[\s\-()]/g, '').replace(/^0/, '213')
+    switch (action) {
+      case 'call':
+        window.open(`tel:${client.phone}`, '_self')
+        break
+      case 'whatsapp':
+        window.open(`https://wa.me/${waPhone}`, '_blank')
+        break
+      case 'email':
+        if (client.email) window.open(`mailto:${client.email}`, '_self')
+        break
+      default:
+        onAction(client.id, action)
+    }
+  }
+
   if (clients.length === 0) return null
 
   return (
@@ -88,7 +110,7 @@ export function PrioritySlider({ clients, onAction }: PrioritySliderProps) {
                 ].map(({ icon: Icon, action, title }) => (
                   <button
                     key={action}
-                    onClick={() => onAction(c.id, action)}
+                    onClick={(e) => { e.stopPropagation(); handleAction(c, action) }}
                     title={title}
                     className="flex h-7 w-7 items-center justify-center rounded-md text-immo-text-muted transition-colors hover:bg-immo-bg-card-hover hover:text-immo-accent-green"
                   >

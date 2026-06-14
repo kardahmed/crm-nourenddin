@@ -16,7 +16,7 @@ import toast from 'react-hot-toast'
 interface Props {
   isOpen: boolean
   onClose: () => void
-  onConfirm: (note?: string) => void
+  onConfirm: (note?: string, stageOverride?: PipelineStage) => void
   clientId: string
   clientName: string
   fromStage: PipelineStage
@@ -84,8 +84,9 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
 
   const dialogType = getDialogType()
 
-  function handleConfirm() {
+  async function handleConfirm() {
     let finalNote = note
+    let stageOverride: PipelineStage | undefined
 
     switch (dialogType) {
       case 'plan_visit':
@@ -96,8 +97,9 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
 
       case 'confirm_visit':
         if (confirmAction === 'cancel') {
-          // Go back to accueil instead
+          // Visit cancelled → send the client back to "accueil" (as the UI states).
           finalNote = 'Visite annulee par le client'
+          stageOverride = 'accueil'
         } else if (confirmAction === 'report') {
           if (!visitDate || !visitTime) { toast.error('Nouveau créneau requis'); return }
           createVisit.mutate()
@@ -110,7 +112,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
       case 'feedback_visit':
         if (!visitNote) { toast.error('Donnez une note a la visite'); return }
         // Update client with visit feedback
-        supabase.from('clients').update({
+        await supabase.from('clients').update({
           visit_note: visitNote,
           visit_feedback: visitReserves || null,
         } as never).eq('id', clientId)
@@ -119,7 +121,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
 
       case 'enter_negociation':
         if (budget) {
-          supabase.from('clients').update({ confirmed_budget: parseInt(budget) || null } as never).eq('id', clientId)
+          await supabase.from('clients').update({ confirmed_budget: parseInt(budget) || null } as never).eq('id', clientId)
         }
         finalNote = `Entree en negociation${budget ? '. Budget confirme: ' + formatLocalNumber(parseInt(budget)) + ' DA' : ''}`
         break
@@ -128,7 +130,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
         if (!reason) { toast.error('Sélectionnez une raison'); return }
         finalNote = `${toStage === 'perdue' ? 'Client perdu' : 'Relancement'}: ${reason}${reminderDays ? '. Rappel dans ' + reminderDays + 'j' : ''}`
         if (reminderDays) {
-          supabase.from('client_tasks').insert({
+          await supabase.from('client_tasks').insert({
      client_id: clientId, agent_id: userId,
             title: `Rappel: relancer ${clientName}`,
             stage: toStage, status: 'scheduled', channel: 'whatsapp', priority: 'medium',
@@ -140,7 +142,7 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
     }
 
     if (note && finalNote && !finalNote.includes(note)) finalNote += '. ' + note
-    onConfirm(finalNote)
+    onConfirm(finalNote, stageOverride)
     resetForm()
   }
 

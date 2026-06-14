@@ -89,6 +89,7 @@ export function UnitsTab() {
   const [priceMin, setPriceMin] = useState('')
   const [priceMax, setPriceMax] = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [editUnit, setEditUnit] = useState<Unit | null>(null)
   const [showBulkImport, setShowBulkImport] = useState(false)
   const [deleteId, setDeleteId] = useState<string | null>(null)
   const [showAdvanced, setShowAdvanced] = useState(false)
@@ -321,11 +322,11 @@ export function UnitsTab() {
                             <MoreHorizontal className="h-4 w-4" />
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="border-immo-border-default bg-immo-bg-card">
-                            <DropdownMenuItem className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                            <DropdownMenuItem onClick={() => setEditUnit(u)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                               <Eye className="mr-2 h-3.5 w-3.5" /> Voir détail
                             </DropdownMenuItem>
                             {canManageProjects && (
-                              <DropdownMenuItem className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
+                              <DropdownMenuItem onClick={() => setEditUnit(u)} className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover">
                                 <Pencil className="mr-2 h-3.5 w-3.5" /> Modifier
                               </DropdownMenuItem>
                             )}
@@ -375,7 +376,11 @@ export function UnitsTab() {
       </div>
 
       {/* Create modal */}
-      <CreateUnitModal isOpen={showCreate} onClose={() => setShowCreate(false)} />
+      <CreateUnitModal
+        isOpen={showCreate || !!editUnit}
+        onClose={() => { setShowCreate(false); setEditUnit(null) }}
+        unit={editUnit}
+      />
 
       {/* Bulk import modal */}
       <BulkImportUnitsModal isOpen={showBulkImport} onClose={() => setShowBulkImport(false)} />

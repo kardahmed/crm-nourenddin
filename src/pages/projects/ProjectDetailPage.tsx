@@ -48,8 +48,8 @@ const STATUS_MAP: Record<string, { labelKey: string; type: 'green' | 'muted' | '
 const UNIT_STATUS_BADGE: Record<string, { labelKey: string; type: 'green' | 'orange' | 'blue' | 'red' | 'muted' }> = {
   available: { labelKey: 'status.available', type: 'green' },
   reserved: { labelKey: 'status.reserved', type: 'orange' },
-  sold: { labelKey: 'status.sold', type: 'blue' },
-  blocked: { labelKey: 'status.blocked', type: 'red' },
+  sold: { labelKey: 'status.sold', type: 'red' },
+  blocked: { labelKey: 'status.blocked', type: 'muted' },
 }
 
 interface ProjectHistory {

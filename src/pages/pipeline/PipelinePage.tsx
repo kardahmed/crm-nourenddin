@@ -146,9 +146,10 @@ export function PipelinePage() {
       if (advFilters.isPriority === 'false' && c.is_priority) return false
       if (advFilters.budgetMin && (c.confirmed_budget ?? 0) < Number(advFilters.budgetMin)) return false
       if (advFilters.budgetMax && (c.confirmed_budget ?? Infinity) > Number(advFilters.budgetMax)) return false
+      if (projectFilter !== 'all' && !(c.interested_projects ?? []).includes(projectFilter)) return false
       return true
     })
-  }, [clients, debouncedSearch, alertFilter, advFilters])
+  }, [clients, debouncedSearch, alertFilter, advFilters, projectFilter])
 
   // Group by stage
   const clientsByStage = useMemo(() => {
@@ -372,7 +373,10 @@ export function PipelinePage() {
         />
         <FilterDropdown
           label="Projet"
-          options={[{ value: 'all', label: 'Tous les projets' }]}
+          options={[
+            { value: 'all', label: 'Tous les projets' },
+            ...(projectMap ? Array.from(projectMap.entries()).map(([id, name]) => ({ value: id, label: name })) : []),
+          ]}
           value={projectFilter}
           onChange={setProjectFilter}
         />

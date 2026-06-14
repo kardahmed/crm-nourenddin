@@ -279,7 +279,7 @@ export function ClientDetailPage() {
                 {t('client_detail.edit_client')}
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => navigate(`/pipeline/clients/${clientId}?from=${returnTo}#documents`)}
+                onClick={() => navigate(`/pipeline/clients/${clientId}?from=${returnTo}&tab=documents`)}
                 className="text-sm text-immo-text-primary focus:bg-immo-bg-card-hover"
               >
                 {t('client_detail.generate_doc')}

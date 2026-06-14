@@ -25,7 +25,7 @@ function useAgentKPIs(userId: string | undefined) {
           .lte('scheduled_at', todayStart + 'T23:59:59')
           .neq('status', 'cancelled'),
         supabase.from('sales').select('final_price').eq('agent_id', userId).eq('status', 'active').gte('created_at', monthStart),
-        supabase.from('agent_goals').select('target_sales_count').eq('agent_id', userId).limit(1).maybeSingle(),
+        supabase.from('agent_goals').select('target_value').eq('agent_id', userId).eq('metric', 'sales_count').order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ])
 
       const sales = (monthSales.data ?? []) as Array<{ final_price: number }>
@@ -34,7 +34,7 @@ function useAgentKPIs(userId: string | undefined) {
         todayVisits: todayVisitsCount.count ?? 0,
         monthRevenue: sales.reduce((sum, s) => sum + (s.final_price ?? 0), 0),
         monthSales: sales.length,
-        goalTarget: (goalsRes.data as { target_sales_count: number } | null)?.target_sales_count ?? null,
+        goalTarget: (goalsRes.data as { target_value: number } | null)?.target_value ?? null,
       }
     },
   })

@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -15,7 +16,7 @@ import {
 import { useUnits } from '@/hooks/useUnits'
 import { useProjects } from '@/hooks/useProjects'
 import { UNIT_TYPE_LABELS, UNIT_SUBTYPE_LABELS } from '@/types'
-import type { UnitType, UnitSubtype } from '@/types'
+import type { UnitType, UnitSubtype, Unit } from '@/types'
 
 const schema = z.object({
   project_id: z.string().min(1, 'Projet requis'),
@@ -35,11 +36,13 @@ interface CreateUnitModalProps {
   isOpen: boolean
   onClose: () => void
   defaultProjectId?: string
+  unit?: Unit | null
 }
 
-export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUnitModalProps) {
-  const { createUnit } = useUnits()
+export function CreateUnitModal({ isOpen, onClose, defaultProjectId, unit }: CreateUnitModalProps) {
+  const { createUnit, updateUnit } = useUnits()
   const { projects } = useProjects()
+  const isEdit = !!unit
 
   const {
     register,
@@ -57,11 +60,32 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
     },
   })
 
+  // Prefill (edit) or reset (create) whenever the modal opens.
+  useEffect(() => {
+    if (!isOpen) return
+    if (unit) {
+      reset({
+        project_id: unit.project_id,
+        code: unit.code,
+        type: unit.type,
+        subtype: unit.subtype ?? '',
+        building: unit.building ?? '',
+        floor: unit.floor != null ? String(unit.floor) : '',
+        surface: unit.surface != null ? String(unit.surface) : '',
+        price: unit.price != null ? String(unit.price) : '',
+        delivery_date: unit.delivery_date ?? '',
+      })
+    } else {
+      reset({ project_id: defaultProjectId ?? '', code: `U-${String(Date.now()).slice(-6)}`, type: 'apartment' })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, unit])
+
   // eslint-disable-next-line react-hooks/incompatible-library -- react-hook-form watch() intentionally used
   const selectedType = watch('type')
 
   async function onSubmit(data: FormData) {
-    await createUnit.mutateAsync({
+    const payload = {
       project_id: data.project_id,
       code: data.code,
       type: data.type as UnitType,
@@ -71,7 +95,12 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
       surface: data.surface ? Number(data.surface) : null,
       price: data.price ? Number(data.price) : null,
       delivery_date: data.delivery_date || null,
-    })
+    }
+    if (isEdit && unit) {
+      await updateUnit.mutateAsync({ id: unit.id, ...payload })
+    } else {
+      await createUnit.mutateAsync(payload)
+    }
     reset()
     onClose()
   }
@@ -79,7 +108,7 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
   const inputClass = 'border-immo-border-default bg-immo-bg-primary text-immo-text-primary placeholder:text-immo-text-muted'
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Nouvelle unité" subtitle="Ajouter un bien au projet" size="md">
+    <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? "Modifier l'unité" : 'Nouvelle unité'} subtitle={isEdit ? 'Mettre à jour ce bien' : 'Ajouter un bien au projet'} size="md">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {/* Projet */}
@@ -195,13 +224,13 @@ export function CreateUnitModal({ isOpen, onClose, defaultProjectId }: CreateUni
           </Button>
           <Button
             type="submit"
-            disabled={createUnit.isPending}
+            disabled={createUnit.isPending || updateUnit.isPending}
             className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
           >
-            {createUnit.isPending ? (
+            {createUnit.isPending || updateUnit.isPending ? (
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-immo-bg-primary border-t-transparent" />
             ) : (
-              'Créer l\'unité'
+              isEdit ? 'Enregistrer' : 'Créer l\'unité'
             )}
           </Button>
         </div>

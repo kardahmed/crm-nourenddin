@@ -57,6 +57,18 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
     enabled: !!clientId,
   })
 
+  // Resolve CIN verification from the client when the prop isn't passed
+  // (the Documents tab renders this component without it).
+  const { data: clientCinVerified } = useQuery({
+    queryKey: ['client-cin-verified', clientId],
+    queryFn: async () => {
+      const { data } = await supabase.from('clients').select('cin_verified').eq('id', clientId).maybeSingle()
+      return (data as { cin_verified: boolean } | null)?.cin_verified ?? false
+    },
+    enabled: !!clientId,
+  })
+  const verified = cinVerified ?? clientCinVerified ?? false
+
   async function handleUpload(e: React.ChangeEvent<HTMLInputElement>, docType: string) {
     const file = e.target.files?.[0]
     if (!file) return
@@ -84,6 +96,7 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
       if (docType === 'cin') {
         await supabase.from('clients').update({ cin_verified: true } as never).eq('id', clientId)
         qc.invalidateQueries({ queryKey: ['client-detail'] })
+        qc.invalidateQueries({ queryKey: ['client-cin-verified', clientId] })
       }
     }
 
@@ -110,16 +123,16 @@ export function ClientDocuments({ clientId, cinVerified }: Props) {
     <div className="space-y-4">
       {/* CIN status */}
       <div className="flex items-center gap-3 rounded-lg border border-immo-border-default bg-immo-bg-primary p-3">
-        {cinVerified ? (
+        {verified ? (
           <CheckCircle className="h-5 w-5 text-immo-accent-green" />
         ) : (
           <XCircle className="h-5 w-5 text-immo-status-red" />
         )}
         <div className="flex-1">
           <p className="text-sm font-medium text-immo-text-primary">CIN / Carte d'identite</p>
-          <p className="text-[10px] text-immo-text-muted">{cinVerified ? 'Verifie' : 'Non verifie — uploadez le document'}</p>
+          <p className="text-[10px] text-immo-text-muted">{verified ? 'Verifie' : 'Non verifie — uploadez le document'}</p>
         </div>
-        <StatusBadge label={cinVerified ? 'Verifie' : 'Manquant'} type={cinVerified ? 'green' : 'red'} />
+        <StatusBadge label={verified ? 'Verifie' : 'Manquant'} type={verified ? 'green' : 'red'} />
       </div>
 
       {/* Upload buttons */}

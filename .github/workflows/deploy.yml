@@ -1,8 +1,10 @@
 name: Deploy to Hostinger
 
+# Disabled (manual trigger only). Deployment is handled by Hostinger's native
+# GitHub auto-deploy (Hostinger panel → Deployments), so this FTPS workflow is
+# redundant and was failing on every push. Kept for reference / manual use.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:

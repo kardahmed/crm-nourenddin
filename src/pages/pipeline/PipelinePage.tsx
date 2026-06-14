@@ -146,9 +146,10 @@ export function PipelinePage() {
       if (advFilters.isPriority === 'false' && c.is_priority) return false
       if (advFilters.budgetMin && (c.confirmed_budget ?? 0) < Number(advFilters.budgetMin)) return false
       if (advFilters.budgetMax && (c.confirmed_budget ?? Infinity) > Number(advFilters.budgetMax)) return false
+      if (projectFilter !== 'all' && !(c.interested_projects ?? []).includes(projectFilter)) return false
       return true
     })
-  }, [clients, debouncedSearch, alertFilter, advFilters])
+  }, [clients, debouncedSearch, alertFilter, advFilters, projectFilter])
 
   // Group by stage
   const clientsByStage = useMemo(() => {
@@ -195,14 +196,17 @@ export function PipelinePage() {
     })
   }
 
-  function confirmMoveClient(note?: string) {
+  function confirmMoveClient(note?: string, stageOverride?: PipelineStage) {
     if (!pendingMove) return
+    // The dialog can override the destination — e.g. a cancelled visit sends
+    // the client back to "accueil" instead of the dragged-to stage.
+    const targetStage = stageOverride ?? pendingMove.toStage
     updateClientStage.mutate(
-      { clientId: pendingMove.clientId, newStage: pendingMove.toStage },
+      { clientId: pendingMove.clientId, newStage: targetStage },
       {
         onSuccess: () => {
           // Auto-generate tasks for new stage + cancel old
-          generateForStage.mutate({ clientId: pendingMove.clientId, newStage: pendingMove.toStage, oldStage: pendingMove.fromStage })
+          generateForStage.mutate({ clientId: pendingMove.clientId, newStage: targetStage, oldStage: pendingMove.fromStage })
           // If note provided, add to history
           if (note) {
             supabase.from('history').insert({
@@ -210,7 +214,7 @@ export function PipelinePage() {
               agent_id: null,
               type: 'note',
               title: note,
-              metadata: { from: pendingMove.fromStage, to: pendingMove.toStage },
+              metadata: { from: pendingMove.fromStage, to: targetStage },
             } as never)
           }
           setPendingMove(null)
@@ -224,9 +228,11 @@ export function PipelinePage() {
   }
 
   function handlePriorityAction(clientId: string, action: string) {
-    if (action === 'view') {
-      navigate(`/pipeline/clients/${clientId}`)
-    }
+    // call / whatsapp / email are handled inside PrioritySlider; here we route
+    // the navigation-based actions to the right tab of the client detail page.
+    if (action === 'visit') navigate(`/pipeline/clients/${clientId}?tab=visits`)
+    else if (action === 'note') navigate(`/pipeline/clients/${clientId}?tab=notes`)
+    else navigate(`/pipeline/clients/${clientId}`)
   }
 
   function toggleSelect(clientId: string) {
@@ -367,7 +373,10 @@ export function PipelinePage() {
         />
         <FilterDropdown
           label="Projet"
-          options={[{ value: 'all', label: 'Tous les projets' }]}
+          options={[
+            { value: 'all', label: 'Tous les projets' },
+            ...(projectMap ? Array.from(projectMap.entries()).map(([id, name]) => ({ value: id, label: name })) : []),
+          ]}
           value={projectFilter}
           onChange={setProjectFilter}
         />

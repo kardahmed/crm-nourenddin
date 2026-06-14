@@ -1,10 +1,12 @@
 name: CI
 
+# Auto-runs disabled (manual trigger only). The live site deploys via
+# Hostinger's native GitHub integration — not GitHub Actions — and jobs on this
+# account fail to start (they end in a few seconds before any step runs), which
+# only produced misleading red checks on every push/PR. Restore the
+# push / pull_request triggers below once GitHub Actions runners are available.
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:

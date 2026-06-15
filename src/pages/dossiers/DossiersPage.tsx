@@ -3,11 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   DollarSign, CreditCard, AlertTriangle, Clock,
-  FileText, Upload,
+  FileText,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import toast from 'react-hot-toast'
 import { useTranslation } from 'react-i18next'
 import { useAuthStore } from '@/store/authStore'
 import { PaymentSchedulePanel } from './components/PaymentSchedulePanel'
@@ -16,7 +15,6 @@ import {
   KPICard, SearchInput, FilterDropdown, LoadingSpinner,
   StatusBadge,
 } from '@/components/common'
-import { Button } from '@/components/ui/button'
 import { formatPrice, formatPriceCompact } from '@/lib/constants'
 import { format } from 'date-fns'
 
@@ -281,9 +279,6 @@ export function DossiersPage() {
       <div className="flex flex-wrap items-center gap-3">
         <SearchInput placeholder={t('dossiers_extra.search_placeholder')} value={search} onChange={setSearch} className="w-full sm:w-[240px]" />
         <FilterDropdown label={t('field.project')} options={projectOptions} value={projectFilter} onChange={setProjectFilter} />
-        <Button variant="ghost" size="sm" onClick={() => toast(t('dossiers_extra.import_soon'))} className="border border-immo-border-default text-xs text-immo-text-muted">
-          <Upload className="mr-1 h-3.5 w-3.5" /> {t('dossiers_extra.import_csv')}
-        </Button>
       </div>
 
       {/* Tabs */}

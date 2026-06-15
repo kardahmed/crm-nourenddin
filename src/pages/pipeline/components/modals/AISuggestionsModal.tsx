@@ -45,12 +45,11 @@ interface AISuggestionsModalProps {
   isOpen: boolean
   onClose: () => void
   client: ClientInfo | null
-  onSelectUnits?: (unitIds: string[]) => void
 }
 
 /* ═══ Component ═══ */
 
-export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: AISuggestionsModalProps) {
+export function AISuggestionsModal({ isOpen, onClose, client }: AISuggestionsModalProps) {
   const { t } = useTranslation()
   const [projectFilter, setProjectFilter] = useState('')
   const [typeFilter, setTypeFilter] = useState('')
@@ -367,21 +366,11 @@ export function AISuggestionsModal({ isOpen, onClose, client, onSelectUnits }: A
         {/* Footer */}
         <div className="flex items-center justify-between border-t border-immo-border-default pt-4">
           <span className="text-xs text-immo-text-muted">
-            {selectedIds.length > 0 ? `${selectedIds.length} unité(s) sélectionnée(s)` : 'Sélectionnez des unités pour continuer'}
+            {selectedIds.length > 0 ? `${selectedIds.length} unité(s) sélectionnée(s)` : 'Sélectionnez 2 unités ou plus pour les comparer'}
           </span>
-          <div className="flex gap-2">
-            <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">
-              {t('action.close')}
-            </Button>
-            {onSelectUnits && selectedIds.length > 0 && (
-              <Button
-                onClick={() => { onSelectUnits(selectedIds); onClose() }}
-                className="bg-immo-accent-green font-semibold text-immo-bg-primary hover:bg-immo-accent-green/90"
-              >
-                Sélectionner ({selectedIds.length})
-              </Button>
-            )}
-          </div>
+          <Button variant="ghost" onClick={onClose} className="text-immo-text-secondary hover:bg-immo-bg-card-hover">
+            {t('action.close')}
+          </Button>
         </div>
       </div>
     </Modal>

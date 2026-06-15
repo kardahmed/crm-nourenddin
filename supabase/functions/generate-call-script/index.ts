@@ -59,15 +59,16 @@ Deno.serve(async (req) => {
     }
 
     // 3. Load COMPLETE client dossier (everything we know about this client)
-    const [clientRes, historyRes, visitsRes, reservationsRes, salesRes, tasksRes, callResponsesRes, schedulesRes] = await Promise.all([
-      supabase.from('clients').select('*, users!clients_agent_id_fkey(first_name, last_name, phone), tenants(name, phone)').eq('id', client_id).single(),
+    const [clientRes, historyRes, visitsRes, reservationsRes, salesRes, tasksRes, callResponsesRes, schedulesRes, settingsRes] = await Promise.all([
+      supabase.from('clients').select('*, users!clients_agent_id_fkey(first_name, last_name, phone)').eq('id', client_id).single(),
       supabase.from('history').select('type, title, description, created_at').eq('client_id', client_id).order('created_at', { ascending: false }).limit(20),
       supabase.from('visits').select('scheduled_at, status, visit_type, notes, projects(name)').eq('client_id', client_id).order('scheduled_at', { ascending: false }).limit(5),
       supabase.from('reservations').select('status, deposit_amount, expires_at, duration_days, units(code, type, subtype, price, surface, floor, projects(name))').eq('client_id', client_id).limit(3),
       supabase.from('sales').select('final_price, financing_mode, status, units(code, type, price)').eq('client_id', client_id).limit(3),
       supabase.from('client_tasks').select('title, status, channel, client_response, completed_at').eq('client_id', client_id).order('created_at', { ascending: false }).limit(10),
       supabase.from('call_responses').select('responses, result, duration_seconds, ai_summary, created_at').eq('client_id', client_id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('payment_schedules').select('description, amount, due_date, status').eq('sale_id', client_id).order('due_date').limit(10),
+      supabase.from('payment_schedules').select('description, amount, due_date, status, sales!inner(client_id)').eq('sales.client_id', client_id).order('due_date').limit(10),
+      supabase.from('app_settings').select('company_name, company_phone').limit(1).maybeSingle(),
     ])
 
     if (clientRes.error) return json({ error: 'Client not found' }, 404)
@@ -82,7 +83,7 @@ Deno.serve(async (req) => {
     const schedules = (schedulesRes.data ?? []) as Array<Record<string, unknown>>
 
     const agent = client.users as { first_name: string; last_name: string; phone: string | null } | null
-    const tenant = client.tenants as { name: string; phone: string | null } | null
+    const settings = settingsRes.data as { company_name: string | null; company_phone: string | null } | null
 
     // Calculate days since last contact
     const lastContact = client.last_contact_at ? new Date(client.last_contact_at as string) : null
@@ -137,8 +138,8 @@ Deno.serve(async (req) => {
         name: agent ? `${agent.first_name} ${agent.last_name}` : 'Agent',
         phone: agent?.phone ?? '',
       },
-      agency: tenant?.name ?? 'Agence',
-      agency_phone: tenant?.phone ?? '',
+      agency: settings?.company_name ?? 'Agence',
+      agency_phone: settings?.company_phone ?? '',
       recent_history: history.slice(0, 10).map(h => ({
         type: h.type,
         title: h.title,

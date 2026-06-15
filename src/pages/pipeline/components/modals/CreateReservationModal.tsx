@@ -158,11 +158,12 @@ export function CreateReservationModal({ isOpen, onClose, client }: CreateReserv
 
       const expiresAt = addDays(new Date(), Number(duration)).toISOString()
 
-      // 1. Upload CIN
+      // 1. Upload CIN to the same bucket/path the Documents tab reads, so it
+      // shows up there (filename prefix doubles as the document type).
       const ext = cinFile.name.split('.').pop()
-      const path = `cin/${client.id}_${Date.now()}.${ext}`
+      const path = `${client.id}/cin-${Date.now()}.${ext}`
       const { error: uploadErr } = await supabase.storage
-        .from('documents')
+        .from('client-documents')
         .upload(path, cinFile)
       if (uploadErr) { handleSupabaseError(uploadErr); throw uploadErr }
 

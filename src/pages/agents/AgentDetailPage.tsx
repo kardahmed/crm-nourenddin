@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -118,6 +118,39 @@ export function AgentDetailPage() {
     enabled: !!agentId,
   })
 
+  // Recompute goal progress from live actuals (current_value is never persisted).
+  const goalRange = useMemo(() => {
+    if (goals.length === 0) return null
+    const starts = [...goals.map(g => g.started_at)].sort()
+    const ends = [...goals.map(g => g.ended_at)].sort()
+    return { start: starts[0], end: ends[ends.length - 1] }
+  }, [goals])
+
+  const { data: goalActuals } = useQuery({
+    queryKey: ['agent-goal-actuals', agentId, goalRange?.start, goalRange?.end],
+    enabled: !!agentId && !!goalRange,
+    queryFn: async () => {
+      const { start, end } = goalRange!
+      const [salesRes, resRes, visitsRes, clientsRes] = await Promise.all([
+        supabase.from('sales').select('final_price').eq('agent_id', agentId!).eq('status', 'active').gte('created_at', start).lte('created_at', end),
+        supabase.from('reservations').select('id').eq('agent_id', agentId!).eq('status', 'active').gte('created_at', start).lte('created_at', end),
+        supabase.from('visits').select('id').eq('agent_id', agentId!).eq('status', 'completed').gte('scheduled_at', start).lte('scheduled_at', end),
+        supabase.from('clients').select('id').eq('agent_id', agentId!).gte('created_at', start).lte('created_at', end),
+      ])
+      const salesData = (salesRes.data ?? []) as Array<{ final_price: number }>
+      const salesCount = salesData.length
+      const newClients = clientsRes.data?.length ?? 0
+      return {
+        sales_count: salesCount,
+        reservations_count: resRes.data?.length ?? 0,
+        visits_count: visitsRes.data?.length ?? 0,
+        revenue: salesData.reduce((s, r) => s + (r.final_price ?? 0), 0),
+        new_clients: newClients,
+        conversion_rate: newClients > 0 ? (salesCount / newClients) * 100 : 0,
+      } as Record<string, number>
+    },
+  })
+
   // Fetch assigned clients
   const { data: clients = [] } = useQuery({
     queryKey: ['agent-clients', agentId],
@@ -232,7 +265,8 @@ export function AgentDetailPage() {
           ) : (
             <div className="space-y-2">
               {goals.map(g => {
-                const progress = g.target_value > 0 ? Math.min(Math.round((g.current_value / g.target_value) * 100), 150) : 0
+                const currentValue = goalActuals?.[g.metric] ?? g.current_value
+                const progress = g.target_value > 0 ? Math.min(Math.round((currentValue / g.target_value) * 100), 150) : 0
                 const goalStatusLabel = t(`goals_page.${g.status}`)
                 return (
                   <div key={g.id} className="rounded-lg border border-immo-border-default bg-immo-bg-card p-3">

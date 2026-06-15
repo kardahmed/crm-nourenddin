@@ -4,7 +4,6 @@ import {
   Phone, PhoneCall, MessageCircle, MessageSquare,
   Mail, Bot, Calendar, UserCheck, Bookmark, DollarSign,
 } from 'lucide-react'
-import { CallLogModal } from './modals/CallLogModal'
 import { CallScriptModal } from './modals/CallScriptModal'
 import { MessageTemplateModal } from './modals/MessageTemplateModal'
 import type { PipelineStage } from '@/types'
@@ -32,7 +31,6 @@ export function QuickActions({
   onAction, onOpenVisit, onOpenReservation, onOpenSale, onOpenAI, onOpenReassign,
 }: QuickActionsProps) {
   const { t } = useTranslation()
-  const [showCallLog, setShowCallLog] = useState(false)
   const [showCallScript, setShowCallScript] = useState(false)
   const [showMessage, setShowMessage] = useState(false)
 
@@ -133,15 +131,6 @@ export function QuickActions({
         clientName={clientName}
         clientPhone={clientPhone}
         clientStage={clientStage ?? 'accueil'}
-        agentId={agentId}
-      />
-
-      {/* Simple call log modal (fallback) */}
-      <CallLogModal
-        isOpen={showCallLog}
-        onClose={() => setShowCallLog(false)}
-        clientId={clientId}
-        clientName={clientName}
         agentId={agentId}
       />
 

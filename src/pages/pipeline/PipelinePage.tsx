@@ -41,7 +41,6 @@ import { handleSupabaseError } from '@/lib/errors'
 import toast from 'react-hot-toast'
 import { AlertBar } from './components/AlertBar'
 import { PrioritySlider } from './components/PrioritySlider'
-// StageProgress moved to Analytics tab
 import { KanbanBoard } from './components/KanbanBoard'
 import { CardsView } from './components/CardsView'
 import { TableView } from './components/TableView'

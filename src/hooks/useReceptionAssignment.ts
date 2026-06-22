@@ -50,53 +50,31 @@ export function useReceptionSettings() {
 }
 
 /**
- * Fetch all active agents with the metrics needed by every assignment
- * mode: number of active clients (for load_balanced), number of leads
- * created today (for the cap + leads_today mode), and the last time
- * the agent received a new lead (for round_robin).
+ * Fetch every active agent with the metrics each assignment mode needs:
+ * active clients (load_balanced), leads received today (cap + leads_today)
+ * and the last time the agent was dispatched a lead (round_robin).
+ *
+ * The aggregation runs in Postgres (`reception_agent_loads` RPC) so the
+ * browser only receives one small row per agent instead of the whole
+ * clients table. Crucially, the RPC counts **dispatched leads only**
+ * (clients.assigned_at IS NOT NULL): a client an agent created for himself
+ * never inflates his load nor pushes him out of the rotation.
  */
 export function useAgentLoads(maxLeadsPerDay: number) {
   return useQuery({
     queryKey: ['reception-agent-loads', maxLeadsPerDay],
     queryFn: async (): Promise<AgentLoad[]> => {
-      const todayStart = new Date()
-      todayStart.setHours(0, 0, 0, 0)
-
-      const [agentsRes, clientsRes] = await Promise.all([
-        supabase.from('users')
-          .select('id, first_name, last_name')
-          .eq('role', 'agent')
-          .eq('status', 'active')
-          .order('first_name'),
-        supabase.from('clients')
-          .select('id, agent_id, pipeline_stage, created_at')
-          .not('agent_id', 'is', null),
-      ])
-
-      if (agentsRes.error) throw agentsRes.error
-      if (clientsRes.error) throw clientsRes.error
-
-      const agents = (agentsRes.data ?? []) as Array<{ id: string; first_name: string; last_name: string }>
-      const clients = (clientsRes.data ?? []) as Array<{ agent_id: string; pipeline_stage: string; created_at: string }>
-
-      return agents.map(a => {
-        const owned = clients.filter(c => c.agent_id === a.id)
-        const active = owned.filter(c => c.pipeline_stage !== 'vente' && c.pipeline_stage !== 'perdue').length
-        const createdToday = owned.filter(c => new Date(c.created_at) >= todayStart)
-        const lastAssigned = createdToday
-          .map(c => c.created_at)
-          .sort()
-          .reverse()[0] ?? null
-        return {
-          id: a.id,
-          first_name: a.first_name,
-          last_name: a.last_name,
-          active_clients: active,
-          leads_today: createdToday.length,
-          last_assigned: lastAssigned,
-          at_cap: createdToday.length >= maxLeadsPerDay,
-        }
-      })
+      const { data, error } = await supabase.rpc('reception_agent_loads' as never)
+      if (error) throw error
+      return ((data ?? []) as AgentLoad[]).map(a => ({
+        id: a.id,
+        first_name: a.first_name,
+        last_name: a.last_name,
+        active_clients: a.active_clients ?? 0,
+        leads_today: a.leads_today ?? 0,
+        last_assigned: a.last_assigned ?? null,
+        at_cap: a.at_cap ?? false,
+      }))
     },
     staleTime: 15_000,
   })
@@ -146,7 +124,7 @@ export const MODE_LABELS: Record<AssignmentMode, string> = {
 
 export const MODE_DESCRIPTIONS: Record<AssignmentMode, string> = {
   manual: 'La réception choisit librement. Un motif est loggué à chaque attribution.',
-  round_robin: 'Rotation stricte: l\'agent qui a attendu le plus longtemps reçoit le prochain lead.',
-  load_balanced: 'L\'agent avec le moins de clients actifs en pipeline reçoit le prochain lead.',
-  leads_today: 'L\'agent avec le moins de nouveaux leads aujourd\'hui reçoit le prochain lead.',
+  round_robin: 'Rotation stricte: l\'agent dont le dernier lead reçu de la réception est le plus ancien reçoit le prochain. Les clients qu\'un agent ajoute lui-même ne comptent pas.',
+  load_balanced: 'L\'agent avec le moins de leads réception actifs en pipeline reçoit le prochain. Les clients auto-ajoutés par l\'agent ne comptent pas.',
+  leads_today: 'L\'agent avec le moins de leads reçus de la réception aujourd\'hui reçoit le prochain. Les clients auto-ajoutés ne comptent pas.',
 }

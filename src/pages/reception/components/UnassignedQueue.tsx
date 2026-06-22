@@ -7,7 +7,6 @@ import { Inbox, Phone, Sparkles, UserCheck } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import { LoadingSpinner } from '@/components/common'
 import { SOURCE_LABELS } from '@/types'
 import type { ClientSource } from '@/types'
@@ -25,12 +24,12 @@ interface UnassignedClient {
   source: ClientSource
   notes: string | null
   created_at: string
+  is_priority: boolean
 }
 
 export function UnassignedQueue() {
   const { t } = useTranslation()
   const qc = useQueryClient()
-  const userId = useAuthStore(s => s.session?.user?.id)
   const { data: settings } = useReceptionSettings()
   const { data: agentLoads = [] } = useAgentLoads(settings?.maxLeadsPerDay ?? 10)
 
@@ -47,8 +46,10 @@ export function UnassignedQueue() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clients')
-        .select('id, full_name, phone, source, notes, created_at')
+        .select('id, full_name, phone, source, notes, created_at, is_priority')
         .is('agent_id', null)
+        // Priority leads jump the queue, then oldest first.
+        .order('is_priority', { ascending: false })
         .order('created_at', { ascending: true })
       if (error) throw error
       return (data ?? []) as UnassignedClient[]
@@ -61,6 +62,7 @@ export function UnassignedQueue() {
       const isOverride =
         suggested !== null && agentId !== suggested.id && settings?.mode !== 'manual'
 
+      // Client-side guard for UX; the RPC re-validates atomically.
       if (
         isOverride &&
         settings?.overrideRequiresReason &&
@@ -69,30 +71,15 @@ export function UnassignedQueue() {
         throw new Error(t('reception_form.bypass_required'))
       }
 
-      const { error: upErr } = await supabase
-        .from('clients')
-        .update({ agent_id: agentId } as never)
-        .eq('id', clientId)
-      if (upErr) { handleSupabaseError(upErr); throw upErr }
-
-      // history: reassignment (even for first-time assignment from null)
-      await supabase.from('history').insert({
-        client_id: clientId,
-        agent_id: agentId,
-        type: 'reassignment',
-        title: isOverride
-          ? `Attribution manuelle (motif: ${reason})`
-          : 'Attribution automatique',
-        description: `Assigné depuis la file non-assignés (mode ${settings ? MODE_LABELS[settings.mode] : '—'}).`,
-        metadata: {
-          reassigned_by: userId,
-          from_agent_id: null,
-          to_agent_id: agentId,
-          suggested_agent_id: suggested?.id ?? null,
-          mode: settings?.mode,
-          reason: reason || null,
-        },
+      // Atomic dispatch: the server picks/validates the agent, enforces the
+      // daily cap, marks the lead as distributed (assigned_at) and writes a
+      // single audited history row (kind = 'dispatch').
+      const { error } = await supabase.rpc('assign_client_to_agent' as never, {
+        p_client_id: clientId,
+        p_agent_id: agentId,
+        p_reason: reason || null,
       } as never)
+      if (error) { handleSupabaseError(error); throw error }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['unassigned-queue'] })
@@ -141,6 +128,11 @@ export function UnassignedQueue() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
+                  {c.is_priority && (
+                    <span className="rounded-full bg-immo-status-red/10 px-2 py-0.5 text-[9px] font-bold uppercase text-immo-status-red">
+                      Prioritaire
+                    </span>
+                  )}
                   <span className="text-sm font-semibold text-immo-text-primary">
                     {c.full_name}
                   </span>

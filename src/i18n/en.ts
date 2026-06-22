@@ -703,6 +703,7 @@ export const en = {
     phone_duplicate: 'This number already belongs to another client. Transfer the call to the existing agent.',
     bypass_required: 'A reason is required when bypassing the suggested agent.',
     toast_created: 'Client created and assigned',
+    toast_created_unassigned: 'Client created — left unassigned, placed in the queue.',
     toast_assigned: 'Client assigned',
     toast_checked_in: 'Client checked in — agent notified',
   },

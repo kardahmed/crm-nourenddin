@@ -710,6 +710,7 @@ export const fr = {
     phone_duplicate: 'Ce numéro est déjà attribué à un autre client. Transférez l\'appel à l\'agent existant.',
     bypass_required: 'Un motif est obligatoire quand vous bypassez l\'agent suggéré.',
     toast_created: 'Client créé et assigné',
+    toast_created_unassigned: 'Client créé — non assigné, placé dans la file d\'attente.',
     toast_assigned: 'Client assigné',
     toast_checked_in: 'Client accueilli — agent notifié',
   },

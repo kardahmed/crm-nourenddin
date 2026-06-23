@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, Check, Sparkles, Star, UserCheck } from 'lucide-react'
@@ -6,7 +6,6 @@ import toast from 'react-hot-toast'
 import { z } from 'zod'
 import { supabase } from '@/lib/supabase'
 import { handleSupabaseError } from '@/lib/errors'
-import { useAuthStore } from '@/store/authStore'
 import {
   SOURCE_LABELS,
   UNIT_TYPE_LABELS,
@@ -18,7 +17,6 @@ import {
   useReceptionSettings,
   useAgentLoads,
   pickAgent,
-  MODE_LABELS,
   MODE_DESCRIPTIONS,
 } from '@/hooks/useReceptionAssignment'
 import { useDuplicateCheck } from '@/hooks/useDuplicateCheck'
@@ -55,7 +53,6 @@ const contactSchema = z.object({
 export function NewContactForm() {
   const { t } = useTranslation()
   const qc = useQueryClient()
-  const userId = useAuthStore(s => s.session?.user?.id)
 
   const { data: settings } = useReceptionSettings()
   const { data: agentLoads = [] } = useAgentLoads(settings?.maxLeadsPerDay ?? 10)
@@ -79,20 +76,12 @@ export function NewContactForm() {
       prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]
     )
 
-  // Auto-suggested agent per configured mode.
+  // Auto-suggested agent per configured mode (display + override detection).
   const suggested = useMemo(() => {
     if (!settings) return null
     return pickAgent(settings.mode, agentLoads)
   }, [settings, agentLoads])
 
-  // Default to suggested agent whenever it changes (and no manual pick yet).
-  useEffect(() => {
-    if (suggested && !overrideAgent) {
-      // noop — effective agent derived below
-    }
-  }, [suggested, overrideAgent])
-
-  const effectiveAgentId = overrideAgent ?? suggested?.id ?? null
   const isOverriding =
     overrideAgent !== null && suggested !== null && overrideAgent !== suggested.id
 
@@ -110,9 +99,7 @@ export function NewContactForm() {
         // for the receptionist while the rest live in dev console.
         throw new Error(parsed.error.issues[0]?.message ?? t('reception_form.name_phone_required'))
       }
-      if (!effectiveAgentId && settings?.mode !== 'manual') {
-        throw new Error(t('reception_form.no_agent_available'))
-      }
+      // Client-side guard for UX; the server re-checks atomically.
       if (
         isOverriding &&
         settings?.overrideRequiresReason &&
@@ -121,13 +108,18 @@ export function NewContactForm() {
         throw new Error(t('reception_form.override_reason_required'))
       }
 
+      // The lead is always created unassigned, then dispatched through the
+      // atomic RPC. This keeps the agent pick, the daily cap and the audit
+      // trail server-side and race-free, and marks the lead as distributed
+      // by reception (clients.assigned_at) so it counts in the rotation —
+      // unlike clients an agent adds for himself.
       const payload: Record<string, unknown> = {
         full_name: parsed.data.fullName,
         phone: parsed.data.phone,
         email: parsed.data.email || null,
         source,
         pipeline_stage: 'accueil',
-        agent_id: effectiveAgentId,
+        agent_id: null,
         notes: notes.trim() || null,
         interested_projects: projectInterest.trim() ? [projectInterest.trim()] : null,
         confirmed_budget: budget ? Number(budget) : null,
@@ -140,7 +132,7 @@ export function NewContactForm() {
       const { data, error } = await supabase
         .from('clients')
         .insert(payload as never)
-        .select('id, full_name, agent_id')
+        .select('id, full_name')
         .single()
       if (error) {
         if (error.code === '23505' && error.message?.includes('uq_clients_phone_normalized')) {
@@ -149,33 +141,38 @@ export function NewContactForm() {
         handleSupabaseError(error); throw error
       }
 
-      // Log the override reason in history so admins can audit why the
-      // receptionist bypassed the suggested agent. `reassignment` fits
-      // semantically — the suggested pick was "reassigned" at creation.
-      if (isOverriding && data) {
-        await supabase.from('history').insert({
-          client_id: data.id,
-          agent_id: data.agent_id,
-          type: 'reassignment',
-          title: `Attribution manuelle (motif: ${overrideReason.trim()})`,
-          description: `Réception a bypassé l'agent suggéré par le mode ${MODE_LABELS[settings!.mode]}.`,
-          metadata: {
-            reassigned_by: userId,
-            suggested_agent_id: suggested?.id ?? null,
-            chosen_agent_id: data.agent_id,
-            mode: settings?.mode,
-            reason: overrideReason.trim(),
-          },
+      // Dispatch. In auto modes (or when the receptionist picked an agent),
+      // hand off to the server. p_agent_id = null lets the server pick per
+      // the configured mode; a non-null value is an explicit/override pick.
+      const wantsAssignment = settings?.mode !== 'manual' || overrideAgent !== null
+      let assigned = false
+      if (wantsAssignment) {
+        const { error: assignErr } = await supabase.rpc('assign_client_to_agent' as never, {
+          p_client_id: (data as { id: string }).id,
+          p_agent_id: overrideAgent, // null ⇒ auto-pick
+          p_reason: overrideReason.trim() || null,
         } as never)
+        if (assignErr) {
+          // The lead exists but couldn't be assigned (e.g. every agent at
+          // cap). Don't fail the whole creation — it lands in the queue.
+          return { ...(data as object), assignError: assignErr.message } as { id: string; assignError?: string }
+        }
+        assigned = true
       }
 
-      return data
+      return { ...(data as object), assigned } as { id: string; assigned?: boolean; assignError?: string }
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['reception-metrics'] })
       qc.invalidateQueries({ queryKey: ['reception-agent-loads'] })
       qc.invalidateQueries({ queryKey: ['unassigned-queue'] })
-      toast.success(t('reception_form.toast_created'))
+      if (data?.assigned) {
+        toast.success(t('reception_form.toast_created'))
+      } else {
+        // Either every agent is at cap, or manual mode with no pick: the
+        // lead is created and parked in the unassigned queue.
+        toast(t('reception_form.toast_created_unassigned'))
+      }
       setFullName('')
       setPhone('')
       setEmail('')

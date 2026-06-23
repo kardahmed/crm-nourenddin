@@ -83,6 +83,11 @@ export function EquityDashboard() {
           .from('history')
           .select('client_id, agent_id, created_at, metadata')
           .eq('type', 'reassignment')
+          // Only true reception dispatches (one tagged row per assignment,
+          // written atomically by assign_client_to_agent). This excludes
+          // pipeline reassignments and agent-departure transfers, and avoids
+          // the historical double/under counting of the two old code paths.
+          .contains('metadata', { kind: 'dispatch' })
           .gte('created_at', since)
           .order('created_at', { ascending: false }),
         supabase

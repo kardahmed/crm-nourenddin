@@ -155,7 +155,7 @@ export function NewContactForm() {
         if (assignErr) {
           // The lead exists but couldn't be assigned (e.g. every agent at
           // cap). Don't fail the whole creation — it lands in the queue.
-          return { ...(data as object), assignError: assignErr.message } as { id: string; assignError?: string }
+          return { ...(data as object), assigned: false, assignError: assignErr.message } as { id: string; assigned?: boolean; assignError?: string }
         }
         assigned = true
       }

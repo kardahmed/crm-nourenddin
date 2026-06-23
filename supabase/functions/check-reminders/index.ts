@@ -27,6 +27,17 @@ Deno.serve(async (req) => {
     const twoDaysFromNow = new Date(now.getTime() + 2 * 86400000).toISOString()
     const threeDaysAgo = new Date(now.getTime() - 3 * 86400000).toISOString()
 
+    // 0. Activate scheduled tasks whose time has come (scheduled → pending).
+    // Tasks created with a delay land in 'scheduled'; nothing else flips them,
+    // so any KPI filtering status='pending' would otherwise miss them forever.
+    const { data: activatedTasks } = await supabase
+      .from('client_tasks')
+      .update({ status: 'pending' })
+      .eq('status', 'scheduled')
+      .lte('scheduled_at', now.toISOString())
+      .select('id')
+    const tasksActivated = activatedTasks?.length ?? 0
+
     const notifications: Array<{ user_id: string | null; type: string; title: string; message: string; metadata: Record<string, unknown> }> = []
     const emailTasks: EmailTask[] = []
 
@@ -162,7 +173,8 @@ Deno.serve(async (req) => {
     }
 
     return new Response(JSON.stringify({
-      message: `Created ${inserted} notification(s), sent ${emailsSent} email(s)`,
+      message: `Activated ${tasksActivated} task(s), created ${inserted} notification(s), sent ${emailsSent} email(s)`,
+      tasks_activated: tasksActivated,
       breakdown: {
         payment_reminders: notifications.filter(n => n.type === 'payment_reminder').length,
         reservation_expiring: notifications.filter(n => n.type === 'reservation_expiring').length,

@@ -131,7 +131,9 @@ export function SmartStageDialog({ isOpen, onClose, onConfirm, clientId, clientN
         finalNote = `${toStage === 'perdue' ? 'Client perdu' : 'Relancement'}: ${reason}${reminderDays ? '. Rappel dans ' + reminderDays + 'j' : ''}`
         if (reminderDays) {
           await supabase.from('client_tasks').insert({
-     client_id: clientId, agent_id: userId,
+            // agent_id omitted on purpose: the client_tasks_default_agent
+            // trigger fills it with the client's agent, never the actor.
+            client_id: clientId,
             title: `Rappel: relancer ${clientName}`,
             stage: toStage, status: 'scheduled', channel: 'whatsapp', priority: 'medium',
             // eslint-disable-next-line react-hooks/purity -- inside mutation handler, not render

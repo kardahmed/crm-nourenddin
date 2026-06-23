@@ -18,7 +18,6 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useClients } from '@/hooks/useClients'
-import { useAutoTasks } from '@/hooks/useAutoTasks'
 import { exportToCsv } from '@/lib/exportCsv'
 import { usePipelineStats } from '@/hooks/usePipelineStats'
 import type { PipelineAlert } from '@/hooks/usePipelineStats'
@@ -61,7 +60,6 @@ export function PipelinePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const { clients: rawClients, isLoading: loadingClients, updateClientStage } = useClients({ pageSize: 'all' })
-  const { generateForStage } = useAutoTasks()
   const { data: stats, isLoading: loadingStats } = usePipelineStats()
   const { canManageProjects, isAgent } = usePermissions()
 
@@ -204,8 +202,8 @@ export function PipelinePage() {
       { clientId: pendingMove.clientId, newStage: targetStage },
       {
         onSuccess: () => {
-          // Auto-generate tasks for new stage + cancel old
-          generateForStage.mutate({ clientId: pendingMove.clientId, newStage: targetStage, oldStage: pendingMove.fromStage })
+          // Stage tasks (create new + cancel old) are generated server-side
+          // by the generate_stage_tasks trigger on the stage UPDATE above.
           // If note provided, add to history
           if (note) {
             supabase.from('history').insert({

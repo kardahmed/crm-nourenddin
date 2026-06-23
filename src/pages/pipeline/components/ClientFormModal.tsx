@@ -7,7 +7,6 @@ import { useTranslation } from 'react-i18next'
 import { AlertTriangle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useClients } from '@/hooks/useClients'
-import { useAutoTasks } from '@/hooks/useAutoTasks'
 import { useProjects } from '@/hooks/useProjects'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuthStore } from '@/store/authStore'
@@ -57,7 +56,6 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
   const { t } = useTranslation()
   const isEdit = !!client
   const { createClient, updateClient } = useClients()
-  const { generateForStage } = useAutoTasks()
   const { projects } = useProjects()
   const { isAgent } = usePermissions()
   const currentUserId = useAuthStore(s => s.session?.user?.id)
@@ -176,10 +174,9 @@ export function ClientFormModal({ isOpen, onClose, client }: ClientFormModalProp
     if (isEdit && client) {
       await updateClient.mutateAsync({ id: client.id, ...payload })
     } else {
-      const created = await createClient.mutateAsync(payload)
-      if (created?.id && created.pipeline_stage) {
-        generateForStage.mutate({ clientId: created.id, newStage: created.pipeline_stage })
-      }
+      // Stage tasks are generated server-side by the generate_stage_tasks
+      // trigger on INSERT (using the client's agent, not the creator).
+      await createClient.mutateAsync(payload)
     }
     onClose()
   }

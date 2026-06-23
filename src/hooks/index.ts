@@ -2,7 +2,6 @@
 // can `import { useFoo } from '@/hooks'` without remembering the source file.
 export * from './useActivityLog'
 export * from './useAuth'
-export * from './useAutoTasks'
 export * from './useBranding'
 export * from './useClients'
 export * from './useDarkMode'

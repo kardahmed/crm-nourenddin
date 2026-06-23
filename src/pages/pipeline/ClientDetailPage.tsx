@@ -57,7 +57,6 @@ import { CreateReservationModal } from './components/modals/CreateReservationMod
 import { NewSaleModal } from './components/modals/NewSaleModal'
 import { AISuggestionsModal } from './components/modals/AISuggestionsModal'
 import { ReassignModal } from './components/modals/ReassignModal'
-import { useAutoTasks } from '@/hooks/useAutoTasks'
 
 // Avatar color from name
 function nameToColor(name: string): string {
@@ -152,17 +151,11 @@ export function ClientDetailPage() {
     setStageConfirm(newStage)
   }
 
-  const { generateForStage } = useAutoTasks()
-
   function confirmStageChange() {
     if (!client || !stageConfirm) return
-    const oldStage = client.pipeline_stage
-    updateClientStage.mutate({ clientId: client.id, newStage: stageConfirm }, {
-      onSuccess: () => {
-        // Auto-generate tasks for new stage + cancel old stage tasks
-        generateForStage.mutate({ clientId: client.id, newStage: stageConfirm, oldStage })
-      },
-    })
+    // Stage tasks (create new + cancel old) are generated server-side by the
+    // generate_stage_tasks trigger when pipeline_stage changes below.
+    updateClientStage.mutate({ clientId: client.id, newStage: stageConfirm })
     setStageConfirm(null)
   }
 

@@ -50,6 +50,11 @@ const contactSchema = z.object({
   notes: z.string().max(2000, { message: 'Notes trop longues (max 2000 caractères)' }),
 })
 
+// Shared shape returned by the create mutation across all paths (assigned,
+// unassigned/queued, or assignment error). A single type keeps `onSuccess`
+// able to read `assigned`/`assignError` without divergent assertions.
+type CreateContactResult = { id: string; assigned?: boolean; assignError?: string }
+
 export function NewContactForm() {
   const { t } = useTranslation()
   const qc = useQueryClient()
@@ -155,12 +160,12 @@ export function NewContactForm() {
         if (assignErr) {
           // The lead exists but couldn't be assigned (e.g. every agent at
           // cap). Don't fail the whole creation — it lands in the queue.
-          return { ...(data as object), assignError: assignErr.message } as { id: string; assignError?: string }
+          return { ...(data as object), assignError: assignErr.message } as CreateContactResult
         }
         assigned = true
       }
 
-      return { ...(data as object), assigned } as { id: string; assigned?: boolean; assignError?: string }
+      return { ...(data as object), assigned } as CreateContactResult
     },
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['reception-metrics'] })
